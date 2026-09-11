@@ -1,3 +1,6 @@
+// F8 opens the local avatar picker. Set false to disable it.
+EnableAvatarPicker=true
+
 // Should we reload character settings every time character appears in menu or do that only upon game restart
 ReloadInMenu=false
 

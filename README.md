@@ -1,80 +1,46 @@
-# ValheimVRM
+# ValheimVRM — Celeste-twinkle fork
 
-## Game updated? Found a bug?
+[Download the compiled release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [English installation](docs/INSTALL.md) · [中文安装说明](docs/INSTALL.zh-CN.md)
 
-For the Valheim 1.0.7 compatibility changes, see the
-[validation notes](docs/valheim-1.0-validation.md) and
-[runtime dependency instructions](Libs/README.md).
+Windows x64 client build for Valheim 1.0.7. This fork combines the compatibility
+fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
+with an in-game avatar picker and optional rendering controls. It is an independent
+release based on nyaarium's fork, with thanks to nyaarium, aMidnightNova and yoship1639.
 
-**[File an issue on the Issues tab](https://github.com/nyaarium/valheim-vrm/issues?q=is%3Aissue)** with **what the problem is**, and paste in the **error logged in the console**.
+- Press **F8** to open a scrollable list of your own VRM files. There is no eight-model limit.
+- Add files to `ValheimVRM` beside `valheim.exe`, refresh, then select a model.
+- Remember selections per character, including after restart or respawn.
+- Toggle scene lighting, received shadows and avatar bloom for VRM 1.0 MToon materials.
+  Defaults: lighting on, received shadows on, avatar bloom off. No brightness ceiling or highlight compression.
+- Keep equipped items and their stats when changing appearance.
 
-I'll _probably_ continue maintenance even when I'm not actively playing the game.
+No avatars are included. BepInEx is required separately. The package includes the
+matched UniVRM dependencies; install the complete ZIP, not only `ValheimVRM.dll`.
+See the installation guides for supported materials, per-model settings and the
+limits of local-only outfit selection in multiplayer.
 
----
+## Development
 
-## Yet Another Fork
+The local rendering/picker build is on `codex/public-release`. The narrower
+`codex/valheim-1.0-compatibility` branch remains the source of the upstream PR.
 
-> **[yoship1639](https://github.com/yoship1639/ValheimVRM)** ► **[aMidnightNova](https://github.com/aMidnightNova/ValheimVRM)** ► **nyaarium**
+With a .NET SDK and an installed copy of Valheim plus BepInEx:
 
-Big thanks to the original authors and maintainers for their hard work. It's always been fun running around in custom avatars.
+```powershell
+$env:VALHEIM_INSTALL_PATH = 'C:\Games\Valheim'
+powershell -NoProfile -File tools/Test-RuntimeDependencies.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
+dotnet build -c Release
+dotnet run --project tests/AvatarCatalogTests
+```
 
-This fork diverges heavily from the original, to support Linux environments and CI/CD. As such, there won't be upstream PRs to ancestor repos ...Unless they really like Linux and GitHub workflows \:)
+Build output is `release/ValheimVRM-1.7.0.zip`. Building does not install the plugin
+into your game unless you explicitly pass `-p:InstallToGame=true`.
+The catalog tests use .NET 7 and temporary files; the plugin targets .NET Framework 4.7.1.
+Shader source/rebuild instructions are in [shaders/README.md](shaders/README.md).
+Use a full build to include the embedded rendering resources; `-t:Compile` alone
+is insufficient for a distributable DLL.
 
----
-
-### Notes
-
-If anyone's model has **MToon shaders**, you need to **disable SSAO**. This is true even if you do not have MToon stuff enabled in the settings. You can set `AttemptTextureFix` to true, it will convert shaders to standard at game runtime.
-
-### How to Install
-
-[Download the latest release](https://github.com/nyaarium/valheim-vrm/releases) and extract it directly into the Valheim install directory.
-
-### First Time Install
-
-- make sure to copy / rename all files that end with .example into the correct corresponding file. E.G. \
-  global_settings.txt.example -> global_settings.txt.
-
-### File Install Locations
-
-The VRM and settings files should be in the ValheimVRM folder inside the Valheim game dir.
-
-### Settings File
-
-The name of the character in the game needs to correspond to a VRM and settings file like so.
-
-**Character**: Midnight Nova \
-**Settings File**: settings_Midnight Nova.txt \
-**VRM**: Midnight Nova.vrm
-
-### Default Settings and avatar for people you do not have custom stuff for
-
-**Settings File**: settings\_**\_Default.txt \
-**VRM**: \_**Default.vrm
-
-**NOTE:** settings\_**_Default.txt has 4 underscores, and _**Default.vrm has 3.
-
-### Usefull Info
-
-- If you have a shader compile error you probably need to use the old shader bundle. \
-  the newer current bundle should work, but JIC ive included the old one still\
-  Its in General settings. UseShaderBundle=<old,current>. Note that this will affect all models.
-
----
-
-## 🛑 Stop Here 🛑
-
-Only continue down if you wish to fork from this repo and develop. The following info will help you get started.
-
-### 🛠️ Technical Stuff for maintaining this repo
-
-- The landscape of the project has changed a bit, so I'll have to come back and update these sections later.
-- You might need to build an Asset Bundle of shaders to stay inline with UniVrm. This is probably a non issue
-  unless Valheim Updates Unity. - see next point.
-- Current UniVrm version is 121, for Unity 2022. UniVrm was 111 previous to Valheim Patch 0.217.46. 111 is the last version to support Unity 2020.
-- Most Recent AssetBundle of shaders is UniVrm.shaders. This has shaders that are required since version 67 - 70(I dont know exactly when).
-- You will need to install UniVrm into a blank project (create the shader asset bundle there too)
-  once that's done(install from git the assetBundle Browser), you will need to build the Unity Project. Find the (build folder)\_Data and set that as a system Path. I called my project "UniVrm v121" so the data folder would be UniVrm v121_Data - **VALHEIM_UNITY_LIBS**
-- inside your UniVrm Project you will need to install [UnityAsyncImageLoader](https://github.com/aMidnightNova/UnityAsyncImageLoader)
-- Set your Valheim Folder as a system path. **VALHEIM_INSTALL**
-- If for whatever reason you are targeting 111 still, Make sure in Unity you have Mono and .NET 4.x selected.
+Read [runtime dependency provenance](Libs/README.md),
+[compatibility validation](docs/valheim-1.0-validation.md), and
+[release validation](docs/release-1.7.0-validation.md) for the tested scope.
+Report fork-build problems to [this fork's Issues](https://github.com/Celeste-twinkle/valheim-vrm/issues).

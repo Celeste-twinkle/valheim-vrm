@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,6 +40,8 @@ namespace ValheimVRM
 			{
 				foreach (var mat in smr.materials)
 				{
+					// Standard and VRM 1.0 MToon receive real scene lighting already.
+					if (mat == null || mat.shader == null || mat.shader.name == "Standard" || AvatarRenderingTarget.Supports(mat)) continue;
 					if (!matColors.Exists(m => m.mat == mat))
 					{
 						matColors.Add(new MatColor()
@@ -64,18 +66,13 @@ namespace ValheimVRM
 			var amb = Shader.GetGlobalColor(_AmbientColor);
 			var sunAmb = sun + amb;
 
-			// Normalize brightness: prevents blown-out whites while preserving color ratios.
-			if (sunAmb.maxColorComponent > 0.7f) sunAmb /= 0.3f + sunAmb.maxColorComponent;
-
 			foreach (var matColor in matColors)
 			{
 				var col = matColor.color * sunAmb;
 				col.a = matColor.color.a;
-				if (col.maxColorComponent > 1.0f) col /= col.maxColorComponent;
 
 				var shadeCol = matColor.shadeColor * sunAmb;
 				shadeCol.a = matColor.shadeColor.a;
-				if (shadeCol.maxColorComponent > 1.0f) shadeCol /= shadeCol.maxColorComponent;
 
 				var emi = matColor.emission * sunAmb.grayscale;
 

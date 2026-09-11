@@ -123,3 +123,11 @@ EnableProfileCode=false
 - **UniVRM** - VRM format support
 - **Unity Engine** - Game engine integration
 - **UnityAsyncImageLoader** - Async image loading
+
+## Fork release additions
+
+- AvatarCatalog discovers top-level VRM files and saves per-character selections atomically.
+- OutfitSwitcher provides the F8 list and rendering toggles. It does not synchronize outfit choices over the inherited sharing protocol.
+- AvatarRendering/AvatarRenderingTarget apply opt-in shader variants; default lighting and shadows retain the original shader and material values.
+- AvatarBloomCamera/Controller/Target and PatchAvatarBloom exclude VRM 1.0 MToon surfaces from the bloom input without modifying HDR scene color.
+- Build both embedded shader bundles for a distributable release; see shaders/README.md. Builds install to the game only with InstallToGame=true.

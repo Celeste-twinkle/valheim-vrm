@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Globalization;
 using BepInEx;
 using HarmonyLib;
@@ -20,7 +20,7 @@ namespace ValheimVRM
     {
         public const string PluginGuid = "com.yoship1639.plugins.valheimvrm";
         public const string PluginName = "ValheimVRM";
-        public const string PluginVersion = "1.3.11.0";
+        public const string PluginVersion = VersionInfo.PluginVersion;
 
         private static Harmony _harmony = new Harmony("com.yoship1639.plugins.valheimvrm.patch");
 
@@ -30,6 +30,9 @@ namespace ValheimVRM
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
             Settings.ReloadGlobalSettings();
+            AvatarRendering.Initialize();
+            gameObject.AddComponent<OutfitSwitcher>();
+            gameObject.AddComponent<AvatarBloomController>();
 
             // a semi hacky way of loading a default character, no one can name a character with and underscore as far as i am aware.
             Settings.AddSettingsFromFile("___Default", false);

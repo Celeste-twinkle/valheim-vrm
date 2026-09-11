@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,6 +34,8 @@ namespace ValheimVRM
 		public VRM(GameObject visualModel, string name)
 		{
 			VisualModel = visualModel;
+			if (visualModel.GetComponent<AvatarRenderingTarget>() == null) visualModel.AddComponent<AvatarRenderingTarget>();
+			if (visualModel.GetComponent<AvatarBloomTarget>() == null) visualModel.AddComponent<AvatarBloomTarget>();
 			Name = name;
 		}
 

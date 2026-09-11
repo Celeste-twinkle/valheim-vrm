@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -329,6 +329,7 @@ namespace ValheimVRM
         public class GlobalSettingsContainer : Container
         {
             public bool ReloadInMenu = false;
+            public bool EnableAvatarPicker = true;
             public bool AcceptVrmSharing = true;
             public bool DrawPlayerSizeGizmo = false;
             public float StartVrmShareDelay = 10.0f;
@@ -422,7 +423,7 @@ namespace ValheimVRM
             playerSettings[playerName].Name = playerName;
             playerSettings[playerName].LoadFrom(settingsData);
 
-            int maxNameWidth = settingsData.Max(kvp => kvp.Key.Length);
+            int maxNameWidth = settingsData.Count == 0 ? 0 : settingsData.Max(kvp => kvp.Key.Length);
 
             Debug.Log("[ValheimVRM] loaded settings for " + playerName + ":\n" + playerSettings[playerName].ToString());
         }

@@ -1,3 +1,14 @@
+## 1.7.0 — Celeste-twinkle fork, Valheim 1.0.7
+
+Independent Windows x64 release with the Valheim 1.0 import/lifecycle fixes,
+F8 avatar picker, per-character saved selections, and VRM 1.0 MToon rendering controls.
+The picker scans all top-level .vrm files instead of a fixed set of outfits.
+Lighting and received shadows default to on; avatar bloom defaults to off.
+Brightness ceilings and highlight compression are absent.
+
+Requires BepInExPack Valheim 5.4.2333. Install the complete release ZIP into the
+Valheim game directory. Models are not included. See docs/INSTALL.md and
+INSTALL.zh-CN.md for details and supported-material/multiplayer limitations.
 ## Update 1.6.0
 
 **BepInEx:** 5.4.23.3

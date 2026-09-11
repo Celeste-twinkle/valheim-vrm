@@ -2,13 +2,16 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>1.6.0</Version>
+		<Version>1.7.0</Version>
+		<InstallToGame Condition="'$(InstallToGame)' == ''">false</InstallToGame>
 		<TargetFramework>net471</TargetFramework>
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Include="src/**/*.cs" />
+        <EmbeddedResource Include="Assets/avatar_bloom" LogicalName="ValheimVRM.avatar_bloom" />
+        <EmbeddedResource Include="Assets/avatar_rendering" LogicalName="ValheimVRM.avatar_rendering" />
 	</ItemGroup>
 
 	<!-- Valheim root: Windows = VALHEIM_INSTALL_PATH. Linux = /mnt/valheim if that mount has BepInEx, else VALHEIM_INSTALL_PATH (e.g. CI runner). -->
@@ -56,12 +59,18 @@
 		<Reference Include="BepInEx" HintPath="$(VALHEIM_BEPINEX_CORE)/BepInEx.dll" />
 		<Reference Include="0Harmony" HintPath="$(VALHEIM_BEPINEX_CORE)/0Harmony.dll" />
 
-		<!-- Valheim -->
+		<Reference Include="assembly_postprocessing" HintPath="$(VALHEIM_MANAGED)/assembly_postprocessing.dll" />
+
+        <!-- Valheim -->
 		<Reference Include="assembly_utils" HintPath="$(VALHEIM_MANAGED)/assembly_utils.dll" />
 		<Reference Include="assembly_guiutils" HintPath="$(VALHEIM_MANAGED)/assembly_guiutils.dll" />
 		<Reference Include="assembly_valheim" HintPath="$(VALHEIM_MANAGED)/assembly_valheim.dll" />
 
-		<!-- Unity Engine -->
+		<Reference Include="Newtonsoft.Json" HintPath="$(VALHEIM_MANAGED)/Newtonsoft.Json.dll" />
+        <Reference Include="UnityEngine.IMGUIModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.IMGUIModule.dll" />
+        <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.TextRenderingModule.dll" />
+
+        <!-- Unity Engine -->
 		<Reference Include="UnityEngine" HintPath="$(VALHEIM_MANAGED)/UnityEngine.dll" />
 		<Reference Include="UnityEngine.AnimationModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.AnimationModule.dll" />
 		<Reference Include="UnityEngine.AssetBundleModule" HintPath="$(VALHEIM_MANAGED)/UnityEngine.AssetBundleModule.dll" />
@@ -129,14 +138,14 @@
 		<Delete Files="@(OldZipFiles)" ContinueOnError="true" />
 
 		<!-- Delete old files from BepInEx plugins directory (only when plugin folder exists: update existing install) -->
-		<ItemGroup Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
+		<ItemGroup Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and '$(InstallToGame)' == 'true' and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetFileName)" />
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/UniVRM.shaders" />
 
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetName).pdb" />
 			<OldInstallFiles Include="$(VALHEIM_PLUGINS_PATH)/ValheimVRM/$(TargetFileName).mdb" />
 		</ItemGroup>
-		<Delete Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " Files="@(OldInstallFiles)" ContinueOnError="true" />
+		<Delete Condition=" '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and '$(InstallToGame)' == 'true' and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " Files="@(OldInstallFiles)" ContinueOnError="true" />
 
 		<!-- Copy files -->
 		<ItemGroup>
@@ -163,24 +172,24 @@
 		<Exec Condition=" '$(Configuration)' == 'Debug' " Command="&quot;$(Pdb2MdbPath)&quot; &quot;$(TargetPath)&quot;" />
 
 		<!-- Copy debug files to local Valheim installation (only when plugin folder exists) -->
-		<ItemGroup Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
+		<ItemGroup Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and '$(InstallToGame)' == 'true' and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<DebugFiles Include="$(TargetPath)" />
 			<DebugFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
 
 			<DebugFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
 			<DebugFiles Include="$(TargetDir)$(TargetFileName).mdb" Condition="Exists('$(TargetDir)$(TargetFileName).mdb')" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(DebugFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Debug' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and '$(InstallToGame)' == 'true' and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(DebugFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
 
 
 		<!-- RELEASE BUILD STUFF -->
 
 		<!-- Copy release files to local Valheim installation (only when plugin folder exists) -->
-		<ItemGroup Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
+		<ItemGroup Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and '$(InstallToGame)' == 'true' and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') ">
 			<ReleaseFiles Include="$(TargetPath)" />
 			<ReleaseFiles Include="$(ROOT_DIR)/Assets/UniVRM.shaders" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Release' and '$(VALHEIM_ROOT)' != '' and Exists('$(VALHEIM_ROOT)') and '$(InstallToGame)' == 'true' and Exists('$(VALHEIM_PLUGINS_PATH)/ValheimVRM') " SourceFiles="@(ReleaseFiles)" DestinationFolder="$(VALHEIM_PLUGINS_PATH)/ValheimVRM" />
 
 		<!-- Clean release directory -->
 		<RemoveDir Condition=" '$(Configuration)' == 'Release' " Directories="$(FINAL_RELEASE)" ContinueOnError="true" />
@@ -209,12 +218,18 @@
 			<ProjectFiles Include="$(ROOT_DIR)/settings_Example.txt.example" />
 			<ProjectFiles Include="$(ROOT_DIR)/global_settings.txt.example" />
 			<ProjectFiles Include="$(ROOT_DIR)/README.md" />
+            <ProjectDocs Include="$(ROOT_DIR)/docs/*.md" />
+
+
+            <ProjectFiles Include="$(LIBS_PLUGINS_64)/FreeImage-license.md" />
 			<ProjectFiles Include="$(ROOT_DIR)/LICENSE" />
+            <ProjectFiles Include="$(ROOT_DIR)/UnityAsyncImageLoader-LICENSE.txt" />
 			<ProjectFiles Include="$(LIBS_MANAGED)/*-LICENSE.txt" />
 		</ItemGroup>
 		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectFiles)" DestinationFolder="$(RELEASE_STAGING)/ValheimVRM" />
 
 
+		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectDocs)" DestinationFolder="$(RELEASE_STAGING)/ValheimVRM/docs" />
 		<!-- Zip for release -->
 
 		<!-- Windows: use PowerShell Compress-Archive -->

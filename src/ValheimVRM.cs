@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -97,6 +97,7 @@ namespace ValheimVRM
 	public static class VrmManager
 	{
 		public static Dictionary<Player, GameObject> PlayerToVrmInstance = new Dictionary<Player, GameObject>();
+		public static readonly HashSet<Player> LoadingPlayers = new HashSet<Player>();
 		public static Dictionary<Player, string> PlayerToName = new Dictionary<Player, string>();
 		public static Dictionary<string, VRM> VrmDic = new Dictionary<string, VRM>();
 		public static Dictionary<string, byte[]> VrmHashes = new Dictionary<string, byte[]>(); // Store VRM hashes for lifecycle
@@ -166,6 +167,8 @@ namespace ValheimVRM
 
 			foreach (var mat in materials)
 			{
+				// Preserve authored lit materials; they already receive scene lighting.
+				if (mat.shader != null && (mat.shader.name == "Standard" || AvatarRenderingTarget.Supports(mat))) continue;
 				var processedTextures = new List<string>();
 
 				if (settings.UseMToonShader && mat.HasProperty("_Color"))
@@ -251,38 +254,37 @@ namespace ValheimVRM
 
 		private static IEnumerator LoadVrm(Player player, string playerName, string localPlayerName, string path, float scale, bool settingsUpdated, Settings.VrmSettingsContainer settings, bool isShared = false)
 		{
-			Task<byte[]> bytesTask = Task.Run(() => File.ReadAllBytes(path));
-
-			while (!bytesTask.IsCompleted)
+			VrmManager.LoadingPlayers.Add(player);
+			try
 			{
-				yield return new WaitUntil(() => bytesTask.IsCompleted);
-			}
-
-			if (bytesTask.IsFaulted)
-			{
-				Debug.LogError($"Error loading VRM: {bytesTask.Exception.Flatten().InnerException}");
-				yield break;
-			}
-
-			byte[] vrmBytes = bytesTask.Result;
-			byte[] vrmHash = null;
-			using (var sha256 = SHA256.Create())
-			{
-				vrmHash = sha256.ComputeHash(vrmBytes);
-				Debug.Log($"[VrmTextureCache] 💽 Computed VRM hash for '{playerName}': {vrmHash.GetHaxadecimalString()}");
-			}
-
-			yield return player.StartCoroutine(VRM.ImportVisualAsync(vrmBytes, path, settings.ModelScale, loadedRoot =>
-			{
-				if (loadedRoot != null)
+				var read = Task.Run(() => File.ReadAllBytes(path));
+				while (!read.IsCompleted) yield return null;
+				if (read.IsFaulted)
 				{
-					var vrm = CreateVrm(loadedRoot, player, vrmBytes, playerName, vrmHash, isShared);
-					if (vrm != null)
-					{
-						SetVrm(player, vrm, settingsUpdated);
-					}
+					Debug.LogError("[ValheimVRM] Error reading VRM: " + read.Exception.GetBaseException());
+					yield break;
 				}
-			}));
+				GameObject loaded = null;
+				yield return VRM.ImportVisualAsync(read.Result, path, settings.ModelScale, root => loaded = root);
+				if (loaded == null) yield break;
+				if (player == null || player.IsDead())
+				{
+					Object.Destroy(loaded);
+					yield break;
+				}
+				byte[] hash;
+				using (var sha = SHA256.Create()) hash = sha.ComputeHash(read.Result);
+				var vrm = CreateVrm(loaded, player, read.Result, playerName, hash, isShared);
+				if (vrm != null)
+				{
+					if (settingsUpdated) vrm.RecalculateSettingsHash();
+					yield return vrm.SetToPlayer(player);
+				}
+			}
+			finally
+			{
+				VrmManager.LoadingPlayers.Remove(player);
+			}
 		}
 
 		static VRM CreateVrm(GameObject vrmVisual, Player player, byte[] bytes, string name, byte[] vrmHash, bool isShared = false)
@@ -755,6 +757,7 @@ namespace ValheimVRM
 				localPlayerName = playerName;
 			}
 
+			if (playerName == localPlayerName) playerName = OutfitSwitcher.ResolveModelName(playerName);
 			VrmManager.PlayerToName[__instance] = playerName;
 
 			bool isInMenu = __instance.gameObject.scene.name == "start";
@@ -783,7 +786,7 @@ namespace ValheimVRM
 			{
 				bool settingsUpdated = false;
 
-				var path = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", $"{playerName}.vrm");
+				var path = OutfitSwitcher.ResolveModelPath(playerName);
 				var sharedPath = Path.Combine(Environment.CurrentDirectory, "ValheimVRM", "Shared", $"{playerName}.vrm");
 
 				bool settingsNotLoaded = !Settings.ContainsSettings(playerName);
@@ -906,41 +909,37 @@ namespace ValheimVRM
 
 		private static IEnumerator LoadVrm(Player player, string playerName, string localPlayerName, string path, float scale, bool settingsUpdated, Settings.VrmSettingsContainer settings, bool isShared = false)
 		{
-
-
-			Task<byte[]> bytesTask = Task.Run(() => File.ReadAllBytes(path));
-
-			while (!bytesTask.IsCompleted)
+			VrmManager.LoadingPlayers.Add(player);
+			try
 			{
-				yield return new WaitUntil(() => bytesTask.IsCompleted);
-			}
-
-			if (bytesTask.IsFaulted)
-			{
-				Debug.LogError($"Error loading VRM: {bytesTask.Exception.Flatten().InnerException}");
-				yield break;
-			}
-
-			byte[] vrmBytes = bytesTask.Result;
-			byte[] vrmHash = null;
-			using (var sha256 = SHA256.Create())
-			{
-				vrmHash = sha256.ComputeHash(vrmBytes);
-				Debug.Log($"[VrmTextureCache] 💽 Computed VRM hash for '{playerName}': {vrmHash.GetHaxadecimalString()}");
-			}
-
-			yield return player.StartCoroutine(VRM.ImportVisualAsync(vrmBytes, path, settings.ModelScale, loadedRoot =>
-			{
-				if (loadedRoot != null)
+				var read = Task.Run(() => File.ReadAllBytes(path));
+				while (!read.IsCompleted) yield return null;
+				if (read.IsFaulted)
 				{
-					var vrm = CreateVrm(loadedRoot, player, vrmBytes, playerName, vrmHash, isShared);
-					if (vrm != null)
-					{
-						SetVrm(player, vrm, settingsUpdated);
-					}
+					Debug.LogError("[ValheimVRM] Error reading VRM: " + read.Exception.GetBaseException());
+					yield break;
 				}
-			}));
-
+				GameObject loaded = null;
+				yield return VRM.ImportVisualAsync(read.Result, path, settings.ModelScale, root => loaded = root);
+				if (loaded == null) yield break;
+				if (player == null || player.IsDead())
+				{
+					Object.Destroy(loaded);
+					yield break;
+				}
+				byte[] hash;
+				using (var sha = SHA256.Create()) hash = sha.ComputeHash(read.Result);
+				var vrm = CreateVrm(loaded, player, read.Result, playerName, hash, isShared);
+				if (vrm != null)
+				{
+					if (settingsUpdated) vrm.RecalculateSettingsHash();
+					yield return vrm.SetToPlayer(player);
+				}
+			}
+			finally
+			{
+				VrmManager.LoadingPlayers.Remove(player);
+			}
 		}
 
 		[HarmonyPatch(typeof(global::VRM.VRMBlendShapeProxy), "OnDestroy")]
