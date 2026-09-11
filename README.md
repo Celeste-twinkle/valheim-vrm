@@ -1,5 +1,7 @@
 # ValheimVRM — Celeste-twinkle fork
 
+**English** | [简体中文](README.zh-CN.md)
+
 [Download the compiled release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [Release source](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [English installation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) · [中文安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)
 
 Windows x64 client build for Valheim 1.0.7. This fork combines the compatibility
@@ -20,7 +22,7 @@ an independent compiled release; report problems with this build to
 
 ## Installation
 
-Install BepInEx separately, then extract the **complete release ZIP** into the
+Install BepInEx 5 separately, then extract the **complete release ZIP** into the
 folder containing `valheim.exe`. The package includes the matching UniVRM
 dependencies; copying only `ValheimVRM.dll` is insufficient. Exit the game before
 installing or upgrading, and keep only one installed copy of the plugin.
@@ -43,19 +45,21 @@ See the [English guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/code
 or [中文安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)
 for prerequisites, upgrades and per-model settings.
 
-## F8 avatar menu / F8 人物外观菜单
+## F8 avatar menu
 
 1. Enter a world with your character, close chat, inventory and other menus, then
    press **F8** to open the avatar panel.
-2. Scroll through the list and click a model to switch. The list supports **any
-   number of models**, including filenames with spaces or Chinese characters.
+2. Scroll through the list and click a model to switch. The list has **no fixed model-count limit** and supports filenames with spaces
+   or Chinese characters.
    Subfolders and the `Shared` multiplayer cache are not scanned.
-3. After adding or removing files, click **Refresh list / 刷新列表**. If you replace
+3. After adding or removing files, click **Refresh list**. If you replace
    the contents of an existing model file, restart the game to clear its cache.
-4. Press **F8**, **Esc**, or **Close / 关闭** to close the panel.
+4. Press **F8**, **Esc**, or **Close** to close the panel.
+
+The panel uses Chinese when the game language is Chinese, and English otherwise.
 
 Selections are saved per game character in `ValheimVRM/avatar_selections.json`
-and restored after restarting or respawning. A failed import displays an error
+and restored after restarting or respawning. An invalid model file displays an import error
 and retains the previous appearance. Changing appearance keeps your equipped
 items and their stats; existing per-model settings can still control equipment
 visibility, weapon placement, collider size and interaction distance.
@@ -63,22 +67,18 @@ visibility, weapon placement, collider size and interaction distance.
 The picker changes local appearance. It does not add live multiplayer outfit
 synchronization, so other players are not guaranteed to see your current choice.
 
-**中文快速使用：** 将任意数量的 `.vrm` 直接放入游戏根目录的 `ValheimVRM`
-文件夹，进入世界后按 **F8**，滚动列表并点击模型切换。增删文件后点“刷新列表”，
-按 F8 或 Esc 关闭。选择按游戏角色自动保存，切换外观时保留装备和装备属性。
-
-### Rendering controls / 渲染开关
+### Rendering controls
 
 The panel includes three controls for **VRM 1.0 MToon materials**:
 
 | Control | Default | Effect |
 | --- | --- | --- |
-| Scene lighting / 场景光照 | On / 开 | Respond to sunlight and local lights. When off, display base color and emission without scene lighting. |
-| Receive shadows / 接收阴影 | On / 开 | Receive shadow-map shadows. Turning this off preserves light direction and point-light distance attenuation; the avatar can still cast shadows. |
-| Avatar bloom / 模型泛光 | Off / 关 | Allow the avatar surface to contribute to bloom. When off, scene, fire and weapon bloom remain enabled. |
+| Scene lighting | On | Respond to sunlight and local lights. When off, display base color and emission without scene lighting. |
+| Receive shadows | On | Receive shadow-map shadows. Turning this off preserves light direction and point-light distance attenuation; the avatar can still cast shadows. |
+| Avatar bloom | Off | Allow the avatar surface to contribute to bloom. When off, scene, fire and weapon bloom remain enabled. |
 
-**There is no brightness ceiling, highlight compression or brightness-limit setting.**
-默认开启光照和接收阴影、关闭模型泛光；**亮度上限已完全移除**。
+**This plugin imposes no brightness ceiling or highlight compression and has no
+brightness-limit setting.**
 
 Changes apply immediately and are saved in `ValheimVRM/rendering_options.json`.
 They also apply when switching avatars or creating death ragdolls. Turning scene
