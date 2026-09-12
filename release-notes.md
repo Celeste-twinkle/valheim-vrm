@@ -1,3 +1,38 @@
+## 1.8.0 — Per-player server synchronization and adjustable physics
+
+- Add an optional, separate server addon. Each client installs the same local
+  VRM folder; the server relays model names and SHA-256 fingerprints only.
+- Bind each selection to an authenticated connection and its owned character ZDO.
+  A switching avatars updates only A, even when players have identical names or
+  choose the same asset. Support late joins, respawns and reconnects.
+- Keep local selection when the server addon is absent. The F8 sync checkbox can
+  opt out and restore remote vanilla visuals. Missing or different files retain
+  the last usable appearance; no avatar bytes are downloaded.
+- Disable the legacy whole-file sharing protocol by default and keep remote
+  cosmetic changes from resizing player collision or changing interaction range.
+
+- Add a bilingual **Physics sway weight** slider to the F8 avatar menu. Changes
+  apply immediately and persist in `ValheimVRM/physics_options.json` after dragging
+  or closing the menu. The default is **50%**; **0%** removes spring rotation from
+  the displayed pose and **100%** retains the original simulation output.
+- Support exported VRM 1.0 and VRM 0.x spring chains without avatar-specific bone
+  names. Blend rotations after simulation and restore the unweighted state before
+  the next frame, preserving authored stiffness, gravity, drag and collision data.
+  Garment constraints downstream of the springs follow the reduced rotation.
+- Keep the camera, sitting, hand attachment and ambient-occlusion fixes from 1.7.2.
+
+Install the complete `ValheimVRM-1.8.0.zip` with the game closed. For shared-folder
+synchronization, install `ValheimVRM-Server-1.8.0.zip` on the server as well. See
+`docs/SERVER-SYNC.md` for setup and optional local mode. Existing settings
+and avatar files remain compatible. See `docs/release-1.8.0-validation.md`.
+
+新增可选服务器同步：每位玩家独立选择外观，服务器按连接身份与角色网络 ID 同步。
+其他客户端需要相同模型文件；未装服务器插件时仍可仅本地使用。
+
+F8 菜单新增“物理摆动权重”滑块，默认 50%，支持 0%～100% 即时调节并保存。
+头发、衣服、身体等已导出的弹簧物理使用统一权重，兼容 VRM 1.0 和 VRM 0.x。
+此公开 Release 仅包含插件与源码，不包含私人角色模型。
+
 ## 1.7.2 — Ground sitting, held items, spring physics and avatar occlusion
 
 - Prevent ground-sitting poses from burying differently proportioned avatars.

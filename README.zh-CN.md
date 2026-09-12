@@ -6,7 +6,7 @@
 
 适用于 Windows x64 客户端，已在英灵神殿 1.0.7 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
-可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.7.2.zip`。
+可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.0.zip`。
 
 ## Fork 继承链
 
@@ -41,6 +41,38 @@ Valheim/
 [中文安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)
 或 [English installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md)。
 
+## 服务器端包使用
+
+服务器同步为可选功能。需要联机同步时，从本仓库的
+[Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) 下载对应包：
+
+| 安装位置 | 安装包 | 使用方法 |
+| --- | --- | --- |
+| 每位玩家的客户端 | `ValheimVRM-1.8.0.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
+| 专用服务器 | `ValheimVRM-Server-1.8.0.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
+| 通过游戏“启动服务器”的房主 | 客户端包 + 服务器端包 | 两个包都安装到房主的游戏目录；其他玩家只安装客户端包。 |
+
+服务器插件的最终路径为
+`BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll`。
+服务器不需要模型、UniVRM 依赖或客户端着色器；服务器端包不包含 BepInEx。
+
+各客户端的模型文件名（含大小写）和文件内容必须一致，建议统一分发模型及其
+`settings_模型名.txt` 配置。进入世界后按 **F8**，保持
+**服务器外观同步（服务器支持时）**勾选，确认显示**服务器同步已连接**，再点击模型。
+例如 A 选模型 1、B 选模型 2，其他玩家看到的就是 A = 模型 1、B = 模型 2；
+A 再切换只影响 A，同名玩家或使用相同模型也各自独立。
+
+未安装服务器插件时自动使用本地模式，模型菜单仍可正常使用。
+取消 F8 同步勾选会保留自己的本地模型、撤回公开选择，并恢复本机其他玩家的原版外观。
+缺少模型或文件内容不一致时会提示并保留已有可用外观；统一文件后重启客户端。
+服务器仅同步模型名称和文件指纹，不传输 VRM 文件。
+
+首次运行后，服务器配置位于
+`BepInEx/config/com.celestetwinkle.valheimvrm.server.cfg`，默认 `[Sync] Enabled = true`。
+客户端 F8 同步开关保存在
+`BepInEx/config/com.yoship1639.plugins.valheimvrm.cfg` 的 `[AvatarSync] Enabled`。
+更多安装、重生和故障处理说明见[服务器同步说明](docs/SERVER-SYNC.md)。
+
 ## F8 人物外观菜单
 
 1. 使用角色进入世界，关闭聊天、物品栏和其他菜单，然后按 **F8** 打开人物外观面板。
@@ -55,7 +87,16 @@ Valheim/
 无效的模型文件会显示导入错误，并保留先前外观。切换外观会保留已装备物品及其属性；
 原有模型配置仍可控制装备是否显示、武器位置、碰撞体尺寸和交互距离。
 
-菜单改变的是本机显示的外观，没有新增多人外观实时同步功能，因此不能保证其他玩家看到当前选择。
+支持可选的服务器外观同步。服务器安装独立 **ValheimVRM.Server** 插件、各客户端
+安装相同模型文件夹后，A 切换只会改变其他玩家眼中的 A，不影响 B 的选择。
+没有服务器插件时保持本地模式。安装步骤见[服务器同步说明](docs/SERVER-SYNC.md)。
+
+### 物理摆动权重
+
+**物理摆动权重**滑块控制已导出的头发、衣服和身体弹簧物理：**0%** 不摆动，
+**100%** 保持原始物理摆幅，默认 **50%**。兼容 VRM 1.0 和 VRM 0.x，拖动即时
+生效，松开后保存到 `ValheimVRM/physics_options.json`，切换模型及重启后保留。
+该设置不改写模型内的刚度、重力、阻尼或碰撞参数，也不会补造未导出的物理。
 
 ### 渲染开关
 
@@ -96,9 +137,12 @@ $env:VALHEIM_INSTALL_PATH = 'C:\Games\Valheim'
 powershell -NoProfile -File tools/Test-RuntimeDependencies.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 dotnet build -c Release
 dotnet run --project tests/AvatarCatalogTests
+dotnet run --project tests/AvatarSyncTests -c Release
+powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-编译输出为 `release/ValheimVRM-1.7.2.zip`。
+编译输出为 `release/ValheimVRM-1.8.0.zip`。
+服务器打包命令输出 `release/ValheimVRM-Server-1.8.0.zip`，应在客户端构建之后执行。
 除非显式传入 `-p:InstallToGame=true`，否则编译不会自动将插件安装到游戏中。
 模型目录测试使用 .NET 7 和临时文件，插件目标框架为 .NET Framework 4.7.1。
 着色器源码及重建说明见
@@ -107,5 +151,7 @@ dotnet run --project tests/AvatarCatalogTests
 
 验证范围见[运行时依赖来源](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md)、
 [兼容性验证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md)和
-[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.7.2-validation.md)。
-此版本已在 Windows／D3D11 下验证；Linux、macOS、Vulkan 和多人模型分享尚未在此版本中验证。
+[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.0-validation.md)。
+此版本已在 Windows／D3D11 下完成受控引擎验证，包括实际 ZRpc 序列化、服务器处理逻辑
+及两名角色的独立模型绑定。尚未完成真实 Steam／PlayFab 专用服务器联机验收，
+Linux、macOS 和 Vulkan 未验证；完整范围见上述记录。

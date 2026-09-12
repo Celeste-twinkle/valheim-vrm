@@ -31,6 +31,9 @@ namespace ValheimVRM
 
             Settings.ReloadGlobalSettings();
             AvatarRendering.Initialize();
+            AvatarPhysics.Initialize();
+            gameObject.AddComponent<AvatarSyncClient>().Initialize(Config.Bind("AvatarSync", "Enabled", true,
+                "Sync each player's selected local VRM when the server runs ValheimVRM.Server. Without it, selections remain local."));
             gameObject.AddComponent<OutfitSwitcher>();
             gameObject.AddComponent<AvatarBloomController>();
             gameObject.AddComponent<AvatarDepthController>();

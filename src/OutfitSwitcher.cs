@@ -21,6 +21,7 @@ namespace ValheimVRM
         Vector2 scroll;
         Font font;
         string loadingName;
+        bool physicsDirty;
         bool Chinese => Localization.instance != null && Localization.instance.GetSelectedLanguage() == "Chinese";
         string Text(string english, string chinese) => Chinese ? chinese : english;
 
@@ -39,6 +40,7 @@ namespace ValheimVRM
             {
                 Catalog.Refresh();
                 LastError = "";
+                AvatarSyncClient.Instance?.RetryMissing();
             }
             catch (Exception ex) { ReportError("Cannot scan the VRM folder", ex); }
         }
@@ -73,8 +75,16 @@ namespace ValheimVRM
 
         // Unity runs nested enumerators separately. Drive them here so an import
         // exception clears the busy state and is shown in the same menu.
-        IEnumerator RunSwitch(IEnumerator routine)
+        internal void RequestRemoteSwitch(Player player, string name, string hash, Func<bool> stillCurrent, Action<bool> completed)
         {
+            if (IsBusy || player == null || player == Player.m_localPlayer) { completed(false); return; }
+            IsBusy = true; LastError = ""; loadingName = name;
+            StartCoroutine(RunSwitch(Switch(player, name, false, hash, stillCurrent), completed));
+        }
+
+        IEnumerator RunSwitch(IEnumerator routine, Action<bool> onCompleted = null)
+        {
+            bool completed = false;
             var stack = new Stack<IEnumerator>();
             stack.Push(routine);
             try
@@ -99,16 +109,21 @@ namespace ValheimVRM
                     else if (next is IEnumerator nested) stack.Push(nested);
                     else yield return next;
                 }
+                completed = true;
             }
             finally
             {
                 while (stack.Count > 0) (stack.Pop() as IDisposable)?.Dispose();
                 IsBusy = false;
+                onCompleted?.Invoke(completed);
             }
         }
 
-        IEnumerator Switch(Player player, string name)
+        IEnumerator Switch(Player player, string name, bool localSelection = true, string expectedHash = null, Func<bool> stillCurrent = null)
         {
+            Func<bool> valid = () => player != null && !player.IsDead() &&
+                (localSelection ? player == Player.m_localPlayer : player != Player.m_localPlayer && stillCurrent != null && stillCurrent());
+            if (!valid()) yield break;
             if (!Catalog.TryGetPath(name, out var path)) throw new FileNotFoundException("The VRM file was removed.");
             if (!Settings.ContainsSettings(name)) Settings.AddSettingsFromFile(name, false);
             var settings = Settings.GetSettings(name);
@@ -126,20 +141,30 @@ namespace ValheimVRM
                     Destroy(loaded);
                     throw new InvalidOperationException("This VRM does not have a valid humanoid avatar.");
                 }
-                if (player == null || player.IsDead())
+                if (!valid())
                 {
                     Destroy(loaded);
                     yield break;
                 }
                 byte[] hash;
                 using (var sha = SHA256.Create()) hash = sha.ComputeHash(read.Result);
-                candidate = VrmManager.RegisterVrm(new VRM(loaded, name), player.GetComponentInChildren<LODGroup>(), player, hash);
+                if (expectedHash != null && BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant() != expectedHash)
+                {
+                    Destroy(loaded);
+                    throw new InvalidOperationException("VRM file differs from the sender: " + name + ". Install the same ValheimVRM folder, then restart.");
+                }
+                candidate = VrmManager.RegisterVrm(new VRM(loaded, name), player.GetComponentInChildren<LODGroup>(true), player, hash);
                 if (candidate == null) throw new InvalidOperationException("Could not register the VRM.");
                 candidate.Src = read.Result;
                 candidate.RecalculateSrcBytesHash();
                 candidate.RecalculateSettingsHash();
             }
-            if (player == null || player != Player.m_localPlayer || player.IsDead()) yield break;
+            if (!valid()) yield break;
+            if (expectedHash != null && (!VrmManager.VrmHashes.TryGetValue(name, out var cachedHash) ||
+                BitConverter.ToString(cachedHash).Replace("-", "").ToLowerInvariant() != expectedHash))
+                throw new InvalidOperationException("Cached VRM differs from the sender: " + name + ". Install the same files and restart.");
+            if (!localSelection)
+                (player.GetComponent<RemoteAvatarBaseline>() ?? player.gameObject.AddComponent<RemoteAvatarBaseline>()).Capture();
 
             VrmManager.PlayerToName.TryGetValue(player, out var priorName);
             bool hadAvatar = VrmManager.PlayerToVrmInstance.TryGetValue(player, out var priorVisual) && priorVisual != null;
@@ -147,14 +172,17 @@ namespace ValheimVRM
             float priorDistance = player.m_maxInteractDistance;
             VrmManager.PlayerToName[player] = name;
             yield return candidate.SetToPlayer(player);
-            if (player == null || player != Player.m_localPlayer || player.IsDead()) yield break;
+            if (player == null || player.IsDead()) yield break;
             var visual = player.GetComponent<VrmController>()?.visual;
             if (visual == null || visual == priorVisual) throw new InvalidOperationException("Could not attach the selected avatar.");
 
             // SetToPlayer applies a multiplier; repeated selections must not compound it.
-            player.m_maxInteractDistance = priorDistance * settings.InteractionDistanceScale / Mathf.Max(.001f, priorScale);
-            Catalog.Select(player.GetPlayerName(), name);
-            Debug.Log("[ValheimVRM] Local avatar selected: " + name);
+            if (localSelection)
+            {
+                player.m_maxInteractDistance = priorDistance * settings.InteractionDistanceScale / Mathf.Max(.001f, priorScale);
+                Catalog.Select(player.GetPlayerName(), name);
+            }
+            Debug.Log("[ValheimVRM] " + (localSelection ? "Local" : "Remote") + " avatar selected for player instance " + player.GetInstanceID() + ": " + name);
         }
 
         void ReportError(string context, Exception ex)
@@ -165,16 +193,18 @@ namespace ValheimVRM
 
         public void SetMenuOpen(bool value)
         {
+            if (!value) SavePhysicsOptions();
             MenuOpen = value && Player.m_localPlayer != null && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InIntro();
             if (!MenuOpen) return;
             RefreshModels();
             float width = Mathf.Min(500, Screen.width - 20);
-            float height = Mathf.Min(560, Screen.height - 20);
+            float height = Mathf.Min(640, Screen.height - 20);
             window = new Rect((Screen.width - width) / 2, (Screen.height - height) / 2, width, height);
         }
 
         void Update()
         {
+            if (physicsDirty && GUIUtility.hotControl == 0) SavePhysicsOptions();
             if (Player.m_localPlayer == null || Player.m_localPlayer.IsDead() || !Settings.globalSettings.EnableAvatarPicker)
             {
                 MenuOpen = false;
@@ -223,6 +253,8 @@ namespace ValheimVRM
                 GUILayout.Label(Text("Add .vrm files to the ValheimVRM folder beside valheim.exe, then refresh.", "将 .vrm 放入 valheim.exe 旁的 ValheimVRM 文件夹，然后刷新列表。"), label);
             GUILayout.Label(IsBusy ? Text("Loading: ", "正在载入：") + loadingName : LastError, label);
             DrawRenderingOptions();
+            DrawPhysicsOptions();
+            DrawSyncOptions();
             GUILayout.BeginHorizontal();
             GUI.enabled = !IsBusy;
             if (GUILayout.Button(Text("Refresh list", "刷新列表"), GUILayout.Height(30))) RefreshModels();
@@ -249,8 +281,41 @@ namespace ValheimVRM
             }
         }
 
+        void DrawPhysicsOptions()
+        {
+            GUILayout.Label(Text("Physics sway weight", "物理摆动权重") + "  " + Mathf.RoundToInt(AvatarPhysics.Weight * 100) + "%");
+            float weight = Mathf.Round(GUILayout.HorizontalSlider(AvatarPhysics.Weight, 0, 1) * 100) / 100;
+            if (!Mathf.Approximately(weight, AvatarPhysics.Weight))
+            {
+                AvatarPhysics.Preview(weight);
+                physicsDirty = true;
+            }
+            GUILayout.Label(Text("0%: no sway · 100%: original physics · Default: 50%", "0%：不摆动 · 100%：原始物理 · 默认：50%"));
+        }
+
+        void DrawSyncOptions()
+        {
+            var sync = AvatarSyncClient.Instance;
+            if (sync == null) return;
+            bool value = GUILayout.Toggle(sync.SyncEnabled, Text("Server avatar sync (when available)", "服务器外观同步（服务器支持时）"));
+            if (value != sync.SyncEnabled) sync.SetEnabled(value);
+            GUILayout.Label(sync.Connected && sync.SyncEnabled
+                ? Text("Server sync connected · Each player's choice is independent", "服务器同步已连接 · 每位玩家独立选择")
+                : Text("Local mode · Your choice stays on this computer", "本地模式 · 切换仅在本机生效"));
+            if (!string.IsNullOrEmpty(sync.LastError)) GUILayout.Label(sync.LastError, new GUIStyle(GUI.skin.label) { wordWrap = true });
+        }
+
+        void SavePhysicsOptions()
+        {
+            if (!physicsDirty) return;
+            physicsDirty = false;
+            try { AvatarPhysics.Save(); }
+            catch (Exception ex) { ReportError("Cannot save physics options", ex); }
+        }
+
         void OnDestroy()
         {
+            SavePhysicsOptions();
             if (font != null) Destroy(font);
             if (Instance == this) Instance = null;
         }

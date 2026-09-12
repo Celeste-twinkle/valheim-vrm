@@ -304,7 +304,7 @@ namespace ValheimVRM
 		public IEnumerator SetToPlayer(Player player)
 		{
 			if (player == null) yield break;
-			var animator = player.GetComponentInChildren<Animator>();
+			var animator = player.GetField<Player, Animator>("m_animator") ?? player.GetComponentInChildren<Animator>();
 			while (animator == null)
 			{
 				yield return null;
@@ -317,7 +317,9 @@ namespace ValheimVRM
 
 			var settings = Settings.GetSettings(Name);
 			if (settings == null) yield break;
-			player.m_maxInteractDistance *= settings.InteractionDistanceScale;
+			var networkView = player.GetComponent<ZNetView>();
+			bool localPhysics = networkView == null || networkView.GetZDO() == null || networkView.IsOwner();
+			if (localPhysics) player.m_maxInteractDistance *= settings.InteractionDistanceScale;
 
 			if (VisualModel == null) yield break;
 			var vrmModel = Object.Instantiate(VisualModel);
@@ -338,6 +340,8 @@ namespace ValheimVRM
 			vrmModel.transform.localPosition = animator.transform.localPosition;
 			// Initialize springs at the player's location, not at the import origin.
 			PrepareVrm10Clone(VisualModel, vrmModel);
+			var physicsWeight = vrmModel.GetComponent<AvatarPhysicsWeight>() ?? vrmModel.AddComponent<AvatarPhysicsWeight>();
+			physicsWeight.Setup();
 			vrmModel.SetActive(true);
 			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
 			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>());
@@ -347,7 +351,7 @@ namespace ValheimVRM
 			// change its rest-pose bones. Never select the player's vanilla animator.
 			var eyeSync = player.GetComponent<VRMEyePositionSync>();
 			if (eyeSync != null) eyeSync.ResetEyePosition();
-			if (settings.FixCameraHeight)
+			if (localPhysics && settings.FixCameraHeight)
 			{
 				var vrmAnimator = vrmModel.GetComponent<Animator>();
 				if (vrmAnimator != null)
@@ -368,13 +372,13 @@ namespace ValheimVRM
 
 			var rigidBody = player.GetComponent<Rigidbody>();
 			var collider = player.GetComponent<CapsuleCollider>();
-			if (collider != null)
+			if (localPhysics && collider != null)
 			{
 				collider.height = newHeight;
 				collider.radius = newRadius;
 				collider.center = new Vector3(0, newHeight / 2, 0);
 			}
-			if (rigidBody != null && collider != null)
+			if (localPhysics && rigidBody != null && collider != null)
 			{
 				rigidBody.centerOfMass = collider.center;
 			}

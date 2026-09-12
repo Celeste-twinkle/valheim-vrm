@@ -185,6 +185,7 @@ namespace ValheimVRM
 			}
 
 			if (view.GetZDO() == null) return;
+			if (!Settings.globalSettings.EnableLegacyVrmSharing) return;
 
 			view.Register(nameof(RPC_QueryAll), new Action<long>(RPC_QueryAll));
 			view.Register(nameof(RPC_SendHashes), new Action<long, string, ZPackage, ZPackage>(RPC_SendHashes));
@@ -316,6 +317,7 @@ namespace ValheimVRM
 
 		public void ShareVrm(bool delay = true)
 		{
+			if (!Settings.globalSettings.EnableLegacyVrmSharing) return;
 			if (view.GetZDO() == null) return;
 			if (!view.IsOwner()) return;
 
@@ -358,6 +360,7 @@ namespace ValheimVRM
 
 		public void QueryAllVrm(bool delayed = true)
 		{
+			if (!Settings.globalSettings.EnableLegacyVrmSharing) return;
 			if (ZNet.instance == null) return;
 			if (ZNet.instance.IsServer()) return;
 			if (view.GetZDO() == null) return;

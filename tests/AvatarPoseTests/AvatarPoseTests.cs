@@ -51,6 +51,8 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
 
     IEnumerator Run()
     {
+        PhysicsWeightProbe.CheckSettings();
+        report.Add("physics settings: atomic save/reload and finite 0..1 bounds passed");
         float deadline = Time.realtimeSinceStartup + 90;
         FejdStartup menu;
         while ((menu = Object.FindFirstObjectByType<FejdStartup>()) == null)
@@ -75,6 +77,7 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
             yield return ValheimVRM.VRM.ImportVisualAsync(File.ReadAllBytes(path), path, 1, root => imported = root);
             if (imported == null) throw new Exception("Import failed: " + path);
             imported.SetActive(false);
+            report.Add(PhysicsWeightProbe.Run(imported));
             var model = Object.Instantiate(imported);
             model.transform.SetParent(holder.transform, false);
             AccessTools.Method(typeof(ValheimVRM.VRM), "PrepareVrm10Clone").Invoke(null, new object[] { imported, model });

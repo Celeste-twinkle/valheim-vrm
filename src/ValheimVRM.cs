@@ -740,6 +740,12 @@ namespace ValheimVRM
 		[HarmonyPostfix]
 		static void Postfix(Player __instance, ZNetView ___m_nview)
 		{
+			bool online = ___m_nview != null && ___m_nview.GetZDO() != null;
+			if (online && !___m_nview.IsOwner() && !Settings.globalSettings.EnableLegacyVrmSharing)
+			{
+				if (__instance.GetComponent<VrmController>() == null) __instance.gameObject.AddComponent<VrmController>();
+				return;
+			}
 			Commands.Trigger();
 
 			string playerName = null;
@@ -758,7 +764,7 @@ namespace ValheimVRM
 				localPlayerName = playerName;
 			}
 
-			if (playerName == localPlayerName) playerName = OutfitSwitcher.ResolveModelName(playerName);
+			if (!online || ___m_nview.IsOwner()) playerName = OutfitSwitcher.ResolveModelName(playerName);
 			VrmManager.PlayerToName[__instance] = playerName;
 
 			bool isInMenu = __instance.gameObject.scene.name == "start";
@@ -778,8 +784,6 @@ namespace ValheimVRM
 
 				VrmController.CleanupLoadings();
 			}
-
-			bool online = ___m_nview.GetZDO() != null;
 
 			var vrmController = __instance.GetComponent<VrmController>() ?? __instance.gameObject.AddComponent<VrmController>();
 

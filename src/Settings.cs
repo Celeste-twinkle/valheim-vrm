@@ -331,6 +331,7 @@ namespace ValheimVRM
             public bool ReloadInMenu = false;
             public bool EnableAvatarPicker = true;
             public bool AcceptVrmSharing = true;
+            public bool EnableLegacyVrmSharing = false;
             public bool DrawPlayerSizeGizmo = false;
             public float StartVrmShareDelay = 10.0f;
             public bool ForceWindDisabled = false;

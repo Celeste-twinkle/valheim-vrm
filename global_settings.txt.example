@@ -1,6 +1,10 @@
 // F8 opens the local avatar picker. Set false to disable it.
 EnableAvatarPicker=true
 
+// Optional shared-folder sync uses the F8 checkbox and ValheimVRM.Server addon.
+// Keep the older whole-file upload protocol disabled.
+EnableLegacyVrmSharing=false
+
 // Should we reload character settings every time character appears in menu or do that only upon game restart
 ReloadInMenu=false
 

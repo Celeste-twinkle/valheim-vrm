@@ -7,7 +7,7 @@
 Windows x64 client build for Valheim 1.0.7. This fork combines the compatibility
 fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
 with an in-game avatar picker and optional rendering controls. Download
-`ValheimVRM-1.7.2.zip` from this fork's Release page for the compiled plugin.
+`ValheimVRM-1.8.0.zip` from this fork's Release page for the compiled plugin.
 
 ## Fork history
 
@@ -45,6 +45,42 @@ See the [English guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/code
 or [中文安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)
 for prerequisites, upgrades and per-model settings.
 
+## Using the server package
+
+Server synchronization is optional. Download the packages from this fork's
+[Release page](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest):
+
+| Install on | Package | Setup |
+| --- | --- | --- |
+| Every player's client | `ValheimVRM-1.8.0.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
+| Dedicated server | `ValheimVRM-Server-1.8.0.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
+| A player hosting through **Start server** | Both packages | Install both in the host's game directory; other players only need the client package. |
+
+The server DLL must end up at
+`BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll`.
+The server needs no models, UniVRM dependencies or client shaders. BepInEx is
+installed separately and is not included in the server ZIP.
+
+Clients must have matching model filenames, including case, and identical VRM
+contents. Distribute the model-specific `settings_ModelName.txt` files consistently
+as well. Join the world, press **F8**, leave **Server avatar sync (when available)**
+enabled, and check for **Server sync connected** before choosing a model.
+If A selects model 1 and B selects model 2, every participating client sees
+A = model 1 and B = model 2. A switching again changes only A; identical player
+names or model choices still use independent avatar instances.
+
+Without the server addon, the picker automatically works locally. Opting out in
+F8 keeps your local avatar, withdraws your shared selection, and restores remote
+players to their original appearance on your client. Missing or different model
+files produce a message and retain the last usable appearance; align the files
+and restart the client. The server relays names and hashes, never VRM files.
+
+After the first launch, server configuration is in
+`BepInEx/config/com.celestetwinkle.valheimvrm.server.cfg`, with `[Sync] Enabled = true`
+by default. The client F8 switch saves `[AvatarSync] Enabled` in
+`BepInEx/config/com.yoship1639.plugins.valheimvrm.cfg`.
+See [server synchronization](docs/SERVER-SYNC.md) for more setup and troubleshooting details.
+
 ## F8 avatar menu
 
 1. Enter a world with your character, close chat, inventory and other menus, then
@@ -64,8 +100,18 @@ and retains the previous appearance. Changing appearance keeps your equipped
 items and their stats; existing per-model settings can still control equipment
 visibility, weapon placement, collider size and interaction distance.
 
-The picker changes local appearance. It does not add live multiplayer outfit
-synchronization, so other players are not guaranteed to see your current choice.
+Optional server synchronization is available with the separate **ValheimVRM.Server** addon.
+With the same VRM folder on each client, A changing their model updates only A on
+other clients. Without the server addon, selection remains local. See
+[server installation and modes](docs/SERVER-SYNC.md).
+
+### Physics weight
+
+The **Physics sway weight** slider scales exported hair, clothing and body spring
+motion from **0%** (no spring rotation) to **100%** (original motion). The default
+is **50%**. It works with VRM 1.0 and VRM 0.x, takes effect immediately, and is
+saved locally in `ValheimVRM/physics_options.json` when dragging ends. The setting
+applies across model switches; authored physics parameters are preserved.
 
 ### Rendering controls
 
@@ -112,10 +158,14 @@ $env:VALHEIM_INSTALL_PATH = 'C:\Games\Valheim'
 powershell -NoProfile -File tools/Test-RuntimeDependencies.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 dotnet build -c Release
 dotnet run --project tests/AvatarCatalogTests
+dotnet run --project tests/AvatarSyncTests -c Release
+powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Build output is `release/ValheimVRM-1.7.2.zip`. Building does not install the plugin
+Build output is `release/ValheimVRM-1.8.0.zip`. Building does not install the plugin
 into your game unless you explicitly pass `-p:InstallToGame=true`.
+Run the server packaging command after the client build to produce
+`release/ValheimVRM-Server-1.8.0.zip`.
 The catalog tests use .NET 7 and temporary files; the plugin targets .NET Framework 4.7.1.
 Shader source/rebuild instructions are in
 [shaders/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md).
@@ -124,6 +174,8 @@ is insufficient for a distributable DLL.
 
 Read [runtime dependency provenance](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md),
 [compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md), and
-[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.7.2-validation.md)
-for the tested scope. This release was validated on Windows/D3D11; Linux, macOS,
-Vulkan and multiplayer model sharing were not validated for this build.
+[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.0-validation.md)
+for the tested scope. Windows/D3D11 engine probes cover actual ZRpc serialization,
+production server handlers and independent model attachment to two player fixtures.
+A real Steam/PlayFab dedicated-server session, Linux, macOS and Vulkan have not
+been validated for this build.

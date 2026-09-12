@@ -1,4 +1,7 @@
-# Install ValheimVRM 1.7.2 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.0 (Celeste-twinkle fork)
+
+For optional per-player multiplayer appearance, also install the separate server
+addon. See [server setup and local fallback](SERVER-SYNC.md).
 
 Windows x64 client release, tested with Valheim 1.0.7, Unity 6000.0.75f1 and
 BepInExPack Valheim 5.4.2333 (BepInEx 5.4.23.3). This is an independent fork
@@ -11,7 +14,7 @@ release, not a release by the upstream maintainer. No avatars are included.
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.7.2.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.0.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx`, `valheim_Data`, and `ValheimVRM` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -35,6 +38,10 @@ in `avatar_selections.json` and restored on respawn and restart. Earlier local-b
 selections in `selected_models.json` are migrated when a unique filename matches.
 If a selected file disappears, normal character-name/default matching is used.
 Restart the game after replacing a model's contents; loaded models are cached.
+
+Use **Physics sway weight** in F8 to reduce excessive spring motion. Default: 50%.
+0% removes spring rotation and 100% retains the original motion. It applies to
+VRM 1.0 and VRM 0.x and saves to `ValheimVRM/physics_options.json` after dragging.
 
 Changing appearance keeps items equipped and preserves their armor/damage stats.
 Existing per-model settings can still change collider size, interaction distance,
@@ -85,18 +92,18 @@ The fallback model is `___Default.vrm` (three underscores); its settings file is
 installed over your own settings. Set `EnableAvatarPicker=false` in
 `ValheimVRM/global_settings.txt` to disable F8.
 
-This is a client mod; a server installation is not required for local appearance.
-The picker changes what you see locally. It does not add synchronized multiplayer
-outfit changes. The inherited VRM-sharing protocol has not been validated in this
-release; do not rely on other players seeing your selection. Share model files only
-when their license permits it. To disable inherited sharing, use `AllowShare=false`
-in your per-model settings and `AcceptVrmSharing=false` in global settings.
+No server installation is required for local appearance. For per-player synchronized
+selection, install `ValheimVRM-Server-1.8.0.zip` on a BepInEx 5 server and give each
+client identical model files. See [server setup](SERVER-SYNC.md), including the
+F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
+is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
+using this new protocol. Share model files only when their license permits it.
 
 ## Troubleshooting and removal
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.7.2**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.0**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

@@ -1,4 +1,6 @@
-# ValheimVRM 1.7.2 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 1.8.0 安装说明（Celeste-twinkle 分支）
+
+多人外观同步需要服务器另外安装独立服务端插件，详见[服务器同步与本地模式](SERVER-SYNC.md)。
 
 适用于 Windows x64 客户端，验证环境为英灵神殿 1.0.7、Unity 6000.0.75f1、
 BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译版本。
@@ -10,7 +12,7 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-1.7.2.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-1.8.0.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data`、`ValheimVRM` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
@@ -31,6 +33,10 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
 重启游戏或死亡复活后自动恢复。旧本地版的 `selected_models.json` 可按唯一文件名后缀迁移。
 已选文件被移除时回到原来的角色同名模型／默认模型匹配方式。
 模型加载失败会显示错误并保留先前外观。替换同一模型文件的内容后请重启游戏以清除缓存。
+
+F8 的“物理摆动权重”可减轻过大的摆动，默认 50%，范围 0%～100%。0% 不摆动，
+100% 为原始物理摆幅。兼容 VRM 1.0 与 VRM 0.x，拖动即时生效，松开后保存到
+`ValheimVRM/physics_options.json`。这是本机统一设置，切换模型后保留。
 
 切换外观不会卸下装备，也不会改变装备本身的护甲、伤害属性。原有模型配置仍可影响
 碰撞体尺寸、交互距离、武器位置及装备是否显示。插件不修改角色存档。
@@ -68,16 +74,17 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 默认配置名为 `settings____Default.txt`（四个下划线）。示例配置以 `.example` 结尾，
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。
 
-只改变本机外观时，无需服务器安装。菜单切换不提供新增的多人外观实时同步功能，
-不要假定其他玩家会看到当前选择。原仓库继承的模型分享协议尚未在这次发布中验证；
-分享模型文件需遵守其许可。需要禁用旧分享功能时，模型配置设 `AllowShare=false`，
-全局配置设 `AcceptVrmSharing=false`。
+只改变本机外观时，无需服务器安装。多人同步时，在已安装 BepInEx 5 的服务器上
+解压 `ValheimVRM-Server-1.8.0.zip`，并让各客户端安装相同模型文件，详见
+[服务器安装说明](SERVER-SYNC.md)。F8 可随时退出同步；通过游戏“启动服务器”的
+房主也可同时安装服务端插件。旧版整文件分享协议默认通过
+`EnableLegacyVrmSharing=false` 停用，使用新同步时请保持关闭。分发模型仍需遵守其许可。
 
 ## 排错与卸载
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.7.2**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.0**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。
