@@ -6,7 +6,7 @@
 
 适用于 Windows x64 客户端，已在英灵神殿 1.0.12 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
-可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.1.zip`。
+可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.2.zip`。
 
 ## Fork 继承链
 
@@ -48,8 +48,8 @@ Valheim/
 
 | 安装位置 | 安装包 | 使用方法 |
 | --- | --- | --- |
-| 每位玩家的客户端 | `ValheimVRM-1.8.1.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
-| 专用服务器 | `ValheimVRM-Server-1.8.1.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
+| 每位玩家的客户端 | `ValheimVRM-1.8.2.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
+| 专用服务器 | `ValheimVRM-Server-1.8.2.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
 | 通过游戏“启动服务器”的房主 | 客户端包 + 服务器端包 | 两个包都安装到房主的游戏目录；其他玩家只安装客户端包。 |
 
 服务器插件的最终路径为
@@ -58,16 +58,19 @@ Valheim/
 **未安装本 Mod 的玩家也可正常加入服务器**，他们看到原版角色且不参与外观同步。
 服务器不强制客户端安装，不因缺少 Mod 拒绝连接或踢人。
 
-各客户端的模型文件名（含大小写）和文件内容必须一致，建议统一分发模型及其
-`settings_模型名.txt` 配置。进入世界后按 **F8**，保持
+客户端与服务器的文件夹不同、客户端缺少或多出文件，都不会影响入服和正常游戏。
+显示某位玩家的模型时，接收方需要该模型的同名文件（含大小写）及相同内容；
+其他文件无需完全一致。建议统一分发模型及其 `settings_模型名.txt` 配置，以保持外观一致。进入世界后按 **F8**，保持
 **服务器外观同步（服务器支持时）**勾选，确认显示**服务器同步已连接**，再点击模型。
 例如 A 选模型 1、B 选模型 2，其他玩家看到的就是 A = 模型 1、B = 模型 2；
 A 再切换只影响 A，同名玩家或使用相同模型也各自独立。
 
 未安装服务器插件时自动使用本地模式，模型菜单仍可正常使用。
 取消 F8 同步勾选会保留自己的本地模型、撤回公开选择，并恢复本机其他玩家的原版外观。
-缺少模型或文件内容不一致时会提示并保留已有可用外观；统一文件后重启客户端。
-服务器仅同步模型名称和文件指纹，不传输 VRM 文件。
+缺少、无法读取或内容不一致的模型会跳过，并保留该玩家已有可用外观，首次加载则显示原版角色。
+未缓存模型在导入前校验文件指纹，失败不会阻塞其他玩家的模型切换。补齐或修正未导入的文件后，
+按 F8“刷新列表”即可重试；替换已缓存的模型需要重启客户端。
+服务器仅同步模型名称和文件指纹，不读取自己的模型文件夹，也不传输 VRM 文件。
 
 首次运行后，服务器配置位于
 `BepInEx/config/com.celestetwinkle.valheimvrm.server.cfg`，默认 `[Sync] Enabled = true`。
@@ -143,8 +146,8 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-编译输出为 `release/ValheimVRM-1.8.1.zip`。
-服务器打包命令输出 `release/ValheimVRM-Server-1.8.1.zip`，应在客户端构建之后执行。
+编译输出为 `release/ValheimVRM-1.8.2.zip`。
+服务器打包命令输出 `release/ValheimVRM-Server-1.8.2.zip`，应在客户端构建之后执行。
 除非显式传入 `-p:InstallToGame=true`，否则编译不会自动将插件安装到游戏中。
 模型目录测试使用 .NET 7 和临时文件，插件目标框架为 .NET Framework 4.7.1。
 着色器源码及重建说明见
@@ -153,7 +156,7 @@ powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALH
 
 验证范围见[运行时依赖来源](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md)、
 [兼容性验证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md)和
-[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.1-validation.md)。
+[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.2-validation.md)。
 此版本已在 Windows／D3D11 下完成受控引擎验证，包括实际 ZRpc 序列化、服务器处理逻辑
 及两名角色的独立模型绑定。尚未完成真实 Steam／PlayFab 专用服务器联机验收，
 Linux、macOS 和 Vulkan 未验证；完整范围见上述记录。

@@ -1,3 +1,22 @@
+## 1.8.2 — Safe fallback for different avatar folders
+
+- Different client/server folders never become an admission requirement. The
+  server does not read model files; each receiver verifies only the selected VRM.
+- Verify uncached bytes before loading settings or invoking UniVRM. Missing,
+  deleted, unreadable, differing or incompatible cached files retain the existing
+  appearance (vanilla on first load), with a bounded status message.
+- A failing player selection does not block another player. Correct unimported
+  files and refresh F8 to recover; restart after replacing a cached model.
+- Add engine regression coverage for mismatch containment and recovery, preserving
+  unmodded-client compatibility and independent per-player identities.
+
+Update the complete client ZIP for this fix. The server package is also versioned
+1.8.2, with unchanged protocol 1 compatibility for 1.8.0/1.8.1 peers.
+See `docs/release-1.8.2-validation.md` and `docs/SERVER-SYNC.md`.
+
+文件夹不一致不影响入服；缺少、无法读取或同名不同内容的模型安全跳过，
+保留原有可用外观，首次加载显示原版角色。服务器不读取自己的模型文件夹。
+
 ## 1.8.1 — Optional synchronization for mixed client servers
 
 - Stop discovery after three unanswered messages. Unmodded clients can join and

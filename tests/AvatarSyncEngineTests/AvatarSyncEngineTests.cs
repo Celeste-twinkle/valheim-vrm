@@ -13,7 +13,7 @@ using Object = UnityEngine.Object;
 
 [BepInPlugin("valheimvrm.tests.sync", "Avatar sync engine tests", "1.0.0")]
 [BepInDependency(MainPlugin.PluginGuid)]
-public sealed class AvatarSyncEngineTests : BaseUnityPlugin
+public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
 {
     string output;
     readonly List<string> report = new List<string>();
@@ -78,6 +78,8 @@ public sealed class AvatarSyncEngineTests : BaseUnityPlugin
         Check(VrmManager.PlayerToVrmInstance[b]==rootB,"A changing to B's asset replaced B's instance");
         Check(VrmManager.PlayerToVrmInstance[a]!=rootB,"Shared asset merged player instances");
         report.Add("Same-named game Player fixtures: A and B own distinct VRM clones; A switching to B's asset leaves B's object/bones untouched; remote collider unchanged");
+        yield return FolderMismatchTests(prefab, sync, registry, a, b, names, hashes);
+        rootB = VrmManager.PlayerToVrmInstance[b];
         var desired=AccessTools.Method(typeof(AvatarSyncClient),"Desired");
         registry.Set(101,1001,99,names[0],hashes[0]);SetState(sync,registry);
         Check(desired.Invoke(sync,new object[]{a})==null,"Old incarnation still matches respawn state");

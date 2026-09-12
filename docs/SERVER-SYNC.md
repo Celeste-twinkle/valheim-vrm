@@ -2,15 +2,16 @@
 
 ## 中文
 
-客户端和服务器推荐使用 1.8.1；同步协议仍兼容 1.8.0 客户端。参与外观同步的玩家在自己的游戏根目录安装同一套
-`ValheimVRM` 文件夹，模型文件名（含大小写）及 VRM 内容必须一致。
+客户端和服务器推荐使用 1.8.2；同步协议仍兼容 1.8.0 客户端。推荐为参与外观同步的玩家统一分发
+`ValheimVRM` 文件夹，但文件夹不一致不是入服限制：缺失、多出或不同的文件都不影响连接和正常游戏。
+只有显示某位玩家选择的模型时，接收方才需要该文件的相同名称（含大小写）和 VRM 内容。
 各客户端仍可保留自己的角色选择、渲染开关和物理摆动权重。
 
-1. 服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.1.zip`
+1. 服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.2.zip`
    解压到服务器程序所在目录。目标为
    `BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll`。
    服务器只需该同步插件，不需要客户端的着色器、UniVRM DLL 或角色模型。
-2. 参与外观同步的玩家安装完整客户端 `ValheimVRM-1.8.1.zip` 和相同的模型文件夹。
+2. 参与外观同步的玩家安装完整客户端 `ValheimVRM-1.8.2.zip` 和相同的模型文件夹。
 3. 重启服务器和客户端。进入世界后，F8 应显示“服务器同步已连接”。
 4. 保持“服务器外观同步（服务器支持时）”勾选，点击模型。只有进行切换的
    玩家改变外观；其他玩家各自的选择不变。
@@ -30,10 +31,19 @@
 这类玩家看到原版角色，自己的外观也保持原版。此兼容路径有受控引擎测试覆盖。
 
 服务器只中转模型名称与 SHA-256 指纹，不接收、导入或分发 VRM 文件。
-接收方缺少模型或文件指纹不一致时，显示提示并保留已有可用外观（首次
-加载时为原版角色）。请统一文件夹并重启客户端，防止旧模型缓存继续生效。
-F8 的“刷新列表”可重新尝试之前缺失的模型。设置文件也应由服主统一分发，
-以保持模型比例和装备偏移一致；协议校验 VRM 内容，不强制统一本机画面设置。
+服务器自己的模型文件夹可以不存在或与任一客户端不同，它不参与模型校验。
+
+| 接收方文件情况 | 行为 |
+| --- | --- |
+| 所选模型同名且内容相同，其他文件不同 | 正常显示该玩家的模型；额外文件不影响同步。 |
+| 文件或整个模型目录不存在、文件已删除或暂时无法读取 | 跳过该次外观更新；保留该玩家已有可用外观，首次加载显示原版角色。 |
+| 同名 VRM 内容不同或本地旧缓存不同 | 跳过该次更新，不导入错误文件，不修改其他玩家的外观。 |
+| 仅个人配置、画面和物理权重不同 | 继续同步；各客户端使用本机配置，外观效果可能不同。 |
+
+未缓存模型先检查将要导入的字节指纹，再读取模型配置和导入。失败选择只提示一次，
+不会反复导入，也不会阻塞其他玩家切换、影响登录或踢人。补齐或修正未导入文件后，
+F8 的“刷新列表”会重试；已经导入缓存的同名文件被替换时需要重启客户端。
+模型配置建议由服主统一分发以保持比例和装备偏移一致，但协议不强制统一本机设置。
 
 服务器配置：`BepInEx/config/com.celestetwinkle.valheimvrm.server.cfg`，
 `[Sync] Enabled = true`。客户端配置：
@@ -50,14 +60,15 @@ Linux 服务器使用同一个托管 DLL，但本次引擎验证环境为 Window
 
 ## English
 
-Install the full 1.8.1 client on every participating player and distribute an identical top-level
-`ValheimVRM` model folder. File names are case-sensitive protocol identifiers;
-SHA-256 must match the sender's VRM. Model settings should also be distributed
+Install the full 1.8.2 client on participating players. Their top-level
+`ValheimVRM` folders may differ without affecting admission or normal play. To
+display a selected remote avatar, its case-sensitive filename and SHA-256 must
+match the sender's VRM. Extra files are ignored; folder equality is not enforced. Model settings should also be distributed
 consistently. Personal avatar selections, lighting and physics-weight preferences
 remain local.
 
 The dedicated server needs BepInEx 5 and only the DLL from
-`ValheimVRM-Server-1.8.1.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
+`ValheimVRM-Server-1.8.2.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
 It does not load avatar files, UniVRM or shaders. Restart, join, and enable
 **Server avatar sync** in F8. A client-hosted server can install the same server
 addon alongside its client plugin.
@@ -77,8 +88,13 @@ reconnections and reappearing remote players.
 Without the addon, local selection works without sending selection requests.
 Opting out preserves your local appearance, withdraws your shared choice and
 restores remote players to their original visuals. Missing or different files
-retain the last usable appearance; update the shared folder and restart to clear
-cached imports. VRM bytes are never transferred by this protocol.
+retain that player's last usable appearance (vanilla on first load). Missing
+folders, removed files and unreadable files behave the same way. Uncached bytes
+are verified before settings/import/cache changes; failures are not repeatedly
+imported and do not block healthy players. Correct unimported files and refresh
+the F8 list to retry; restart after replacing a cached model. Local settings may
+differ. The server ignores its own avatar folder, including an absent folder,
+and VRM bytes are never transferred by this protocol.
 
 Server: `[Sync] Enabled` in `com.celestetwinkle.valheimvrm.server.cfg`.
 Client: `[AvatarSync] Enabled` in `com.yoship1639.plugins.valheimvrm.cfg`.

@@ -131,6 +131,7 @@ namespace ValheimVRM
                 var desired = Desired(player);
                 if (desired == null)
                 {
+                    failed.Remove(player);
                     if (applied.Remove(player)) RemoteAvatarBaseline.Restore(player);
                     continue;
                 }
@@ -140,8 +141,8 @@ namespace ValheimVRM
                 if (picker == null || picker.IsBusy || VrmManager.LoadingPlayers.Contains(player)) continue;
                 if (!picker.Catalog.TryGetPath(desired.Model, out _))
                 {
-                    failed[player] = desired; LastError = "Missing local VRM: " + desired.Model;
-                    Debug.LogWarning("[ValheimVRM Sync] " + LastError); continue;
+                    failed[player] = desired; LastError = "Missing local VRM: " + desired.Model + ". Existing appearance retained; add the file and refresh the list.";
+                    Debug.Log("[ValheimVRM Sync] " + LastError); continue;
                 }
                 var target = player; var selection = desired;
                 Func<bool> stillCurrent = () => target != null && selection.SameAs(Desired(target));

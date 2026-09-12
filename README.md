@@ -7,7 +7,7 @@
 Windows x64 client build for Valheim 1.0.12. This fork combines the compatibility
 fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
 with an in-game avatar picker and optional rendering controls. Download
-`ValheimVRM-1.8.1.zip` from this fork's Release page for the compiled plugin.
+`ValheimVRM-1.8.2.zip` from this fork's Release page for the compiled plugin.
 
 ## Fork history
 
@@ -52,8 +52,8 @@ Server synchronization is optional. Download the packages from this fork's
 
 | Install on | Package | Setup |
 | --- | --- | --- |
-| Every player's client | `ValheimVRM-1.8.1.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
-| Dedicated server | `ValheimVRM-Server-1.8.1.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
+| Every player's client | `ValheimVRM-1.8.2.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
+| Dedicated server | `ValheimVRM-Server-1.8.2.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
 | A player hosting through **Start server** | Both packages | Install both in the host's game directory; other players only need the client package. |
 
 The server DLL must end up at
@@ -64,8 +64,9 @@ installed separately and is not included in the server ZIP.
 characters and do not participate in avatar synchronization. The server does not
 require the client addon or reject/disconnect players who lack it.
 
-Clients must have matching model filenames, including case, and identical VRM
-contents. Distribute the model-specific `settings_ModelName.txt` files consistently
+Folders may differ without affecting admission or normal play. To display a
+particular remote avatar, the receiver needs its matching filename (including
+case) and VRM contents; other files may differ or be absent. Distribute the model-specific `settings_ModelName.txt` files consistently
 as well. Join the world, press **F8**, leave **Server avatar sync (when available)**
 enabled, and check for **Server sync connected** before choosing a model.
 If A selects model 1 and B selects model 2, every participating client sees
@@ -75,8 +76,11 @@ names or model choices still use independent avatar instances.
 Without the server addon, the picker automatically works locally. Opting out in
 F8 keeps your local avatar, withdraws your shared selection, and restores remote
 players to their original appearance on your client. Missing or different model
-files produce a message and retain the last usable appearance; align the files
-and restart the client. The server relays names and hashes, never VRM files.
+files produce a message and retain the last usable appearance (vanilla on first
+load). Unreadable files are also skipped. Hashes are checked before importing
+uncached models, and a failed choice does not block other players. Add or correct
+unimported files and use **Refresh list**; restart after replacing a cached model.
+The server relays names and hashes, never VRM files, and ignores its model folder.
 
 After the first launch, server configuration is in
 `BepInEx/config/com.celestetwinkle.valheimvrm.server.cfg`, with `[Sync] Enabled = true`
@@ -165,10 +169,10 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Build output is `release/ValheimVRM-1.8.1.zip`. Building does not install the plugin
+Build output is `release/ValheimVRM-1.8.2.zip`. Building does not install the plugin
 into your game unless you explicitly pass `-p:InstallToGame=true`.
 Run the server packaging command after the client build to produce
-`release/ValheimVRM-Server-1.8.1.zip`.
+`release/ValheimVRM-Server-1.8.2.zip`.
 The catalog tests use .NET 7 and temporary files; the plugin targets .NET Framework 4.7.1.
 Shader source/rebuild instructions are in
 [shaders/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md).
@@ -177,7 +181,7 @@ is insufficient for a distributable DLL.
 
 Read [runtime dependency provenance](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md),
 [compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md), and
-[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.1-validation.md)
+[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.2-validation.md)
 for the tested scope. Windows/D3D11 engine probes cover actual ZRpc serialization,
 production server handlers and independent model attachment to two player fixtures.
 A real Steam/PlayFab dedicated-server session, Linux, macOS and Vulkan have not

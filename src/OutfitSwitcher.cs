@@ -22,6 +22,10 @@ namespace ValheimVRM
         Font font;
         string loadingName;
         bool physicsDirty;
+        sealed class RemoteAvatarUnavailableException : Exception
+        {
+            public RemoteAvatarUnavailableException(string message) : base(message) { }
+        }
         bool Chinese => Localization.instance != null && Localization.instance.GetSelectedLanguage() == "Chinese";
         string Text(string english, string chinese) => Chinese ? chinese : english;
 
@@ -102,7 +106,12 @@ namespace ValheimVRM
                     catch (Exception ex) { failure = ex; }
                     if (failure != null)
                     {
-                        ReportError("Avatar switch failed", failure);
+                        if (failure is RemoteAvatarUnavailableException)
+                        {
+                            LastError = failure.Message;
+                            Debug.Log("[ValheimVRM Sync] " + LastError);
+                        }
+                        else ReportError("Avatar switch failed", failure);
                         yield break;
                     }
                     if (!more) (stack.Pop() as IDisposable)?.Dispose();
@@ -124,16 +133,48 @@ namespace ValheimVRM
             Func<bool> valid = () => player != null && !player.IsDead() &&
                 (localSelection ? player == Player.m_localPlayer : player != Player.m_localPlayer && stillCurrent != null && stillCurrent());
             if (!valid()) yield break;
-            if (!Catalog.TryGetPath(name, out var path)) throw new FileNotFoundException("The VRM file was removed.");
+            if (!Catalog.TryGetPath(name, out var path))
+            {
+                if (!localSelection) throw new RemoteAvatarUnavailableException("Missing local VRM: " + name + ". Existing appearance retained.");
+                throw new FileNotFoundException("The VRM file was removed.");
+            }
+            bool cached = VrmManager.VrmDic.TryGetValue(name, out var candidate) && candidate != null && candidate.VisualModel != null;
+            byte[] source = null, hash = null;
+            if (cached)
+            {
+                if (expectedHash != null && (!VrmManager.VrmHashes.TryGetValue(name, out var existingHash) ||
+                    BitConverter.ToString(existingHash).Replace("-", "").ToLowerInvariant() != expectedHash))
+                    throw new RemoteAvatarUnavailableException("Cached VRM differs from the sender: " + name + ". Existing appearance retained; install matching files and restart.");
+            }
+            else
+            {
+                // Verify the exact bytes to be imported before touching settings,
+                // Unity objects or shared caches. A different/corrupt local file
+                // is a normal synchronization miss, not an importer failure.
+                var read = Task.Run(() =>
+                {
+                    var data = File.ReadAllBytes(path);
+                    using (var sha = SHA256.Create()) return new KeyValuePair<byte[], byte[]>(data, sha.ComputeHash(data));
+                });
+                while (!read.IsCompleted) yield return null;
+                if (read.IsFaulted)
+                {
+                    var error = read.Exception.GetBaseException();
+                    if (!localSelection && (error is IOException || error is UnauthorizedAccessException))
+                        throw new RemoteAvatarUnavailableException("Cannot read local VRM: " + name + ". Existing appearance retained; check the file and refresh the list.");
+                    throw error;
+                }
+                source = read.Result.Key; hash = read.Result.Value;
+                if (expectedHash != null && BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant() != expectedHash)
+                    throw new RemoteAvatarUnavailableException("VRM file differs from the sender: " + name + ". Existing appearance retained; install matching files and refresh the list.");
+            }
+            if (!valid()) yield break;
             if (!Settings.ContainsSettings(name)) Settings.AddSettingsFromFile(name, false);
             var settings = Settings.GetSettings(name);
-            if (!VrmManager.VrmDic.TryGetValue(name, out var candidate) || candidate == null || candidate.VisualModel == null)
+            if (!cached)
             {
-                var read = Task.Run(() => File.ReadAllBytes(path));
-                while (!read.IsCompleted) yield return null;
-                if (read.IsFaulted) throw read.Exception.GetBaseException();
                 GameObject loaded = null;
-                yield return VRM.ImportVisualAsync(read.Result, path, settings.ModelScale, root => loaded = root);
+                yield return VRM.ImportVisualAsync(source, path, settings.ModelScale, root => loaded = root);
                 if (loaded == null) throw new InvalidOperationException("Could not import the VRM. See BepInEx/LogOutput.log.");
                 var animator = loaded.GetComponent<Animator>();
                 if (animator == null || animator.avatar == null || !animator.avatar.isValid || !animator.avatar.isHuman)
@@ -146,23 +187,16 @@ namespace ValheimVRM
                     Destroy(loaded);
                     yield break;
                 }
-                byte[] hash;
-                using (var sha = SHA256.Create()) hash = sha.ComputeHash(read.Result);
-                if (expectedHash != null && BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant() != expectedHash)
-                {
-                    Destroy(loaded);
-                    throw new InvalidOperationException("VRM file differs from the sender: " + name + ". Install the same ValheimVRM folder, then restart.");
-                }
                 candidate = VrmManager.RegisterVrm(new VRM(loaded, name), player.GetComponentInChildren<LODGroup>(true), player, hash);
                 if (candidate == null) throw new InvalidOperationException("Could not register the VRM.");
-                candidate.Src = read.Result;
+                candidate.Src = source;
                 candidate.RecalculateSrcBytesHash();
                 candidate.RecalculateSettingsHash();
             }
             if (!valid()) yield break;
             if (expectedHash != null && (!VrmManager.VrmHashes.TryGetValue(name, out var cachedHash) ||
                 BitConverter.ToString(cachedHash).Replace("-", "").ToLowerInvariant() != expectedHash))
-                throw new InvalidOperationException("Cached VRM differs from the sender: " + name + ". Install the same files and restart.");
+                throw new RemoteAvatarUnavailableException("Cached VRM differs from the sender: " + name + ". Existing appearance retained; install matching files and restart.");
             if (!localSelection)
                 (player.GetComponent<RemoteAvatarBaseline>() ?? player.gameObject.AddComponent<RemoteAvatarBaseline>()).Capture();
 
