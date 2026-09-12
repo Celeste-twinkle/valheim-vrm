@@ -1,4 +1,4 @@
-# ValheimVRM 1.7.1 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 1.7.2 安装说明（Celeste-twinkle 分支）
 
 适用于 Windows x64 客户端，验证环境为英灵神殿 1.0.7、Unity 6000.0.75f1、
 BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译版本。
@@ -10,7 +10,7 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-1.7.1.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-1.7.2.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data`、`ValheimVRM` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
@@ -35,6 +35,13 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
 切换外观不会卸下装备，也不会改变装备本身的护甲、伤害属性。原有模型配置仍可影响
 碰撞体尺寸、交互距离、武器位置及装备是否显示。插件不修改角色存档。
 
+坐地时会按当前脚底姿态自动补偿下陷，椅子、船和床仍使用各自的偏移设置。
+左右手挂点按人形骨骼的手掌比例校准，并跟随最终动画姿态；原有物品偏移仍可微调。
+缺少足够指骨的模型会退回手腕跟随方式。本次不增加双手武器的第二只手 IK。
+
+VRM 1.0 模型副本会保留导出的弹簧链和碰撞体，恢复已有的头发、衣物及身体弹簧物理。
+插件保留导出参数，无法补回未写入 VRM 文件的 VRChat PhysBone 数据。
+
 ## 光照、阴影与泛光
 
 面板的三个开关作用于本机的 **VRM 1.0 MToon 材质**，切换模型及死亡生成布娃娃后同样有效。
@@ -47,6 +54,8 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
 **完全没有亮度上限或亮部压缩，也没有亮度封顶选项。**
 光照、阴影重新开启时恢复原始着色器及导出材质参数。关闭光照后，接收阴影选项暂不可操作，
 但会保留用户选择。场景其他物体产生的泛光仍可能覆盖到模型，游戏的屏幕空间后处理仍会生效。
+不透明／裁剪 MToon 表面会补充自己的延迟渲染深度和法线，避免模型后方的环境遮蔽轮廓
+错误叠到身体上。这项兼容修复不关闭游戏的环境遮蔽。
 
 选择立即保存到 `ValheimVRM/rendering_options.json`。设置不改写 `.vrm` 文件，
 不改全局图像设置，不会改变其他模型查看器的渲染效果。
@@ -68,7 +77,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.7.1**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.7.2**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。

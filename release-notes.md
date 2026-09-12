@@ -1,3 +1,29 @@
+## 1.7.2 — Ground sitting, held items, spring physics and avatar occlusion
+
+- Prevent ground-sitting poses from burying differently proportioned avatars.
+  A small cached set of sole vertices supplies a pose-dependent vertical correction;
+  standing, chair, ship and bed placement retain their existing behavior.
+- Calibrate both equipment mounts from humanoid wrist/finger bind poses and palm
+  proportions. Attachments follow the final VRM pose after constraints, including
+  model switches and scaling. No model-specific bone names or offsets are used.
+- Restore VRM 1.0 spring chains, collision groups and simulation centers when
+  cloning the imported model. Remap references to the clone, restore its rest pose
+  and initialize physics at the player's location. Legacy springs run after
+  animation and retain their authored center.
+- Fix background shapes appearing on opaque/cutout MToon surfaces through the
+  game's Amplify Occlusion post-effect. Supply avatar depth, normals and neutral
+  material data before deferred lighting while retaining the authored forward
+  shading. Transparent overlays, HDR brightness and scene ambient occlusion remain.
+
+Includes the 1.7.1 camera jitter fix. Install the complete `ValheimVRM-1.7.2.zip`
+with the game closed; models and existing settings do not need to be regenerated.
+See `docs/release-1.7.2-validation.md` for engine tests and their scope.
+
+修复坐地下陷、左右手持物脱离手掌、VRM 1.0 头发／胸部等弹簧物理不动，
+以及游戏环境遮蔽把模型后方轮廓叠到身体上的问题。握持点按人形骨骼和手掌
+比例自动校准，保留模型已有物理参数。包含此前镜头抖动修复；退出游戏后
+更新完整 1.7.2 插件包即可，模型与个人设置无需重做。
+
 ## 1.7.1 — Stable camera height after avatar switching
 
 - Fix close-range camera jitter caused by feeding animated head/eye positions

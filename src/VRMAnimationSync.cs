@@ -22,6 +22,7 @@ namespace ValheimVRM
 		private readonly Quaternion[] boneRotationOffsets = new Quaternion[(int)HumanBodyBones.LastBone];
 		private readonly bool[] hasBoneRotationOffset = new bool[(int)HumanBodyBones.LastBone];
 		private HumanBodyBones[] ragdollBones;
+		private GroundSitFootSupport groundSitSupport;
 
 		public void Setup(Animator orgAnim, Settings.VrmSettingsContainer settings, bool isRagdoll = false)
 		{
@@ -39,6 +40,10 @@ namespace ValheimVRM
 			if (isRagdoll)
 			{
 				PrepareRagdollBones();
+			}
+			else
+			{
+				groundSitSupport = new GroundSitFootSupport(vrmAnim);
 			}
 		}
 
@@ -276,6 +281,15 @@ namespace ValheimVRM
 
 			vrmHip.position += adjustPos.Value;
 
+			// The game's seated hip pivot can be below the floor. Copying it to a
+			// differently proportioned avatar buries its legs and pelvis. Keep its
+			// posed soles above the character's ground plane for ground sitting only.
+			if (IsGroundSitState(curStateHash) || IsGroundSitState(nextStateHash))
+			{
+				float lift = groundSitSupport.GetLift(orgAnim.transform.position.y);
+				vrmHip.position += Vector3.up * lift;
+			}
+
 			if (!ragdoll)
 			{
 				for (var i = 0; i < 55; i++)
@@ -301,6 +315,11 @@ namespace ValheimVRM
 
 			CacheBoneRotationOffsets();
 			oldStateHash = curStateHash;
+		}
+
+		private static bool IsGroundSitState(int stateHash)
+		{
+			return stateHash == StartToSitDown || stateHash == SittingIdle || stateHash == StandingUpFromSit;
 		}
 	}
 }

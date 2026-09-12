@@ -322,10 +322,8 @@ namespace ValheimVRM
 			if (VisualModel == null) yield break;
 			var vrmModel = Object.Instantiate(VisualModel);
 			if (vrmModel == null) yield break;
-			PrepareVrm10Clone(vrmModel);
 			VrmManager.PlayerToVrmInstance[player] = vrmModel;
 			vrmModel.name = "VRM_Visual";
-			vrmModel.SetActive(true);
 			vrmController.visual = vrmModel;
 
 			var parent = animator.transform != null ? animator.transform.parent : null;
@@ -337,6 +335,12 @@ namespace ValheimVRM
 			}
 
 			vrmModel.transform.SetParent(parent, false);
+			vrmModel.transform.localPosition = animator.transform.localPosition;
+			// Initialize springs at the player's location, not at the import origin.
+			PrepareVrm10Clone(VisualModel, vrmModel);
+			vrmModel.SetActive(true);
+			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
+			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>());
 
 			// Detach the previous camera binding even when the next avatar opts out.
 			// Calibrate from this clone before any yield lets animation retargeting
@@ -421,8 +425,9 @@ namespace ValheimVRM
 			{
 				springBone.m_stiffnessForce *= settings.SpringBoneStiffness;
 				springBone.m_gravityPower *= settings.SpringBoneGravityPower;
-				springBone.m_updateType = VRMSpringBone.SpringBoneUpdateType.FixedUpdate;
-				springBone.m_center = null;
+				// Legacy springs also run after the retargeted humanoid pose. Keep
+				// the avatar's authored simulation center and collision settings.
+				springBone.m_updateType = VRMSpringBone.SpringBoneUpdateType.LateUpdate;
 				yield return null;
 			}
 
@@ -434,10 +439,12 @@ namespace ValheimVRM
 			}
 		}
 
-		private static void PrepareVrm10Clone(GameObject model)
+		private static void PrepareVrm10Clone(GameObject source, GameObject model)
 		{
 			var vrm10 = model.GetComponent<Vrm10Instance>();
 			if (vrm10 == null) return;
+			var sourceVrm10 = source.GetComponent<Vrm10Instance>();
+			if (sourceVrm10 != null) Vrm10SpringBoneClone.Copy(sourceVrm10, vrm10);
 
 			var gltf = model.GetComponent<RuntimeGltfInstance>();
 			if (gltf != null && gltf.InitialTransformStates.Count == 0 && gltf.RuntimeResources.Count == 0)

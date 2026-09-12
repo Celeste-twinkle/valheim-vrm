@@ -18,7 +18,9 @@ This Windows package includes these existing runtime components:
 The `shaders/AvatarRendering/MToon10` sources derive from UniVRM 0.131.2's MToon10
 shader. Changes add an optional flat-color path and a variant that skips received
 shadow maps. The default rendering path uses the unchanged `UniVRM.shaders` bundle.
-The bloom coverage/filter shader and render-options bundle are embedded in the plugin.
+The compatibility depth pass matches MToon's UV animation and alpha coverage.
+The bloom coverage/filter shader, compatibility depth pass and render-options
+bundle are embedded in the plugin.
 
 The game, BepInEx, Unity engine DLLs, Unity.Burst, Unity.Mathematics, Newtonsoft.Json,
 user avatars and user settings are not bundled. BepInEx must be installed separately;

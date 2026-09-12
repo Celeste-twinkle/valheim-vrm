@@ -10,6 +10,14 @@ attenuation in `UNITY_LIGHT_ATTENUATION`. The flat-color branch returns base col
 and emission in the base pass and zero RGB in additional-light passes. It does not
 clamp output brightness. `AlbedoLit/AvatarBloom.shader` masks only the bloom input.
 
+`AvatarRendering/AvatarDepth.shader` supplies depth and world-space normals for
+opaque/cutout MToon surfaces at `CameraEvent.AfterGBuffer`. Without this step,
+Amplify Occlusion's post-effect can shade a forward-only avatar using the geometry
+behind it. The pass also clears background albedo/specular values in those pixels,
+leaves the lighting target untouched and preserves cutout UV animation. Visible
+color still comes from the original MToon forward passes. Blended materials and
+non-MToon shaders keep their native depth behavior.
+
 To rebuild the embedded bundles:
 
 1. Open a separate Unity 2022.3.22f1 Built-in Render Pipeline project with Windows x64

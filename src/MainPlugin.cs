@@ -33,6 +33,7 @@ namespace ValheimVRM
             AvatarRendering.Initialize();
             gameObject.AddComponent<OutfitSwitcher>();
             gameObject.AddComponent<AvatarBloomController>();
+            gameObject.AddComponent<AvatarDepthController>();
 
             // a semi hacky way of loading a default character, no one can name a character with and underscore as far as i am aware.
             Settings.AddSettingsFromFile("___Default", false);

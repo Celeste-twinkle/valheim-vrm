@@ -496,6 +496,7 @@ namespace ValheimVRM
 		{
 			if (__instance is Player player)
 			{
+				player.GetComponent<VRMEquipmentSync>()?.ResetAttachments();
 				foreach (var smr in ragdoll.GetComponentsInChildren<SkinnedMeshRenderer>())
 				{
 					smr.forceRenderingOff = true;

@@ -1,11 +1,17 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace ValheimVRM
 {
     public sealed class AvatarRenderingTarget : MonoBehaviour
     {
+        internal static readonly HashSet<AvatarRenderingTarget> Active = new HashSet<AvatarRenderingTarget>();
+        internal Renderer[] Renderers { get; private set; }
+        void Awake() { Renderers = GetComponentsInChildren<Renderer>(true); }
         void Start() { Apply(); }
-        void OnEnable() { Apply(); }
+        void OnEnable() { Active.Add(this); Apply(); }
+        void OnDisable() { Active.Remove(this); }
+        void OnDestroy() { Active.Remove(this); }
 
         public void Apply()
         {

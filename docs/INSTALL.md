@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.7.1 (Celeste-twinkle fork)
+# Install ValheimVRM 1.7.2 (Celeste-twinkle fork)
 
 Windows x64 client release, tested with Valheim 1.0.7, Unity 6000.0.75f1 and
 BepInExPack Valheim 5.4.2333 (BepInEx 5.4.23.3). This is an independent fork
@@ -11,7 +11,7 @@ release, not a release by the upstream maintainer. No avatars are included.
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.7.1.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.7.2.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx`, `valheim_Data`, and `ValheimVRM` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -40,6 +40,16 @@ Changing appearance keeps items equipped and preserves their armor/damage stats.
 Existing per-model settings can still change collider size, interaction distance,
 weapon placement and equipment visibility. Switching does not edit character saves.
 
+Ground sitting now raises the posed soles to the character's ground plane when
+needed. Chair/ship/bed offsets remain separate. Hand attachments are calibrated
+from humanoid palm proportions and track the final animated pose; existing item
+offsets remain available for individual equipment. Avatars without enough finger
+bones use a wrist-following fallback. This does not add two-hand weapon IK.
+
+VRM 1.0 spring chains and their collision groups are retained on player clones,
+so exported hair, clothing and body springs can move. The plugin preserves the
+exported parameters; it cannot reconstruct VRChat PhysBones omitted from the VRM.
+
 ## Rendering panel
 
 These controls apply to **VRM 1.0 MToon materials** on this client, including newly
@@ -57,6 +67,9 @@ Lighting and shadows on restores the original shader and exported material value
 Turning off lighting also removes received shading; the shadow preference is retained
 for when lighting is turned back on. Bloom originating elsewhere can still overlap
 the avatar, and screen-space post-processing remains controlled by the game.
+Opaque/cutout MToon avatars now contribute their own deferred depth and normals,
+preventing background ambient-occlusion silhouettes from being applied to their
+surface. This compatibility pass does not turn off the game's ambient occlusion.
 
 VRM 0.x files remain supported by the importer. Their legacy MToon/game shaders,
 Standard materials, and third-party shaders are not controlled by these three
@@ -83,7 +96,7 @@ in your per-model settings and `AcceptVrmSharing=false` in global settings.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.7.1**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.7.2**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models
