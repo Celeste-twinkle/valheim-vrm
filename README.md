@@ -19,7 +19,7 @@ Replace Valheim characters with your own humanoid VRM avatars and switch them wi
 - Optionally synchronize selections independently per player, with increasing request sequences to handle out-of-order messages.
 - Release unused avatar resources. **1.8.7 fixes the GPU memory leak from duplicate patches when returning to the main menu, and cancels avatar attachment safely during scene unload.**
 
-The public release includes **no avatars** and no skill-locking mod. Unity packages, FBX files and VRChat projects must first be exported to VRM. Exported bones, materials and spring settings determine which effects can be reproduced.
+The public release includes **no avatars**. Unity packages, FBX files and VRChat projects must first be exported to VRM. Exported bones, materials and spring settings determine which effects can be reproduced.
 
 ## Installation and upgrades
 
@@ -222,13 +222,11 @@ Keep the old whole-file sharing option `EnableLegacyVrmSharing=false` in `global
 | Empty list / new model missing | Put `.vrm` files directly in the model directory; Unity packages cannot load directly. Refresh, check custom launch scripts' working directory, and inspect scan errors in the log. |
 | Missing `settings_*.txt` or JSON | Loading still works. TXT is optional and manual; JSON is generated when the corresponding choice is saved. |
 | Friends cannot see my switch | Check the server addon, both clients' F8 sync status and the receiver's matching model name/content. The server does not download models to players. |
-| Version-incompatible login dialog | Check game versions and other mods. VRM does not reject clients missing its addon. Separately installed Server Max Skills **1.0.0 servers** require their client; update that server addon to **1.0.1** and restart. |
+| Version-incompatible login dialog | Compare client/server game versions and inspect both connection logs. VRM does not reject clients missing its addon. |
 | Excessive motion / clothes clip through the body | Reduce physics weight, then inspect exported skinning, blend shapes and colliders if necessary. |
 | Leaf-like dark patches remain after disabling shadows | Shadow maps and screen-space post-processing differ. This build supplies depth/normals for opaque/cutout MToon surfaces. Check complete dependencies and include material types/rendering options in reports. |
 | Increasing lag or GPU allocation failures after leaving a world | Install complete **1.8.7**, remove duplicate plugin copies and restart. This version fixes the duplicate-patch leak on menu reentry. |
 | Memory does not drop when an avatar leaves the camera view | Off-camera active players still need their assets. Eviction begins after the last instance is destroyed; see below. |
-
-Server Max Skills is separate, not a VRM dependency. Its 1.0.1 allows unmodded clients to join with ordinary skills and allows modded clients onto ordinary servers; only matching client/server addons activate the temporary skill lock. In some numbered distribution bundles, 09 is the VRM client, 10 the VRM server and 12/13 the separate skill server/client. Those numbers are not public GitHub Release asset names.
 
 For reports, include game/mod versions, reproduction steps and relevant log excerpts:
 
