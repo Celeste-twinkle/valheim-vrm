@@ -1,3 +1,23 @@
+## 1.7.1 — Stable camera height after avatar switching
+
+- Fix close-range camera jitter caused by feeding animated head/eye positions
+  into Valheim's camera collision origin every frame.
+- Calibrate camera height once from the selected VRM clone's rest pose, including
+  model scale and ModelOffsetY. The game retains its normal camera collision logic.
+- Restore the original eye position before another avatar binds, when the new
+  model disables FixCameraHeight, and when the component is disabled or destroyed.
+- Select eye/head/neck bones from the new VRM animator rather than the first
+  animator under the player, which can belong to the vanilla model.
+
+Windows x64 / Valheim 1.0.7 / BepInExPack Valheim 5.4.2333. Models and existing
+settings do not need to be regenerated. Close the game and install the complete
+ValheimVRM-1.7.1.zip. See docs/release-1.7.1-validation.md for the regression
+results and the limits of the automated engine probe.
+
+修复切换模型后镜头贴近实体时的抖动：镜头高度按新模型的初始姿态校准，
+不再每帧追随头骨动画。切换模型或关闭 FixCameraHeight 时恢复原始视点，
+支持模型缩放与 ModelOffsetY。退出游戏后安装 1.7.1；模型和个人设置无需重做。
+
 ## 1.7.0 — Celeste-twinkle fork, Valheim 1.0.7
 
 Independent Windows x64 release with the Valheim 1.0 import/lifecycle fixes,

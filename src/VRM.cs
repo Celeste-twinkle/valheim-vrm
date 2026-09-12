@@ -338,6 +338,27 @@ namespace ValheimVRM
 
 			vrmModel.transform.SetParent(parent, false);
 
+			// Detach the previous camera binding even when the next avatar opts out.
+			// Calibrate from this clone before any yield lets animation retargeting
+			// change its rest-pose bones. Never select the player's vanilla animator.
+			var eyeSync = player.GetComponent<VRMEyePositionSync>();
+			if (eyeSync != null) eyeSync.ResetEyePosition();
+			if (settings.FixCameraHeight)
+			{
+				var vrmAnimator = vrmModel.GetComponent<Animator>();
+				if (vrmAnimator != null)
+				{
+					var vrmEye = vrmAnimator.GetBoneTransform(HumanBodyBones.LeftEye) ??
+						vrmAnimator.GetBoneTransform(HumanBodyBones.Head) ??
+						vrmAnimator.GetBoneTransform(HumanBodyBones.Neck);
+					if (vrmEye != null)
+					{
+						if (eyeSync == null) eyeSync = player.gameObject.AddComponent<VRMEyePositionSync>();
+						eyeSync.Setup(vrmEye, settings.ModelOffsetY);
+					}
+				}
+			}
+
 			float newHeight = settings.PlayerHeight;
 			float newRadius = settings.PlayerRadius;
 
@@ -384,28 +405,6 @@ namespace ValheimVRM
 			if (orgAnim != null)
 			{
 				animationSync.Setup(orgAnim, settings, false);
-			}
-			yield return null;
-
-			if (player == null || vrmModel == null) yield break;
-
-			if (settings.FixCameraHeight)
-			{
-				var currentAnimator = player != null ? player.GetComponentInChildren<Animator>() : null;
-				if (currentAnimator != null)
-				{
-					var vrmEye = currentAnimator.GetBoneTransform(HumanBodyBones.LeftEye) ??
-								currentAnimator.GetBoneTransform(HumanBodyBones.Head) ??
-								currentAnimator.GetBoneTransform(HumanBodyBones.Neck);
-					if (vrmEye != null && player != null)
-					{
-						var vrmEyePostSync = player.gameObject.GetComponent<VRMEyePositionSync>() ?? player.gameObject.AddComponent<VRMEyePositionSync>();
-						if (vrmEyePostSync != null)
-						{
-							vrmEyePostSync.Setup(vrmEye);
-						}
-					}
-				}
 			}
 			yield return null;
 

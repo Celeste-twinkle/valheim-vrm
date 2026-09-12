@@ -6,7 +6,7 @@
 
 适用于 Windows x64 客户端，已在英灵神殿 1.0.7 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
-可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.7.0.zip`。
+可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.7.1.zip`。
 
 ## Fork 继承链
 
@@ -98,7 +98,7 @@ dotnet build -c Release
 dotnet run --project tests/AvatarCatalogTests
 ```
 
-编译输出为 `release/ValheimVRM-1.7.0.zip`。
+编译输出为 `release/ValheimVRM-1.7.1.zip`。
 除非显式传入 `-p:InstallToGame=true`，否则编译不会自动将插件安装到游戏中。
 模型目录测试使用 .NET 7 和临时文件，插件目标框架为 .NET Framework 4.7.1。
 着色器源码及重建说明见
@@ -107,5 +107,5 @@ dotnet run --project tests/AvatarCatalogTests
 
 验证范围见[运行时依赖来源](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md)、
 [兼容性验证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md)和
-[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.7.0-validation.md)。
+[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.7.1-validation.md)。
 此版本已在 Windows／D3D11 下验证；Linux、macOS、Vulkan 和多人模型分享尚未在此版本中验证。

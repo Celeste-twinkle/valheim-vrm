@@ -7,7 +7,7 @@
 Windows x64 client build for Valheim 1.0.7. This fork combines the compatibility
 fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
 with an in-game avatar picker and optional rendering controls. Download
-`ValheimVRM-1.7.0.zip` from this fork's Release page for the compiled plugin.
+`ValheimVRM-1.7.1.zip` from this fork's Release page for the compiled plugin.
 
 ## Fork history
 
@@ -114,7 +114,7 @@ dotnet build -c Release
 dotnet run --project tests/AvatarCatalogTests
 ```
 
-Build output is `release/ValheimVRM-1.7.0.zip`. Building does not install the plugin
+Build output is `release/ValheimVRM-1.7.1.zip`. Building does not install the plugin
 into your game unless you explicitly pass `-p:InstallToGame=true`.
 The catalog tests use .NET 7 and temporary files; the plugin targets .NET Framework 4.7.1.
 Shader source/rebuild instructions are in
@@ -124,6 +124,6 @@ is insufficient for a distributable DLL.
 
 Read [runtime dependency provenance](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md),
 [compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md), and
-[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.7.0-validation.md)
+[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.7.1-validation.md)
 for the tested scope. This release was validated on Windows/D3D11; Linux, macOS,
 Vulkan and multiplayer model sharing were not validated for this build.

@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.7.0 (Celeste-twinkle fork)
+# Install ValheimVRM 1.7.1 (Celeste-twinkle fork)
 
 Windows x64 client release, tested with Valheim 1.0.7, Unity 6000.0.75f1 and
 BepInExPack Valheim 5.4.2333 (BepInEx 5.4.23.3). This is an independent fork
@@ -11,7 +11,7 @@ release, not a release by the upstream maintainer. No avatars are included.
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.7.0.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.7.1.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx`, `valheim_Data`, and `ValheimVRM` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -83,7 +83,7 @@ in your per-model settings and `AcceptVrmSharing=false` in global settings.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.7.0**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.7.1**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models
