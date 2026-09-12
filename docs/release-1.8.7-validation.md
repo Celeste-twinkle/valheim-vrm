@@ -65,11 +65,7 @@ The catalog/configuration and per-player request-ordering suites also passed.
 
 ## Scope
 
-The GPU failure is independent of the server's admission policy. Server Max
-Skills 1.0.0 can separately emit ErrorVersion for clients missing its required
-addon; its optional 1.0.1 update is distributed separately. ValheimVRM's server
-sync remains optional and does not reject unmodded players.
+ValheimVRM's server sync remains optional and does not reject unmodded players.
 
 Controlled Windows engine tests do not establish compatibility with every mod,
-GPU driver, Linux server or Steam/PlayFab deployment. The user's friend must
-replace their own server plugin to change that server's skill admission policy.
+GPU driver, Linux server or Steam/PlayFab deployment.
