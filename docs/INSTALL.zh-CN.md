@@ -70,6 +70,18 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 ## 配置和联机
 
 模型专用配置命名为 `settings_模型文件名.txt`（不含 `.vrm` 后缀）。
+这是可选的纯文本文件，不是 Unity/VRM 导出产物，插件目前也不会自动生成它。
+没有配置文件时仍能加载模型，使用内置默认参数。
+
+创建方法：复制本套模型包中已有的 `settings_*.txt`，或复制插件附带的
+`settings_Example.txt.example` 模板。例如模型为 `MyAvatar.vrm`，将副本命名为
+`settings_MyAvatar.txt`，与模型一起放在游戏根目录的 `ValheimVRM` 文件夹。
+使用记事本编辑 `参数名=值`，如 `ModelScale=1.0`（缩放）、`ModelOffsetY=0`
+（上下偏移）、`ModelBrightness=1`（亮度）；省略的参数使用默认值。
+启用资源管理器的“文件扩展名”，确保名称不以 `.txt.txt` 或 `.example` 结尾。
+保存后重启游戏再选择模型；F8 的“刷新列表”只重新扫描文件，不重载已有模型配置缓存。
+复制其他模型的配置时，请检查其中是否有仅适用于原模型的比例或偏移值。
+
 也可沿用 `游戏角色名.vrm` 的自动匹配方式。默认模型名为 `___Default.vrm`（三个下划线），
 默认配置名为 `settings____Default.txt`（四个下划线）。示例配置以 `.example` 结尾，
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。

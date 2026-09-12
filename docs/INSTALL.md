@@ -86,6 +86,17 @@ settings. Rendering in another VRM viewer is determined by that viewer.
 ## Existing settings and multiplayer
 
 The optional per-model settings filename is `settings_<model filename without .vrm>.txt`.
+This is a plain text file, not a Unity/VRM export; the plugin does not generate it.
+Missing settings files use built-in defaults and do not prevent loading, switching
+or server synchronization. To create one, copy a supplied model's `settings_*.txt`
+or `settings_Example.txt.example`. For `MyAvatar.vrm`, name the copy
+`settings_MyAvatar.txt` and place it beside the VRM in the game's `ValheimVRM` folder.
+Edit `Name=Value` lines in a text editor, for example `ModelScale=1.0`,
+`ModelOffsetY=0` or `ModelBrightness=1`; omitted values use defaults. Show file
+extensions to avoid `.txt.txt` or a remaining `.example` suffix. Check copied
+model-specific offsets and scale. Save and restart the game: F8 **Refresh list**
+rescans files but does not reload already-cached model settings.
+
 To use character-name matching without the picker, use `<Character Name>.vrm`.
 The fallback model is `___Default.vrm` (three underscores); its settings file is
 `settings____Default.txt` (four underscores). Examples are supplied, not automatically

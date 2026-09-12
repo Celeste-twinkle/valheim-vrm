@@ -17,6 +17,7 @@ the mismatched uncached file creates neither model nor settings cache entries.
 Repeated polls do not retry a failed choice. Another player's valid selection
 still applies. Replacing the unimported file with matching bytes and refreshing
 loads independent avatars without reconnecting or writing local selections.
+That recovered test file has no per-model settings TXT and loads with defaults.
 Replacing an already-cached same-name model still requires a client restart.
 
 The existing production server/ZRpc tests also cover an unmodded client with
