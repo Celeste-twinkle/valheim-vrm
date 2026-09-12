@@ -1,4 +1,4 @@
-# ValheimVRM 1.8.6 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 1.8.7 安装说明（Celeste-twinkle 分支）
 
 多人外观同步需要服务器另外安装独立服务端插件，详见[服务器同步与本地模式](SERVER-SYNC.md)。
 
@@ -12,7 +12,7 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-1.8.6.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-1.8.7.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
@@ -74,7 +74,10 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 
 `ValheimVRM` 模型目录只放 `.vrm` 就能正常使用，无需任何 TXT、JSON、清单文件、
 默认模型、固定模型组合或初始化脚本。无配置时内置参数为原始缩放 1.0、亮度 1.0、
-启用 MToon、关闭旧版角色淡出；可选配置仍可覆盖这些参数。
+启用 MToon、关闭旧版角色淡出；可选配置仍可覆盖这些参数，但缩放受 1.6 米最低高度限制。
+1.8.7 起，加载时按站立可见网格高度（含头发和头饰）等比放大，实际倍率为
+`max(ModelScale, 1.6 / 原始高度)`。1.2 米模型变为 1.6 米，已足够高或手动放大更多的保持。
+导入时仅测量一次，本地和远程模型共用该规则，坐姿或反复切换不会累积缩放。
 
 以下文件由 Mod 按需创建，全部位于 `BepInEx/config/ValheimVRM`：
 
@@ -106,7 +109,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。
 
 只改变本机外观时，无需服务器安装。多人同步时，在已安装 BepInEx 5 的服务器上
-解压 `ValheimVRM-Server-1.8.6.zip`，并让各客户端安装相同模型文件，详见
+解压 `ValheimVRM-Server-1.8.7.zip`，并让各客户端安装相同模型文件，详见
 [服务器安装说明](SERVER-SYNC.md)。F8 可随时退出同步；通过游戏“启动服务器”的
 房主也可同时安装服务端插件。旧版整文件分享协议默认通过
 `EnableLegacyVrmSharing=false` 停用，使用新同步时请保持关闭。分发模型仍需遵守其许可。
@@ -115,7 +118,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.6**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.7**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。

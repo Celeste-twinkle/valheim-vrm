@@ -1,3 +1,12 @@
+## 1.8.7 — Fix menu reentry leaks and enforce minimum avatar height
+
+- Install the assembly's Harmony patches once per process. Returning from a world to the main menu previously appended another copy of every patch. Duplicate bloom prefixes overwrote their shared temporary-texture state, leaving full-resolution HDR textures unreleased each frame.
+- Cancel avatar attachment safely when a scene closes, the player disappears or a newer visual replaces the in-progress clone. Check lifetime after every asynchronous boundary and release pending attachment ownership on exit.
+- Enforce a minimum imported standing mesh height of 1.6 m, with uniform scaling. Apply the same rule to local and synchronized avatars, respecting larger custom scales and retaining the original model files. Measure once before animation; sitting and repeated cloning never accumulate scaling.
+- VRM-only model folders, brightness limits, physics/rendering controls and the optional avatar-sync protocol remain available.
+
+Validation: `docs/release-1.8.7-validation.md`. The old build reproduced 4 bloom allocations with only 1 distinct texture released per call after three menu startup callbacks. The fixed build retains one patch and balances every temporary allocation during sustained 4K rendering.
+
 ## 1.8.6 — VRM-only model library
 
 - The `ValheimVRM` model folder only needs `.vrm` files. No model TXT, JSON, manifest, default avatar or initialization step is required for local or server-synchronized selection.

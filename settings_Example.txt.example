@@ -1,6 +1,6 @@
 //--- Player size settings ---//
 
-// VRM model scale
+// VRM model scale; clamped upward to a minimum standing mesh height of 1.6 m
 ModelScale=1.1
 
 // Y-coordinate offset of the model

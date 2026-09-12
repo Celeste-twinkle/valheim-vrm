@@ -283,8 +283,8 @@ namespace ValheimVRM
                             VRM vrm;
                             if (VrmManager.VrmDic.TryGetValue(Name, out vrm))
                             {
-                                vrm.VisualModel.transform.localScale = Vector3.one * ModelScale;
-                                VrmManager.PlayerToVrmInstance[player].transform.localScale = Vector3.one * ModelScale;
+                                AvatarScale.Apply(vrm.VisualModel, ModelScale);
+                                AvatarScale.Apply(VrmManager.PlayerToVrmInstance[player], ModelScale);
                             }
                             break;
 

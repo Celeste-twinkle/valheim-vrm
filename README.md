@@ -7,7 +7,7 @@
 Windows x64 client build for Valheim 1.0.12. This fork combines the compatibility
 fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
 with an in-game avatar picker and optional rendering controls. Download
-`ValheimVRM-1.8.6.zip` from this fork's Release page for the compiled plugin.
+`ValheimVRM-1.8.7.zip` from this fork's Release page for the compiled plugin.
 
 ## Fork history
 
@@ -43,8 +43,20 @@ Valheim/
 
 **The model folder only needs `.vrm` files.** No settings TXT, JSON, manifest,
 fixed model set, default avatar or initialization script is required. On a fresh
-installation, select any model with F8. Built-in defaults preserve model scale
-(1.0), use MToon and disable the old player-fade effect.
+installation, select any model with F8. Built-in defaults use scale 1.0 subject
+to the 1.6 m minimum below, MToon and disable the old player-fade effect.
+
+**Minimum model height: 1.6 m since 1.8.7.** At import, measure the visible standing
+mesh from its lowest to highest vertex, including visible hair and headwear,
+before game animation. Apply `max(ModelScale, 1.6 / originalHeight)` uniformly
+to the complete avatar. A 1.2 m model becomes 1.6 m at scale 1.333; a 1.8 m model
+at scale 1 stays unchanged. Larger custom scales are preserved. This is visual
+mesh height, not a real-world anatomical measurement. No per-frame measurement
+or cumulative enlargement occurs when sitting, cloning or switching. Local and
+synchronized remote imports use the same rule; install this client version on
+all viewers for consistent sizing. Model bytes and synchronization hashes remain
+unchanged, and the server needs no model files. Camera and hand mounts use the
+scaled bones; the game's collision/interaction settings remain independently configured.
 
 The mod creates `avatar_selections.json`, `physics_options.json` and
 `rendering_options.json` under `BepInEx/config/ValheimVRM` when you save a selection
@@ -66,8 +78,8 @@ Server synchronization is optional. Download the packages from this fork's
 
 | Install on | Package | Setup |
 | --- | --- | --- |
-| Every player's client | `ValheimVRM-1.8.6.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
-| Dedicated server | `ValheimVRM-Server-1.8.6.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
+| Every player's client | `ValheimVRM-1.8.7.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
+| Dedicated server | `ValheimVRM-Server-1.8.7.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
 | A player hosting through **Start server** | Both packages | Install both in the host's game directory; other players only need the client package. |
 
 The server DLL must end up at
@@ -219,10 +231,10 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Build output is `release/ValheimVRM-1.8.6.zip`. Building does not install the plugin
+Build output is `release/ValheimVRM-1.8.7.zip`. Building does not install the plugin
 into your game unless you explicitly pass `-p:InstallToGame=true`.
 Run the server packaging command after the client build to produce
-`release/ValheimVRM-Server-1.8.6.zip`.
+`release/ValheimVRM-Server-1.8.7.zip`.
 The catalog tests use .NET 7 and temporary files; the plugin targets .NET Framework 4.7.1.
 Shader source/rebuild instructions are in
 [shaders/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md).
@@ -231,7 +243,7 @@ is insufficient for a distributable DLL.
 
 Read [runtime dependency provenance](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md),
 [compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md), and
-[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.6-validation.md)
+[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)
 for the tested scope. Windows/D3D11 engine probes cover actual ZRpc serialization,
 production server handlers and independent model attachment to two player fixtures.
 A real Steam/PlayFab dedicated-server session, Linux, macOS and Vulkan have not

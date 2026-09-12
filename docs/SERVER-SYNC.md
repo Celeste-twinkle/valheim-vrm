@@ -2,17 +2,17 @@
 
 ## 中文
 
-客户端和服务器推荐使用 1.8.6；同步协议仍兼容 1.8.0 客户端。推荐为参与外观同步的玩家统一分发
+客户端和服务器推荐使用 1.8.7；同步协议仍兼容 1.8.0 客户端。推荐为参与外观同步的玩家统一分发
 `ValheimVRM` 文件夹，但文件夹不一致不是入服限制：缺失、多出或不同的文件都不影响连接和正常游戏。
 只有显示某位玩家选择的模型时，接收方才需要该文件的相同名称（含大小写）和 VRM 内容。
 客户端模型目录只需 `.vrm`，不需要任何 TXT 或 JSON；服务端也不需要这些文件。
 个人选项由客户端按需保存在 `BepInEx/config/ValheimVRM`，各玩家可保留自己的选择、渲染开关和物理权重。
 
-1. 服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.6.zip`
+1. 服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.7.zip`
    解压到服务器程序所在目录。目标为
    `BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll`。
    服务器只需该同步插件，不需要客户端的着色器、UniVRM DLL 或角色模型。
-2. 参与外观同步的玩家安装完整客户端 `ValheimVRM-1.8.6.zip` 和相同的模型文件夹。
+2. 参与外观同步的玩家安装完整客户端 `ValheimVRM-1.8.7.zip` 和相同的模型文件夹。
 3. 重启服务器和客户端。进入世界后，F8 应显示“服务器同步已连接”。
 4. 保持“服务器外观同步（服务器支持时）”勾选，点击模型。只有进行切换的
    玩家改变外观；其他玩家各自的选择不变。
@@ -75,7 +75,7 @@ Linux 服务器使用同一个托管 DLL，但本次引擎验证环境为 Window
 
 ## English
 
-Install the full 1.8.6 client on participating players. Their top-level
+Install the full 1.8.7 client on participating players. Their top-level
 `ValheimVRM` folders may differ without affecting admission or normal play. To
 display a selected remote avatar, its case-sensitive filename and SHA-256 must
 match the sender's VRM. Extra files are ignored; folder equality is not enforced. Model settings should also be distributed
@@ -83,7 +83,7 @@ consistently. Personal avatar selections, lighting and physics-weight preference
 remain local.
 
 The dedicated server needs BepInEx 5 and only the DLL from
-`ValheimVRM-Server-1.8.6.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
+`ValheimVRM-Server-1.8.7.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
 It does not load avatar files, UniVRM or shaders. Restart, join, and enable
 **Server avatar sync** in F8. A client-hosted server can install the same server
 addon alongside its client plugin.

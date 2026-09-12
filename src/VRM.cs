@@ -141,7 +141,9 @@ namespace ValheimVRM
 					{
 						var loaded = await context.LoadAsync(awaitCaller);
 						loaded.ShowMeshes();
-						loaded.Root.transform.localScale = Vector3.one * scale;
+						float effectiveScale = AvatarScale.Apply(loaded.Root, scale);
+						var sizing = loaded.Root.GetComponent<AvatarScale>();
+						Debug.Log($"[ValheimVRM] Avatar standing height {sizing.UnscaledHeight:F3} m, scale {effectiveScale:F3}, final {sizing.UnscaledHeight * effectiveScale:F3} m");
 						Debug.Log("[ValheimVRM] VRM read successful");
 						// LoadAsync transfers resource ownership to RuntimeGltfInstance.
 						return loaded.Root;
@@ -160,7 +162,11 @@ namespace ValheimVRM
 		{
 			using (AvatarResidency.Acquire(this))
 			{
-				yield return AttachToPlayer(player);
+				// Drive the child here so cancellation/errors unwind the attachment
+				// lease in this iterator instead of escaping a nested Unity coroutine.
+				var attachment = AttachToPlayer(player);
+				try { while (attachment.MoveNext()) yield return attachment.Current; }
+				finally { (attachment as IDisposable)?.Dispose(); }
 			}
 		}
 
@@ -192,6 +198,8 @@ namespace ValheimVRM
 			VrmManager.PlayerToVrmInstance[player] = vrmModel;
 			vrmModel.name = "VRM_Visual";
 			vrmController.visual = vrmModel;
+			Func<bool> stillAttached = () => player != null && animator != null &&
+				vrmModel != null && vrmController != null && vrmController.visual == vrmModel;
 
 			var oldModel = parent.Find("VRM_Visual");
 			if (oldModel != null)
@@ -247,15 +255,18 @@ namespace ValheimVRM
 			}
 
 			yield return null;
+			if (!stillAttached()) yield break;
 
 			var originalVisual = player.GetVisual();
 			if (originalVisual != null)
 			{
 				foreach (var smr in originalVisual.GetComponentsInChildren<SkinnedMeshRenderer>())
 				{
+					if (smr == null) continue;
 					smr.forceRenderingOff = true;
 					smr.updateWhenOffscreen = true;
 					yield return null;
+					if (!stillAttached()) yield break;
 				}
 			}
 
@@ -267,6 +278,7 @@ namespace ValheimVRM
 				vrmModel.transform.localPosition = orgAnim.transform.localPosition;
 			}
 			yield return null;
+			if (!stillAttached()) yield break;
 
 			var animationSync = vrmModel.GetComponent<VRMAnimationSync>();
 			if (animationSync == null)
@@ -279,7 +291,7 @@ namespace ValheimVRM
 			}
 			yield return null;
 
-			if (player == null || vrmModel == null) yield break;
+			if (!stillAttached()) yield break;
 
 			if (settings.UseMToonShader)
 			{
@@ -287,15 +299,18 @@ namespace ValheimVRM
 				mToonColorSync.Setup(vrmModel);
 			}
 			yield return null;
+			if (!stillAttached()) yield break;
 
 			foreach (var springBone in vrmModel.GetComponentsInChildren<VRMSpringBone>())
 			{
+				if (springBone == null) continue;
 				springBone.m_stiffnessForce *= settings.SpringBoneStiffness;
 				springBone.m_gravityPower *= settings.SpringBoneGravityPower;
 				// Legacy springs also run after the retargeted humanoid pose. Keep
 				// the avatar's authored simulation center and collision settings.
 				springBone.m_updateType = VRMSpringBone.SpringBoneUpdateType.LateUpdate;
 				yield return null;
+				if (!stillAttached()) yield break;
 			}
 
 			if (player == null) yield break;

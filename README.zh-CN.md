@@ -6,7 +6,7 @@
 
 适用于 Windows x64 客户端，已在英灵神殿 1.0.12 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
-可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.6.zip`。
+可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.7.zip`。
 
 ## Fork 继承链
 
@@ -43,7 +43,16 @@ Valheim/
 
 **模型目录只需 `.vrm` 文件即可正常工作。** 不需要 `settings_*.txt`、JSON、
 清单文件、固定的九个模型、默认模型或初始化脚本。进入世界后按 F8 选择即可。
-无配置时保持模型原始缩放（1.0）、使用 MToon，并关闭旧版角色淡出效果。
+无配置时缩放从 1.0 开始，并执行下述 1.6 米最低高度规则；使用 MToon，关闭旧版角色淡出效果。
+
+**1.8.7 起，模型最低高度为 1.6 米。** 加载时，在播放游戏动画之前，测量站立姿态
+可见网格从最低到最高顶点的高度，包含可见头发和头饰，然后将整个模型等比缩放。
+实际倍率为 `max(ModelScale, 1.6 / 原始高度)`：1.2 米模型以约 1.333 倍变为 1.6 米，
+1.8 米模型在倍率 1 时保持不变；手动设置的更大倍率会保留。这是模型外观高度，
+不是人体解剖身高。只在导入时测量，坐下、复制、反复切换不会累积放大。
+本地模型和同步到其他玩家的模型采用同一加载规则；其他玩家也需要更新客户端，
+才能按相同规则显示。VRM 文件和同步指纹不变，服务端不需要放模型。
+镜头和持物挂点使用缩放后的骨骼；游戏碰撞体、交互距离仍由各自配置控制。
 
 选择模型、调整物理或渲染后，Mod 会在 `BepInEx/config/ValheimVRM` 中自动生成
 对应的 `avatar_selections.json`、`physics_options.json`、`rendering_options.json`。
@@ -61,8 +70,8 @@ Valheim/
 
 | 安装位置 | 安装包 | 使用方法 |
 | --- | --- | --- |
-| 每位玩家的客户端 | `ValheimVRM-1.8.6.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
-| 专用服务器 | `ValheimVRM-Server-1.8.6.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
+| 每位玩家的客户端 | `ValheimVRM-1.8.7.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
+| 专用服务器 | `ValheimVRM-Server-1.8.7.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
 | 通过游戏“启动服务器”的房主 | 客户端包 + 服务器端包 | 两个包都安装到房主的游戏目录；其他玩家只安装客户端包。 |
 
 服务器插件的最终路径为
@@ -187,8 +196,8 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-编译输出为 `release/ValheimVRM-1.8.6.zip`。
-服务器打包命令输出 `release/ValheimVRM-Server-1.8.6.zip`，应在客户端构建之后执行。
+编译输出为 `release/ValheimVRM-1.8.7.zip`。
+服务器打包命令输出 `release/ValheimVRM-Server-1.8.7.zip`，应在客户端构建之后执行。
 除非显式传入 `-p:InstallToGame=true`，否则编译不会自动将插件安装到游戏中。
 模型目录测试使用 .NET 7 和临时文件，插件目标框架为 .NET Framework 4.7.1。
 着色器源码及重建说明见
@@ -197,7 +206,7 @@ powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALH
 
 验证范围见[运行时依赖来源](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md)、
 [兼容性验证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md)和
-[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.6-validation.md)。
+[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
 此版本已在 Windows／D3D11 下完成受控引擎验证，包括实际 ZRpc 序列化、服务器处理逻辑
 及两名角色的独立模型绑定。尚未完成真实 Steam／PlayFab 专用服务器联机验收，
 Linux、macOS 和 Vulkan 未验证；完整范围见上述记录。

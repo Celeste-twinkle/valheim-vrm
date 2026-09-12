@@ -23,6 +23,7 @@ namespace ValheimVRM
         public const string PluginVersion = VersionInfo.PluginVersion;
 
         private static Harmony _harmony = new Harmony("com.yoship1639.plugins.valheimvrm.patch");
+        private static bool _patchesInstalled;
 
         void Awake()
         {
@@ -50,6 +51,10 @@ namespace ValheimVRM
 
         internal static void PatchAll()
         {
+            // FejdStartup.Awake runs again when a world closes. Harmony appends
+            // duplicate patches, including prefixes sharing one __state slot.
+            if (_patchesInstalled) return;
+            _patchesInstalled = true;
             if (Settings.globalSettings.EnableProfileCode) PatchAllUpdateMethods.ApplyPatches(_harmony);
 
             _harmony.PatchAll();
