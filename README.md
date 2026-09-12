@@ -147,6 +147,31 @@ VRM 0.x can still be imported, but its legacy MToon/game materials, Standard and
 third-party materials are outside the controls' scope. Bloom from other objects
 can still overlap the avatar, and the game's other screen-space effects remain active.
 
+### Model brightness reference
+
+The calibrated Shinano variants and KUMALY 2 use the following **exported
+VRM 1.0 / MToon material values** as their brightness reference. These privately
+supplied models are not included in the public plugin release.
+
+| Material parameter | Calibrated reference |
+| --- | --- |
+| Base color (`pbrMetallicRoughness.baseColorFactor`, RGB) | **0.45 per channel** for a neutral white tint; colored tints may use lower channel values. Preserve the original alpha. |
+| Shade color (`VRMC_materials_mtoon.shadeColorFactor`, RGB) | **0.2025 per channel** for a neutral tint; colored shade values may be lower. |
+
+**Base-color values above 0.45 may cause overexposure in game**, making skin,
+hair or clothing look washed out under Valheim's lighting and post-processing.
+Strong emission, matcap reflections or rim highlights can also make a model
+too bright. This is a calibration reference, not an enforced limit or a guarantee
+against overexposure; check the exported avatar in game with scene lighting both
+on and off.
+
+These numbers describe color factors stored in the exported VRM, not texture
+pixel values or the `ModelBrightness` setting in `settings_ModelName.txt`.
+The calibrated models already contain this adjustment and keep that setting at
+`ModelBrightness=1`. The current VRM 1.0 MToon path preserves authored material
+values and does not apply that legacy setting; edit the material factors when
+exporting or adjusting the VRM itself.
+
 If F8 does not open the menu, check that you are alive and in a world, close other
 menus, and check `BepInEx/LogOutput.log`. Setting `EnableAvatarPicker=false` in
 `ValheimVRM/global_settings.txt` disables the picker.
