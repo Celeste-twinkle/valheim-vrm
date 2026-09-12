@@ -1,4 +1,4 @@
-# ValheimVRM 1.8.5 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 1.8.6 安装说明（Celeste-twinkle 分支）
 
 多人外观同步需要服务器另外安装独立服务端插件，详见[服务器同步与本地模式](SERVER-SYNC.md)。
 
@@ -12,8 +12,8 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-1.8.5.zip` 直接解压到 `valheim.exe` 所在目录，合并
-   `BepInEx`、`valheim_Data`、`ValheimVRM` 文件夹。务必使用完整包，不能只替换 DLL。
+3. 将 `ValheimVRM-1.8.6.zip` 直接解压到 `valheim.exe` 所在目录，合并
+   `BepInEx`、`valheim_Data` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
 5. 进入世界后按 **F8** 打开人物外观面板，点击模型切换。列表可以滚动。
@@ -26,17 +26,17 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
   BepInEx/plugins/ValheimVRM/UniVRM.shaders
   valheim_Data/Managed/VRM10.dll 等配套依赖
   ValheimVRM/我的模型.vrm
-  ValheimVRM/settings_我的模型.txt  （可选）
+  BepInEx/config/ValheimVRM/       （保存个人选项时自动创建）
 ```
 
 模型列表不限制为八个。选择保存在 `avatar_selections.json` 中，按游戏角色分别记录，
-重启游戏或死亡复活后自动恢复。旧本地版的 `selected_models.json` 可按唯一文件名后缀迁移。
+重启游戏或死亡复活后自动恢复。选择保存在 `BepInEx/config/ValheimVRM/avatar_selections.json`。
 已选文件被移除时回到原来的角色同名模型／默认模型匹配方式。
 模型加载失败会显示错误并保留先前外观。替换同一模型文件的内容后请重启游戏以清除缓存。
 
 F8 的“物理摆动权重”可减轻过大的摆动，默认 50%，范围 0%～100%。0% 不摆动，
 100% 为原始物理摆幅。兼容 VRM 1.0 与 VRM 0.x，拖动即时生效，松开后保存到
-`ValheimVRM/physics_options.json`。这是本机统一设置，切换模型后保留。
+`BepInEx/config/ValheimVRM/physics_options.json`。这是本机统一设置，切换模型后保留。
 
 切换外观不会卸下装备，也不会改变装备本身的护甲、伤害属性。原有模型配置仍可影响
 碰撞体尺寸、交互距离、武器位置及装备是否显示。插件不修改角色存档。
@@ -66,9 +66,26 @@ VRM 1.0 模型副本会保留导出的弹簧链和碰撞体，恢复已有的头
 不透明／裁剪 MToon 表面会补充自己的延迟渲染深度和法线，避免模型后方的环境遮蔽轮廓
 错误叠到身体上。这项兼容修复不关闭游戏的环境遮蔽。
 
-选择立即保存到 `ValheimVRM/rendering_options.json`。设置不改写 `.vrm` 文件，
+选择立即保存到 `BepInEx/config/ValheimVRM/rendering_options.json`。设置不改写 `.vrm` 文件，
 不改全局图像设置，不会改变其他模型查看器的渲染效果。
 VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、第三方材质不受这三个开关控制。
+
+## 只放 VRM 的安装方式
+
+`ValheimVRM` 模型目录只放 `.vrm` 就能正常使用，无需任何 TXT、JSON、清单文件、
+默认模型、固定模型组合或初始化脚本。无配置时内置参数为原始缩放 1.0、亮度 1.0、
+启用 MToon、关闭旧版角色淡出；可选配置仍可覆盖这些参数。
+
+以下文件由 Mod 按需创建，全部位于 `BepInEx/config/ValheimVRM`：
+
+- 选择模型后生成 `avatar_selections.json`。
+- 调整并保存物理滑块后生成 `physics_options.json`。
+- 修改渲染选项后生成 `rendering_options.json`。
+
+缺少这些文件或整个配置目录时，使用默认值正常工作。TXT 是可选手动配置，不会自动生成。
+1.8.6 起不再读取或自动迁移模型目录中的旧配置，也不再读取 `selected_models.json`。
+升级前可把想保留的 TXT 和上述三类 JSON 移到新配置目录，否则使用默认值。
+说明、许可证和配置示例位于 `BepInEx/plugins/ValheimVRM`。
 
 ## 配置和联机
 
@@ -76,9 +93,8 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 这是可选的纯文本文件，不是 Unity/VRM 导出产物，插件目前也不会自动生成它。
 没有配置文件时仍能加载模型，使用内置默认参数。
 
-创建方法：复制本套模型包中已有的 `settings_*.txt`，或复制插件附带的
-`settings_Example.txt.example` 模板。例如模型为 `MyAvatar.vrm`，将副本命名为
-`settings_MyAvatar.txt`，与模型一起放在游戏根目录的 `ValheimVRM` 文件夹。
+创建方法：复制 `BepInEx/plugins/ValheimVRM/settings_Example.txt.example` 模板。例如模型为 `MyAvatar.vrm`，将副本命名为
+`settings_MyAvatar.txt`，放在 `BepInEx/config/ValheimVRM` 文件夹。
 使用记事本编辑 `参数名=值`，如 `ModelScale=1.0`（缩放）、`ModelOffsetY=0`
 （上下偏移）、`ModelBrightness=1`（亮度）；省略的参数使用默认值。
 启用资源管理器的“文件扩展名”，确保名称不以 `.txt.txt` 或 `.example` 结尾。
@@ -90,7 +106,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。
 
 只改变本机外观时，无需服务器安装。多人同步时，在已安装 BepInEx 5 的服务器上
-解压 `ValheimVRM-Server-1.8.5.zip`，并让各客户端安装相同模型文件，详见
+解压 `ValheimVRM-Server-1.8.6.zip`，并让各客户端安装相同模型文件，详见
 [服务器安装说明](SERVER-SYNC.md)。F8 可随时退出同步；通过游戏“启动服务器”的
 房主也可同时安装服务端插件。旧版整文件分享协议默认通过
 `EnableLegacyVrmSharing=false` 停用，使用新同步时请保持关闭。分发模型仍需遵守其许可。
@@ -99,7 +115,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.5**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.6**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。

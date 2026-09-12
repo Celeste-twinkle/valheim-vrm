@@ -32,7 +32,7 @@ namespace ValheimVRM
         void Awake()
         {
             Instance = this;
-            Catalog = new AvatarCatalog(Settings.ValheimVRMDir);
+            Catalog = new AvatarCatalog(Settings.ValheimVRMDir, Settings.ConfigDir);
             RefreshModels();
             try { Catalog.LoadSelections(); }
             catch (Exception ex) { ReportError("Cannot read avatar selections", ex); }

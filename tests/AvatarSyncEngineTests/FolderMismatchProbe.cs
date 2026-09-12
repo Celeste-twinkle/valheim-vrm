@@ -53,7 +53,7 @@ public sealed partial class AvatarSyncEngineTests
                 "First missing model hid the vanilla character");
 
             // An empty catalog also represents a missing ValheimVRM directory.
-            var empty = new AvatarCatalog(Path.Combine(output, "absent-avatar-directory")); empty.Refresh();
+            var empty = new AvatarCatalog(Path.Combine(output, "absent-avatar-directory"), ValheimVRM.Settings.ConfigDir); empty.Refresh();
             catalogField.SetValue(picker, empty); sync.RetryMissing();
             registry.Set(101, 1001, 1, names[0], hashes[0]); SetState(sync, registry);
             yield return PumpRemote(sync);

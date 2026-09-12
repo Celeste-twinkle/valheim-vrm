@@ -1,3 +1,14 @@
+## 1.8.6 — VRM-only model library
+
+- The `ValheimVRM` model folder only needs `.vrm` files. No model TXT, JSON, manifest, default avatar or initialization step is required for local or server-synchronized selection.
+- Store selections, physics weight and rendering preferences under `BepInEx/config/ValheimVRM`, created on demand. Optional model/global TXT settings use the same directory.
+- Remove reads/migration of old model-folder configuration and `selected_models.json`. Move wanted existing settings to the new directory before upgrading, or use defaults.
+- Built-in appearance defaults now match the distributed models: scale 1.0, brightness 1.0, MToon enabled and player fade disabled. Existing explicit settings override these values.
+- Package documentation, licenses and examples under `BepInEx/plugins/ValheimVRM`; optional distribution validation checks runtime dependencies without requiring any model or model configuration.
+- Sync wire protocol and per-player request sequencing remain unchanged.
+
+Validation: `docs/release-1.8.6-validation.md`. Server instructions: `docs/SERVER-SYNC.md`.
+
 ## 1.8.5 — Apply the avatar brightness reference at import
 
 - Automatically cap VRM 1.0 MToon base color at 0.45 and shade color at 0.2025

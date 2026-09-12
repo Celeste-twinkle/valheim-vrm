@@ -12,15 +12,17 @@ namespace ValheimVRM
     public sealed class AvatarCatalog
     {
         readonly string directory;
+        readonly string configurationDirectory;
         readonly Dictionary<string, string> paths = new Dictionary<string, string>(StringComparer.Ordinal);
         Dictionary<string, string> selections = new Dictionary<string, string>(StringComparer.Ordinal);
 
         public string[] Names { get; private set; } = new string[0];
-        string SelectionPath => Path.Combine(directory, "avatar_selections.json");
+        string SelectionPath => Path.Combine(configurationDirectory, "avatar_selections.json");
 
-        public AvatarCatalog(string directory)
+        public AvatarCatalog(string directory, string configurationDirectory)
         {
             this.directory = directory;
+            this.configurationDirectory = configurationDirectory;
         }
 
         public void Refresh()
@@ -43,24 +45,14 @@ namespace ValheimVRM
 
         public void LoadSelections()
         {
-            if (File.Exists(SelectionPath))
+            var path = SelectionPath;
+            if (File.Exists(path))
             {
-                selections = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(SelectionPath))
+                selections = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(path))
                     ?? new Dictionary<string, string>(StringComparer.Ordinal);
                 return;
             }
-            // Earlier local builds saved short outfit identifiers. Resolve only a
-            // unique filename suffix so existing selections survive the upgrade.
-            var legacyPath = Path.Combine(directory, "selected_models.json");
-            if (!File.Exists(legacyPath)) return;
-            var legacy = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(legacyPath));
-            if (legacy == null) return;
-            foreach (var pair in legacy)
-            {
-                if (string.IsNullOrEmpty(pair.Value)) continue;
-                var matches = Names.Where(name => name == pair.Value || name.EndsWith("_" + pair.Value, StringComparison.Ordinal)).ToArray();
-                if (matches.Length == 1) selections[pair.Key] = matches[0];
-            }
+            selections = new Dictionary<string, string>(StringComparer.Ordinal);
         }
 
         public string Resolve(string characterName)
@@ -75,7 +67,7 @@ namespace ValheimVRM
             if (string.IsNullOrEmpty(characterName)) throw new ArgumentException("Character name is missing.");
             if (!TryGetPath(name, out _)) throw new FileNotFoundException("The selected VRM is no longer available.");
             var updated = new Dictionary<string, string>(selections, StringComparer.Ordinal) { [characterName] = name };
-            Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(configurationDirectory);
             var temporary = SelectionPath + ".tmp";
             try
             {

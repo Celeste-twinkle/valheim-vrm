@@ -16,7 +16,7 @@ static class Program
         Directory.CreateDirectory(root);
         try
         {
-            var catalog = new AvatarCatalog(root);
+            var catalog = new AvatarCatalog(root, root);
             catalog.Refresh();
             Require(catalog.Names.Length == 0, "An empty folder must be supported.");
             for (int i = 0; i < 24; i++) File.WriteAllText(Path.Combine(root, "Avatar " + i + ".vrm"), "fixture");
@@ -30,7 +30,7 @@ static class Program
             Require(!catalog.TryGetPath("../outside", out _), "Reject directory traversal.");
             catalog.Select("First player", "中文 空格");
             catalog.Select("Second player", "Avatar 23");
-            var reload = new AvatarCatalog(root);
+            var reload = new AvatarCatalog(root, root);
             reload.Refresh();
             reload.LoadSelections();
             Require(reload.Resolve("First player") == "中文 空格", "The first selection must survive a restart.");
@@ -41,23 +41,34 @@ static class Program
             reload.LoadSelections();
             Require(reload.Resolve("First player") == "First player", "Stored paths must not bypass the catalog.");
             File.Delete(Path.Combine(root, "avatar_selections.json"));
-            File.WriteAllText(Path.Combine(root, "Costume_Summer.vrm"), "fixture");
-            File.WriteAllText(Path.Combine(root, "selected_models.json"), "{\"Legacy player\":\"Summer\"}");
-            var migrated = new AvatarCatalog(root);
-            migrated.Refresh();
-            migrated.LoadSelections();
-            Require(migrated.Resolve("Legacy player") == "Costume_Summer", "Keep existing local-build selections.");
-            File.WriteAllText(Path.Combine(root, "Other_Summer.vrm"), "fixture");
-            var ambiguous = new AvatarCatalog(root);
-            ambiguous.Refresh();
-            ambiguous.LoadSelections();
-            Require(ambiguous.Resolve("Legacy player") == "Legacy player", "Do not guess ambiguous old identifiers.");
-            Console.WriteLine("PASS: discovery, 25 models, Unicode, refresh, persistence, boundaries, and legacy migration.");
+            VrmOnly(Path.Combine(root, "vrm-only"));
+            Console.WriteLine("PASS: discovery, 25 models, Unicode, refresh, persistence, boundaries, and separate configuration.");
         }
         finally
         {
             // This randomly named directory was created by this process.
             Directory.Delete(root, true);
         }
+    }
+
+    static void VrmOnly(string root)
+    {
+        var models = Path.Combine(root, "ValheimVRM");
+        var config = Path.Combine(root, "BepInEx", "config", "ValheimVRM");
+        Directory.CreateDirectory(models);
+        File.WriteAllText(Path.Combine(models, "Only.vrm"), "model bytes");
+        var catalog = new AvatarCatalog(models, config);
+        catalog.Refresh(); catalog.LoadSelections(); catalog.Select("A", "Only");
+        var reload = new AvatarCatalog(models, config);
+        reload.Refresh(); reload.LoadSelections();
+        Require(reload.Resolve("A") == "Only", "Selections must persist outside the model directory.");
+        Require(Directory.GetFileSystemEntries(models).Length == 1, "Selecting must not write into the model library.");
+        File.WriteAllText(Path.Combine(models, "avatar_selections.json"), "invalid old configuration");
+        reload.LoadSelections();
+        Require(reload.Resolve("A") == "Only", "Old model-side configuration must be ignored.");
+        File.Delete(Path.Combine(config, "avatar_selections.json"));
+        reload.LoadSelections();
+        Require(reload.Resolve("A") == "A", "Missing new configuration must reset to defaults, without legacy fallback.");
+        Console.WriteLine("PASS: VRM-only library, separate persistence, old model-side configuration ignored, missing configuration defaults.");
     }
 }

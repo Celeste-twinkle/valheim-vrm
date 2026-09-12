@@ -59,12 +59,14 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         ClientSequenceProbe.Run();
         report.Add("Production client: old-server format, capability upgrade, monotonic 1/2/3/4 requests, late legacy hello, opt-out/refresh, new RPC reset, stale connection rejection, overflow guard and no-addon local mode passed");
         var prefab=(GameObject)AccessTools.Field(typeof(FejdStartup),"m_playerPrefab").GetValue(menu);
+        if (Environment.GetEnvironmentVariable("VRM_ONLY_LIBRARY_TEST") == "restart") VrmOnlyRestart(prefab, names);
+        if (Environment.GetEnvironmentVariable("VRM_ONLY_LIBRARY_TEST") == "1") yield return VrmOnlyLibrary(prefab, names);
         var a=MakePlayer(prefab,101,1001,1);var b=MakePlayer(prefab,202,2002,2);
         var sync=AvatarSyncClient.Instance;sync.enabled=false;
         AccessTools.Field(typeof(AvatarSyncClient),"<Connected>k__BackingField").SetValue(sync,true);
         var registry=new AvatarSyncRegistry();registry.Set(101,1001,1,names[0],hashes[0]);registry.Set(202,2002,2,names[1],hashes[1]);
         SetState(sync,registry);
-        var selectionPath=Path.Combine(ValheimVRM.Settings.ValheimVRMDir,"avatar_selections.json");
+        var selectionPath=Path.Combine(ValheimVRM.Settings.ConfigDir, "avatar_selections.json");
         var before=File.Exists(selectionPath)?File.ReadAllBytes(selectionPath):null;
         float capsuleA=a.GetComponent<CapsuleCollider>().height;
         yield return Switch(sync,a,names[0],hashes[0]);
@@ -104,6 +106,9 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         Check(!VrmManager.PlayerToVrmInstance.ContainsKey(a) && VrmManager.PlayerToVrmInstance[b]==rootB,"Restoring A affected B");
         Check(before==null?!File.Exists(selectionPath):File.ReadAllBytes(selectionPath).SequenceEqual(before),"Remote switch overwrote local saved choice");
         report.Add("Respawn IDs, stale snapshots, local-player exclusion, opt-out restoration and local selection persistence passed");
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VRM_ONLY_LIBRARY_TEST")))
+            Check(Directory.GetFileSystemEntries(ValheimVRM.Settings.ValheimVRMDir).All(p => Path.GetExtension(p).Equals(".vrm", StringComparison.OrdinalIgnoreCase)),
+                "Remote sync wrote non-VRM files into the model directory");
         // Keep inactive fixtures isolated; process exits immediately after the probe.
     }
     IEnumerator Switch(AvatarSyncClient sync,Player target,string name,string hash)

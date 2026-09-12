@@ -13,7 +13,7 @@ static class PhysicsWeightProbe
 {
     public static void CheckSettings()
     {
-        var path = Path.Combine(ValheimVRM.Settings.ValheimVRMDir, "physics_options.json");
+        var path = Path.Combine(ValheimVRM.Settings.ConfigDir, "physics_options.json");
         var original = File.Exists(path) ? File.ReadAllBytes(path) : null;
         float old = AvatarPhysics.Weight;
         try

@@ -194,7 +194,7 @@ namespace ValheimVRM
             [NonSerializedAttribute]
             public string Name;
 
-            public float ModelScale = 1.1f;
+            public float ModelScale = 1.0f;
             public float ModelOffsetY = 0.0f;
             public float PlayerHeight = 1.85f;
             public float PlayerRadius = 0.5f;
@@ -231,10 +231,10 @@ namespace ValheimVRM
             public bool UtilityVisible = false;
             public bool LegsVisible = false;
 
-            public float ModelBrightness = 0.8f;
+            public float ModelBrightness = 1.0f;
             public bool FixCameraHeight = true;
-            public bool UseMToonShader = false;
-            public bool EnablePlayerFade = true;
+            public bool UseMToonShader = true;
+            public bool EnablePlayerFade = false;
             public bool AllowShare = true;
 
             public float SpringBoneStiffness = 1.0f;
@@ -384,7 +384,10 @@ namespace ValheimVRM
 
         public static string ValheimVRMDir => Path.Combine(Environment.CurrentDirectory, "ValheimVRM");
 
-        public static string PlayerSettingsPath(string playerName, bool shared) => Path.Combine(ValheimVRMDir, shared ? "Shared" : "", $"settings_{playerName}.txt");
+        public static string ConfigDir => Path.Combine(BepInEx.Paths.ConfigPath, "ValheimVRM");
+
+        public static string PlayerSettingsPath(string playerName, bool shared) =>
+            Path.Combine(ConfigDir, shared ? "Shared" : "", $"settings_{playerName}.txt");
         private static Dictionary<string, VrmSettingsContainer> playerSettings = new Dictionary<string, VrmSettingsContainer>();
 
         public static readonly GlobalSettingsContainer globalSettings = new GlobalSettingsContainer();
@@ -453,7 +456,7 @@ namespace ValheimVRM
 
         public static void ReloadGlobalSettings()
         {
-            var path = Path.Combine(ValheimVRMDir, "global_settings.txt");
+            var path = Path.Combine(ConfigDir, "global_settings.txt");
 
             if (File.Exists(path))
             {

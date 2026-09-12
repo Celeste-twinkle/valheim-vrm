@@ -18,14 +18,15 @@ namespace ValheimVRM
         internal static Shader OptionsShader { get; private set; }
         internal static Shader DepthShader { get; private set; }
         static AssetBundle bundle;
-        static string SettingsPath => Path.Combine(Settings.ValheimVRMDir, "rendering_options.json");
+        static string SettingsPath => Path.Combine(Settings.ConfigDir, "rendering_options.json");
 
         public static void Initialize()
         {
             try
             {
-                if (File.Exists(SettingsPath))
-                    Current = JsonConvert.DeserializeObject<Options>(File.ReadAllText(SettingsPath)) ?? new Options();
+                var path = Path.Combine(Settings.ConfigDir, "rendering_options.json");
+                Current = File.Exists(path)
+                    ? JsonConvert.DeserializeObject<Options>(File.ReadAllText(path)) ?? new Options() : new Options();
             }
             catch (Exception ex) { Debug.LogWarning("[ValheimVRM] Cannot load rendering options: " + ex.Message); }
             AvatarBloomController.Enabled = !Current.Bloom;
@@ -49,7 +50,7 @@ namespace ValheimVRM
         public static void Set(bool sceneLighting, bool receiveShadows, bool bloom)
         {
             var next = new Options { SceneLighting = sceneLighting, ReceiveShadows = receiveShadows, Bloom = bloom };
-            Directory.CreateDirectory(Settings.ValheimVRMDir);
+            Directory.CreateDirectory(Settings.ConfigDir);
             var temporary = SettingsPath + ".tmp";
             try
             {

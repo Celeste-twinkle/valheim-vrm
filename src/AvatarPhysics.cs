@@ -9,15 +9,16 @@ namespace ValheimVRM
     {
         public sealed class Options { public float Weight = .5f; }
         public static float Weight { get; private set; } = .5f;
-        static string SettingsPath => Path.Combine(Settings.ValheimVRMDir, "physics_options.json");
+        static string SettingsPath => Path.Combine(Settings.ConfigDir, "physics_options.json");
         internal static float ClampWeight(float value) => float.IsNaN(value) || float.IsInfinity(value) ? .5f : Mathf.Clamp01(value);
 
         public static void Initialize()
         {
             try
             {
-                if (File.Exists(SettingsPath))
-                    Weight = ClampWeight((JsonConvert.DeserializeObject<Options>(File.ReadAllText(SettingsPath)) ?? new Options()).Weight);
+                var path = Path.Combine(Settings.ConfigDir, "physics_options.json");
+                Weight = File.Exists(path)
+                    ? ClampWeight((JsonConvert.DeserializeObject<Options>(File.ReadAllText(path)) ?? new Options()).Weight) : .5f;
             }
             catch (Exception ex) { Debug.LogWarning("[ValheimVRM] Cannot load physics options: " + ex.Message); }
         }
@@ -26,7 +27,7 @@ namespace ValheimVRM
         public static void Preview(float weight) { Weight = ClampWeight(weight); }
         public static void Save()
         {
-            Directory.CreateDirectory(Settings.ValheimVRMDir);
+            Directory.CreateDirectory(Settings.ConfigDir);
             var temporary = SettingsPath + ".tmp";
             try
             {

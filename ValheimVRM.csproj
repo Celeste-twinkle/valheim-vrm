@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>1.8.5</Version>
+		<Version>1.8.6</Version>
 		<InstallToGame Condition="'$(InstallToGame)' == ''">false</InstallToGame>
 		<TargetFramework>net471</TargetFramework>
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -199,7 +199,6 @@
 
 		<MakeDir Directories="$(FINAL_RELEASE)" Condition=" '$(Configuration)' == 'Release' " />
 		<MakeDir Directories="$(RELEASE_STAGING)" Condition=" '$(Configuration)' == 'Release' " />
-		<MakeDir Directories="$(RELEASE_STAGING)/ValheimVRM" Condition=" '$(Configuration)' == 'Release' " />
 
 		<MakeDir Directories="$(RELEASE_MANAGED)" Condition=" '$(Configuration)' == 'Release' " />
 		<MakeDir Directories="$(RELEASE_PLUGIN)" Condition=" '$(Configuration)' == 'Release' " />
@@ -230,10 +229,10 @@
             <ProjectFiles Include="$(ROOT_DIR)/UnityAsyncImageLoader-LICENSE.txt" />
 			<ProjectFiles Include="$(LIBS_MANAGED)/*-LICENSE.txt" />
 		</ItemGroup>
-		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectFiles)" DestinationFolder="$(RELEASE_STAGING)/ValheimVRM" />
+		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectFiles)" DestinationFolder="$(RELEASE_PLUGIN)/ValheimVRM" />
 
 
-		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectDocs)" DestinationFolder="$(RELEASE_STAGING)/ValheimVRM/docs" />
+		<Copy Condition=" '$(Configuration)' == 'Release' " SourceFiles="@(ProjectDocs)" DestinationFolder="$(RELEASE_PLUGIN)/ValheimVRM/docs" />
 		<!-- Zip for release -->
 
 		<!-- Windows: use PowerShell Compress-Archive -->

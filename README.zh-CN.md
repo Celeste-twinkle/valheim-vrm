@@ -6,7 +6,7 @@
 
 适用于 Windows x64 客户端，已在英灵神殿 1.0.12 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
-可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.5.zip`。
+可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.6.zip`。
 
 ## Fork 继承链
 
@@ -41,6 +41,19 @@ Valheim/
 [中文安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)
 或 [English installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md)。
 
+**模型目录只需 `.vrm` 文件即可正常工作。** 不需要 `settings_*.txt`、JSON、
+清单文件、固定的九个模型、默认模型或初始化脚本。进入世界后按 F8 选择即可。
+无配置时保持模型原始缩放（1.0）、使用 MToon，并关闭旧版角色淡出效果。
+
+选择模型、调整物理或渲染后，Mod 会在 `BepInEx/config/ValheimVRM` 中自动生成
+对应的 `avatar_selections.json`、`physics_options.json`、`rendering_options.json`。
+`settings_模型名.txt` 和 `global_settings.txt` 是可选手动配置，也只放在该配置目录中，
+不会自动生成。整个配置目录不存在也能正常使用。
+1.8.6 起不再读取或迁移模型目录中的旧配置，也不再读取 `selected_models.json`。
+升级前可将需要保留的配置移到新位置，或直接使用默认值。
+说明文档、许可证和配置示例放在 `BepInEx/plugins/ValheimVRM` 中。
+
+
 ## 服务器端包使用
 
 服务器同步为可选功能。需要联机同步时，从本仓库的
@@ -48,8 +61,8 @@ Valheim/
 
 | 安装位置 | 安装包 | 使用方法 |
 | --- | --- | --- |
-| 每位玩家的客户端 | `ValheimVRM-1.8.5.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
-| 专用服务器 | `ValheimVRM-Server-1.8.5.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
+| 每位玩家的客户端 | `ValheimVRM-1.8.6.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
+| 专用服务器 | `ValheimVRM-Server-1.8.6.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
 | 通过游戏“启动服务器”的房主 | 客户端包 + 服务器端包 | 两个包都安装到房主的游戏目录；其他玩家只安装客户端包。 |
 
 服务器插件的最终路径为
@@ -60,7 +73,7 @@ Valheim/
 
 客户端与服务器的文件夹不同、客户端缺少或多出文件，都不会影响入服和正常游戏。
 显示某位玩家的模型时，接收方需要该模型的同名文件（含大小写）及相同内容；
-其他文件无需完全一致。建议统一分发模型及其 `settings_模型名.txt` 配置，以保持外观一致。进入世界后按 **F8**，保持
+其他文件无需完全一致。只分发 `.vrm` 即可；若主动使用可选的模型配置，可另外统一 `BepInEx/config/ValheimVRM` 下的对应 TXT。进入世界后按 **F8**，保持
 **服务器外观同步（服务器支持时）**勾选，确认显示**服务器同步已连接**，再点击模型。
 例如 A 选模型 1、B 选模型 2，其他玩家看到的就是 A = 模型 1、B = 模型 2；
 A 再切换只影响 A，同名玩家或使用相同模型也各自独立。
@@ -90,7 +103,7 @@ F8 显示“请求顺序保护已启用”；旧版仍可联机，但需要双�
 
 游戏语言为中文时，面板显示中文；其他语言使用英文。
 
-模型选择按游戏角色保存在 `ValheimVRM/avatar_selections.json`，重启或死亡复活后自动恢复。
+模型选择按游戏角色保存在 `BepInEx/config/ValheimVRM/avatar_selections.json`，重启或死亡复活后自动恢复。
 无效的模型文件会显示导入错误，并保留先前外观。切换外观会保留已装备物品及其属性；
 原有模型配置仍可控制装备是否显示、武器位置、碰撞体尺寸和交互距离。
 
@@ -102,7 +115,7 @@ F8 显示“请求顺序保护已启用”；旧版仍可联机，但需要双�
 
 **物理摆动权重**滑块控制已导出的头发、衣服和身体弹簧物理：**0%** 不摆动，
 **100%** 保持原始物理摆幅，默认 **50%**。兼容 VRM 1.0 和 VRM 0.x，拖动即时
-生效，松开后保存到 `ValheimVRM/physics_options.json`，切换模型及重启后保留。
+生效，松开后保存到 `BepInEx/config/ValheimVRM/physics_options.json`，切换模型及重启后保留。
 该设置不改写模型内的刚度、重力、阻尼或碰撞参数，也不会补造未导出的物理。
 
 ### 渲染开关
@@ -117,7 +130,7 @@ F8 显示“请求顺序保护已启用”；旧版仍可联机，但需要双�
 
 **1.8.5 起，加载时自动将 MToon10 的基础色和阴影色限制到下述亮度基准，无需在 F8 中调整。**
 
-修改立即生效，并保存在 `ValheimVRM/rendering_options.json`，切换模型及死亡生成布娃娃后同样有效。
+修改立即生效，并保存在 `BepInEx/config/ValheimVRM/rendering_options.json`，切换模型及死亡生成布娃娃后同样有效。
 关闭场景光照时，接收阴影开关暂时不可操作，但会保留所选状态。
 重新开启光照和接收阴影时，会恢复原始着色器，并保留导入时的亮度限制。
 
@@ -152,7 +165,7 @@ VRM 0.x、Standard 和其他着色器保持原有处理方式。
 MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 即可。
 
 如果 F8 无法打开菜单，请确认角色存活且已进入世界，关闭其他菜单，并检查 `BepInEx/LogOutput.log`。
-在 `ValheimVRM/global_settings.txt` 中设置 `EnableAvatarPicker=false` 会禁用此菜单。
+在 `BepInEx/config/ValheimVRM/global_settings.txt` 中设置 `EnableAvatarPicker=false` 会禁用此菜单。
 
 ## 开发
 
@@ -174,8 +187,8 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-编译输出为 `release/ValheimVRM-1.8.5.zip`。
-服务器打包命令输出 `release/ValheimVRM-Server-1.8.5.zip`，应在客户端构建之后执行。
+编译输出为 `release/ValheimVRM-1.8.6.zip`。
+服务器打包命令输出 `release/ValheimVRM-Server-1.8.6.zip`，应在客户端构建之后执行。
 除非显式传入 `-p:InstallToGame=true`，否则编译不会自动将插件安装到游戏中。
 模型目录测试使用 .NET 7 和临时文件，插件目标框架为 .NET Framework 4.7.1。
 着色器源码及重建说明见
@@ -184,7 +197,7 @@ powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALH
 
 验证范围见[运行时依赖来源](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md)、
 [兼容性验证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md)和
-[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.5-validation.md)。
+[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.6-validation.md)。
 此版本已在 Windows／D3D11 下完成受控引擎验证，包括实际 ZRpc 序列化、服务器处理逻辑
 及两名角色的独立模型绑定。尚未完成真实 Steam／PlayFab 专用服务器联机验收，
 Linux、macOS 和 Vulkan 未验证；完整范围见上述记录。
