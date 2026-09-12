@@ -106,10 +106,6 @@ namespace ValheimVRM
 		{
 			if (vrm.VisualModel == null) return null;
 
-			// Pre-acquire VRM state at the very beginning
-			Debug.Log($"[VrmTextureCache] 💽 RegisterVrm started for '{vrm.Name}' with hash: {vrmHash.GetHaxadecimalString()}");
-			VrmTextureCache.RegisterVrm(vrm.Name, vrmHash);
-			VrmManager.VrmHashes[vrm.Name] = vrmHash;
 
 			foreach (var registered in VrmDic)
 			{
@@ -122,43 +118,35 @@ namespace ValheimVRM
 				}
 			}
 
-			if (VrmDic.ContainsKey(vrm.Name))
-			{
-				var existing = VrmDic[vrm.Name];
-
-				if (existing == vrm) return vrm;
-
-				if (existing.VisualModel != vrm.VisualModel)
-				{
-					Object.Destroy(existing.VisualModel);
-				}
-
-				VrmDic[vrm.Name] = null;
-			}
+			if (VrmDic.TryGetValue(vrm.Name, out var existing) && existing == vrm) return vrm;
+			// An old generation may still back another player's visual. Residency
+			// releases it only after its last instance has actually been destroyed.
+			AvatarResidency.Track(vrm);
+			VrmHashes[vrm.Name] = vrmHash;
 
 			Object.DontDestroyOnLoad(vrm.VisualModel);
 
 			VrmDic[vrm.Name] = vrm;
 
-			// Shader replacement and material processing with cache integration
+			// Edit importer-owned materials before cloning; do not allocate unowned copies.
 			var settings = Settings.GetSettings(vrm.Name);
 			var materials = new List<Material>();
 			foreach (var smr in vrm.VisualModel.GetComponentsInChildren<SkinnedMeshRenderer>())
 			{
-				foreach (var mat in smr.materials)
+				foreach (var mat in smr.sharedMaterials)
 				{
 					if (!materials.Contains(mat)) materials.Add(mat);
 				}
 			}
 			foreach (var mr in vrm.VisualModel.GetComponentsInChildren<MeshRenderer>())
 			{
-				foreach (var mat in mr.materials)
+				foreach (var mat in mr.sharedMaterials)
 				{
 					if (!materials.Contains(mat)) materials.Add(mat);
 				}
 			}
 
-			// VrmTextureCache Integration: Process materials using cache and shader colors
+			// Preserve the importer's resource ownership when changing shaders.
 			Shader foundShader = Shader.Find("Custom/Player");
 			int textureCount = 0;
 			var totalStartTime = System.Diagnostics.Stopwatch.StartNew();
@@ -196,22 +184,12 @@ namespace ValheimVRM
 				if (mainTex != null)
 				{
 					textureCount++;
-					var mainKey = VrmTextureCache.GetTextureKey(mainTex);
-					if (mainKey.HasValue)
-					{
-						VrmTextureCache.LinkTextureToVrm(vrm.Name, vrmHash, mainKey.Value);
-					}
 					processedTextures.Add($"\"{mainTex.name}\"  |  {mainTex.width}x{mainTex.height}  |  {mainTex.format}");
 				}
 
 				if (bumpMap != null)
 				{
 					textureCount++;
-					var bumpKey = VrmTextureCache.GetTextureKey(bumpMap);
-					if (bumpKey.HasValue)
-					{
-						VrmTextureCache.LinkTextureToVrm(vrm.Name, vrmHash, bumpKey.Value);
-					}
 					processedTextures.Add($"\"{bumpMap.name}\"  |  {bumpMap.width}x{bumpMap.height}  |  {bumpMap.format}");
 				}
 
@@ -231,7 +209,7 @@ namespace ValheimVRM
 
 			if (!settings.UseMToonShader)
 			{
-				Utils.SendNotification($"ValheimVRM - {vrm.Name} - Processed {textureCount} textures via cache in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
+				Utils.SendNotification($"ValheimVRM - {vrm.Name} - Processed {textureCount} textures in {totalStartTime.ElapsedMilliseconds / 1000.0:F2} seconds", MessageHud.MessageType.TopLeft);
 			}
 
 			var lodGroup = vrm.VisualModel.AddComponent<LODGroup>();
@@ -325,7 +303,7 @@ namespace ValheimVRM
 			[HarmonyPostfix]
 			static void Postfix(Player __instance)
 			{
-				// Don't dispose VRM texture state here. Player may reload the VRM again later.
+				// The visual lease releases ownership when Unity destroys the player hierarchy.
 
 				VrmManager.PlayerToName.Remove(__instance);
 				VrmManager.PlayerToVrmInstance.Remove(__instance);
@@ -778,6 +756,7 @@ namespace ValheimVRM
 					if (vrm.Source == VRM.SourceType.Shared)
 					{
 						VrmManager.VrmDic.Remove(name);
+						VrmManager.VrmHashes.Remove(name);
 						Settings.RemoveSettings(name);
 					}
 				}

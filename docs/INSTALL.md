@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.8.3 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.4 (Celeste-twinkle fork)
 
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
@@ -14,7 +14,7 @@ release, not a release by the upstream maintainer. No avatars are included.
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.3.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.4.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx`, `valheim_Data`, and `ValheimVRM` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -104,7 +104,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.3.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.4.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -114,7 +114,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.3**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.4**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

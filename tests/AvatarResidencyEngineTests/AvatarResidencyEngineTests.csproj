@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net471</TargetFramework>
+    <AssemblyName>ValheimVRM.AvatarResidencyEngineTests</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AvatarResidencyEngineTests.cs" />
+    <Reference Include="BepInEx" HintPath="$(VALHEIM_INSTALL_PATH)/BepInEx/core/BepInEx.dll" />
+    <Reference Include="0Harmony" HintPath="$(VALHEIM_INSTALL_PATH)/BepInEx/core/0Harmony.dll" />
+    <Reference Include="assembly_postprocessing" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_postprocessing.dll" />
+    <Reference Include="assembly_utils" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_utils.dll" />
+    <Reference Include="assembly_guiutils" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_guiutils.dll" />
+    <Reference Include="assembly_valheim" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_valheim.dll" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/Newtonsoft.Json.dll" />
+    <Reference Include="UnityEngine.IMGUIModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.IMGUIModule.dll" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.TextRenderingModule.dll" />
+    <Reference Include="UnityEngine" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.dll" />
+    <Reference Include="UnityEngine.AnimationModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.AnimationModule.dll" />
+    <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.AssetBundleModule.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.PhysicsModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.PhysicsModule.dll" />
+    <Reference Include="UnityEngine.UI" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.UI.dll" />
+    <Reference Include="VRM" HintPath="../../Libs/Managed/VRM.dll" />
+    <Reference Include="VRM10" HintPath="../../Libs/Managed/VRM10.dll" />
+    <Reference Include="VRM10.MToon10" HintPath="../../Libs/Managed/VRM10.MToon10.dll" />
+    <Reference Include="VrmLib" HintPath="../../Libs/Managed/VrmLib.dll" />
+    <Reference Include="MToon" HintPath="../../Libs/Managed/MToon.dll" />
+    <Reference Include="UniGLTF" HintPath="../../Libs/Managed/UniGLTF.dll" />
+    <Reference Include="UniGLTF.Utils" HintPath="../../Libs/Managed/UniGLTF.Utils.dll" />
+    <Reference Include="UniGLTF.UniUnlit" HintPath="../../Libs/Managed/UniGLTF.UniUnlit.dll" />
+    <Reference Include="UniHumanoid" HintPath="../../Libs/Managed/UniHumanoid.dll" />
+    <Reference Include="FastSpringBone10" HintPath="../../Libs/Managed/FastSpringBone10.dll" />
+    <Reference Include="SpringBoneJobs" HintPath="../../Libs/Managed/SpringBoneJobs.dll" />
+    <Reference Include="Unity.Burst" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/Unity.Burst.dll" />
+    <Reference Include="Unity.Mathematics" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/Unity.Mathematics.dll" />
+    <Reference Include="AsyncImageLoader" HintPath="../../Libs/Managed/AsyncImageLoader.Runtime.dll" />
+    <Reference Include="ValheimVRM" HintPath="../../bin/Release/net471/ValheimVRM.dll" />
+    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.ImageConversionModule.dll" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

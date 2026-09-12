@@ -24,6 +24,7 @@ namespace ValheimVRM
 		private int _SunColor;
 		private int _AmbientColor;
 
+		private readonly List<Material> ownedMaterials = new List<Material>();
 		private List<MatColor> matColors = new List<MatColor>();
 
 		void Awake()
@@ -38,10 +39,20 @@ namespace ValheimVRM
 			matColors.Clear();
 			foreach (var smr in vrm.GetComponentsInChildren<SkinnedMeshRenderer>())
 			{
-				foreach (var mat in smr.materials)
+				// MToon10/Standard need no per-instance color driver. Inspect
+				// sharedMaterials first: .materials would allocate even when skipped.
+				var materials = smr.sharedMaterials;
+				for (int i = 0; i < materials.Length; i++)
 				{
+					var mat = materials[i];
 					// Standard and VRM 1.0 MToon receive real scene lighting already.
 					if (mat == null || mat.shader == null || mat.shader.name == "Standard" || AvatarRenderingTarget.Supports(mat)) continue;
+					if (!ownedMaterials.Contains(mat))
+					{
+						mat = new Material(mat);
+						ownedMaterials.Add(mat);
+						materials[i] = mat;
+					}
 					if (!matColors.Exists(m => m.mat == mat))
 					{
 						matColors.Add(new MatColor()
@@ -56,7 +67,14 @@ namespace ValheimVRM
 						});
 					}
 				}
+				smr.sharedMaterials = materials;
 			}
+		}
+
+		void OnDestroy()
+		{
+			foreach (var mat in ownedMaterials) if (mat != null) Destroy(mat);
+			ownedMaterials.Clear();
 		}
 
 		void Update()

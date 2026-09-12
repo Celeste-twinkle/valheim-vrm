@@ -7,7 +7,7 @@
 Windows x64 client build for Valheim 1.0.12. This fork combines the compatibility
 fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
 with an in-game avatar picker and optional rendering controls. Download
-`ValheimVRM-1.8.3.zip` from this fork's Release page for the compiled plugin.
+`ValheimVRM-1.8.4.zip` from this fork's Release page for the compiled plugin.
 
 ## Fork history
 
@@ -52,8 +52,8 @@ Server synchronization is optional. Download the packages from this fork's
 
 | Install on | Package | Setup |
 | --- | --- | --- |
-| Every player's client | `ValheimVRM-1.8.3.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
-| Dedicated server | `ValheimVRM-Server-1.8.3.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
+| Every player's client | `ValheimVRM-1.8.4.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
+| Dedicated server | `ValheimVRM-Server-1.8.4.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
 | A player hosting through **Start server** | Both packages | Install both in the host's game directory; other players only need the client package. |
 
 The server DLL must end up at
@@ -172,10 +172,10 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Build output is `release/ValheimVRM-1.8.3.zip`. Building does not install the plugin
+Build output is `release/ValheimVRM-1.8.4.zip`. Building does not install the plugin
 into your game unless you explicitly pass `-p:InstallToGame=true`.
 Run the server packaging command after the client build to produce
-`release/ValheimVRM-Server-1.8.3.zip`.
+`release/ValheimVRM-Server-1.8.4.zip`.
 The catalog tests use .NET 7 and temporary files; the plugin targets .NET Framework 4.7.1.
 Shader source/rebuild instructions are in
 [shaders/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md).
@@ -184,8 +184,21 @@ is insufficient for a distributable DLL.
 
 Read [runtime dependency provenance](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md),
 [compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md), and
-[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.3-validation.md)
+[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.4-validation.md)
 for the tested scope. Windows/D3D11 engine probes cover actual ZRpc serialization,
 production server handlers and independent model attachment to two player fixtures.
 A real Steam/PlayFab dedicated-server session, Linux, macOS and Vulkan have not
 been validated for this build.
+
+## Avatar memory use
+
+Since 1.8.4, imported templates are released about 15 seconds after their last
+player instance is destroyed. Switching avatars, player removal and disabling a
+remote avatar release its ownership. Players still present in the scene retain
+resources even outside the camera view; multiple players using one model keep
+it loaded until the last user is gone. Pending attachments are protected.
+Selecting an evicted model imports it again. The file browser only lists files;
+it does not preload every avatar. VRM import buffers are disposed immediately,
+and source-file bytes are retained only for opt-in legacy file sharing.
+Unity/graphics-driver memory pools may keep the process working set high after
+individual textures and meshes have been destroyed.

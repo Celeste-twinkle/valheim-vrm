@@ -1,4 +1,4 @@
-# ValheimVRM 1.8.3 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 1.8.4 安装说明（Celeste-twinkle 分支）
 
 多人外观同步需要服务器另外安装独立服务端插件，详见[服务器同步与本地模式](SERVER-SYNC.md)。
 
@@ -12,7 +12,7 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-1.8.3.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-1.8.4.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data`、`ValheimVRM` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
@@ -87,7 +87,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。
 
 只改变本机外观时，无需服务器安装。多人同步时，在已安装 BepInEx 5 的服务器上
-解压 `ValheimVRM-Server-1.8.3.zip`，并让各客户端安装相同模型文件，详见
+解压 `ValheimVRM-Server-1.8.4.zip`，并让各客户端安装相同模型文件，详见
 [服务器安装说明](SERVER-SYNC.md)。F8 可随时退出同步；通过游戏“启动服务器”的
 房主也可同时安装服务端插件。旧版整文件分享协议默认通过
 `EnableLegacyVrmSharing=false` 停用，使用新同步时请保持关闭。分发模型仍需遵守其许可。
@@ -96,7 +96,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.3**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.4**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。
@@ -105,3 +105,12 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 本次验证限于 Windows／D3D11；Linux、macOS、Vulkan、多人分享及其他插件组合未验证。
 反馈请提交至 [本 fork 的 Issues](https://github.com/Celeste-twinkle/valheim-vrm/issues)，
 附上游戏版本、Release 标签及相关日志。
+
+## 未使用模型的内存释放
+
+1.8.4 起，模型的最后一个角色实例被销毁后，约 15 秒自动释放导入模板及其网格、
+贴图、材质和骨骼资源。换装、玩家离开场景或恢复原版外观都会解除相应引用。
+仍在场景内、只是位于镜头外的玩家继续保留；多人使用相同模型时，要等最后一人
+不再使用才释放。导入/绑定过程受到保护。再次选择已释放的模型会重新加载。
+模型列表不会预加载整个文件夹。普通本地/服务器同步模式也不再常驻保存 VRM 原始文件字节。
+Unity 和显卡驱动可能保留内存池，因此任务管理器中的占用不一定立刻下降。

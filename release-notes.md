@@ -1,3 +1,22 @@
+## 1.8.4 — Release unused avatar resources
+
+- Dispose native GLB import buffers and importer contexts on success and failure.
+- Release imported templates about 15 seconds after their last player instance
+  is destroyed. Keep shared avatars, off-camera players and pending attachments
+  alive; same-name replacements no longer destroy another player's resources.
+- Stop retaining VRM source-file bytes in normal local and server-sync modes.
+  Opt-in legacy file sharing still retains the bytes needed for transfer.
+- Preserve importer material ownership, dispose legacy color-driver material
+  copies and remove the unsafe global VRM0 texture cache. Re-selecting an evicted
+  avatar imports it again.
+- Keep the 1.8.3 request-order protocol and optional server compatibility unchanged.
+  This fix runs on clients; the server package is rebuilt at the matching version.
+
+修复连续换装后旧模型长期占用内存的问题。最后一个使用者离开后约 15 秒回收；
+多人共用模型不会被误删，镜头外但仍在场景内的玩家保持正常显示。
+
+See `docs/release-1.8.4-validation.md` and `docs/SERVER-SYNC.md`.
+
 ## 1.8.3 — Ordered avatar selection requests
 
 - Add positive 64-bit request sequences after capability negotiation. The server

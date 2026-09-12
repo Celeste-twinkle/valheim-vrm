@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using UnityEngine;
 using UniGLTF;
 using System.IO;
@@ -30,29 +30,14 @@ namespace ValheimVRM
             if (isKnownImage)
             {
                 var linear = textureInfo.ColorSpace == UniGLTF.ColorSpace.Linear;
-                var (cachedTexture, rawKey) = VrmTextureCache.GetOrCacheTexture(textureInfo.ImageData, linear);
-                if (cachedTexture != null)
+                // TextureFactory caches within this import and transfers ownership
+                // to RuntimeGltfInstance. Never share an owned texture with a
+                // different importer that can independently destroy it.
+                texture = Utils.TryLoadImageWithUnity(textureInfo.ImageData, linear);
+                if (texture == null)
                 {
-                    texture = cachedTexture;
-                    VrmTextureCache.RecordInstanceMapping(texture.GetInstanceID(), rawKey);
-                }
-                else
-                {
-                    texture = Utils.TryLoadImageWithUnity(textureInfo.ImageData, linear);
-                    if (texture != null)
-                    {
-                        var (newCached, newKey) = VrmTextureCache.GetOrCacheTexture(textureInfo.ImageData, linear);
-                        if (newCached != null)
-                        {
-                            texture = newCached;
-                            VrmTextureCache.RecordInstanceMapping(texture.GetInstanceID(), newKey);
-                        }
-                    }
-                    else
-                    {
-                        LogTextureFailure(textureInfo, currentTextureIndex);
-                        texture = CreateFallbackTexture();
-                    }
+                    LogTextureFailure(textureInfo, currentTextureIndex);
+                    texture = CreateFallbackTexture();
                 }
 
                 if (texture != null)
@@ -77,7 +62,7 @@ namespace ValheimVRM
 
         private string GetTextureFormat(UniGLTF.DeserializingTextureInfo textureInfo)
         {
-            if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 24)
+            if (textureInfo.DataMimeType == "image/png" && textureInfo.ImageData.Length >= 26)
             {
                 try
                 {
