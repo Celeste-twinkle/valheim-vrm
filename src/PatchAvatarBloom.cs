@@ -5,6 +5,18 @@ using UnityEngine.PostProcessing;
 
 namespace ValheimVRM
 {
+    [HarmonyPatch(typeof(TaaComponent), nameof(TaaComponent.Render))]
+    static class PatchAvatarBloomTemporalInput
+    {
+        static void Postfix(TaaComponent __instance)
+        {
+            // TAA resolves its jittered scene before Bloom.Prepare. Sample the
+            // current coverage at that same offset; reset on each camera cull.
+            var camera = __instance.context.camera;
+            if (camera != null) camera.GetComponent<AvatarBloomCamera>()?.SetTemporalJitter(__instance.jitterVector);
+        }
+    }
+
     [HarmonyPatch(typeof(BloomComponent), nameof(BloomComponent.Prepare))]
     public static class PatchAvatarBloom
     {

@@ -58,12 +58,14 @@ Shader "Hidden/ValheimVRM/AvatarBloom"
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
             sampler2D _AvatarBloomMask;
+            float2 _AvatarBloomJitter;
             float4 frag(v2f_img input) : SV_Target
             {
                 float2 maskUv = input.uv;
                 #if UNITY_UV_STARTS_AT_TOP
                 if (_MainTex_TexelSize.y < 0) maskUv.y = 1 - maskUv.y;
                 #endif
+                maskUv -= _AvatarBloomJitter;
                 float4 color = tex2D(_MainTex, input.uv);
                 color.rgb *= 1 - tex2D(_AvatarBloomMask, maskUv).r;
                 return color;

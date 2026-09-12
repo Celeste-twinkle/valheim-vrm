@@ -1,3 +1,13 @@
+## 1.8.8 — Fix TAA clothing/bloom artifacts and raise minimum height to 2 m
+
+- Keep transparent avatar layers in the same jittered camera projection as the opaque body while Valheim's TAA is active. Previously, close-fitting stockings could disappear in jagged moving strips because they tested against depth from a different projection.
+- Apply the correction per camera render when an avatar is visible, then restore the camera's native transparency setting. Cameras without a visible avatar retain their ordinary behavior. Game antialiasing preferences, original materials, opacity, meshes and model files are preserved.
+- The correction covers local and synchronized avatars displayed on the updated client, with either avatar bloom setting. The optional server protocol is unchanged; the viewing player's client must be updated.
+- Keep bloom exclusion coverage in the same projection as the scene and sample it at the TAA-resolved offset. Fix the large alternating coverage dropouts when game antialiasing is on and avatar bloom is off, while leaving scene HDR color intact.
+- Raise the minimum standing visible mesh height from 1.6 m to 2 m. Smaller models scale uniformly; models already at least 2 m and larger requested scales are preserved.
+
+Validation: `docs/release-1.8.8-validation.md`. Real-model render comparisons cover TAA samples, front/back views, translated world coordinates, ordinary/strong lighting and both avatar bloom settings. A separate static-model test records 64 consecutive HDR frames after 32 warmup frames, including bloom coverage and the actual filtered bloom input.
+
 ## 1.8.7 — Fix menu reentry leaks and enforce minimum avatar height
 
 - Install the assembly's Harmony patches once per process. Returning from a world to the main menu previously appended another copy of every patch. Duplicate bloom prefixes overwrote their shared temporary-texture state, leaving full-resolution HDR textures unreleased each frame.

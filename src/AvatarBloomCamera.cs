@@ -34,6 +34,7 @@ namespace ValheimVRM
             }
             commands.Clear();
             HasVisibleAvatar = false;
+            if (BloomFilter != null) BloomFilter.SetVector("_AvatarBloomJitter", Vector4.zero);
             if (!AvatarBloomController.Enabled || AvatarBloomController.BloomShader == null) return;
 
             draws.Clear();
@@ -71,6 +72,11 @@ namespace ValheimVRM
             }
         }
 
+        internal void SetTemporalJitter(Vector2 jitter)
+        {
+            if (BloomFilter != null) BloomFilter.SetVector("_AvatarBloomJitter", new Vector4(jitter.x, jitter.y, 0, 0));
+        }
+
         Material GetMask(Material source)
         {
             if (!masks.TryGetValue(source, out var mask))
@@ -97,7 +103,9 @@ namespace ValheimVRM
             BloomMask = new RenderTexture(width, height, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear)
             {
                 name = "ValheimVRM bloom coverage",
-                filterMode = FilterMode.Point,
+                // TAA resolves subpixel samples; coverage must support the same
+                // subpixel lookup instead of jumping between nearest pixels.
+                filterMode = FilterMode.Bilinear,
                 hideFlags = HideFlags.HideAndDontSave
             };
             BloomMask.Create();

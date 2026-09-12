@@ -9,6 +9,10 @@ The variant bypasses `UNITY_SHADOW_ATTENUATION`, preserving distance/cookie
 attenuation in `UNITY_LIGHT_ATTENUATION`. The flat-color branch returns base color
 and emission in the base pass and zero RGB in additional-light passes. It does not
 clamp output brightness. `AlbedoLit/AvatarBloom.shader` masks only the bloom input.
+When game TAA is active, the client uses matching projection jitter for opaque
+and transparent draws on cameras that see avatars. TAA resolves scene color before
+bloom, so the bloom filter also applies its current UV offset to coverage and uses
+bilinear sampling. The offset resets at each camera cull, including non-TAA renders.
 
 `AvatarRendering/AvatarDepth.shader` supplies depth and world-space normals for
 opaque/cutout MToon surfaces at `CameraEvent.AfterGBuffer`. Without this step,

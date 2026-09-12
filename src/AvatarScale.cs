@@ -7,7 +7,7 @@ namespace ValheimVRM
     // Serialized scalar data survives Instantiate; clones never measure a seated pose.
     public sealed class AvatarScale : MonoBehaviour
     {
-        public const float MinimumHeight = 1.6f;
+        public const float MinimumHeight = 2f;
         [SerializeField] float unscaledHeight;
         public float UnscaledHeight => unscaledHeight;
 
