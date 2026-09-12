@@ -1,3 +1,19 @@
+## 1.8.1 — Optional synchronization for mixed client servers
+
+- Stop discovery after three unanswered messages. Unmodded clients can join and
+  use normal game RPCs without installing ValheimVRM; they receive no avatar snapshots.
+- Keep admission, version checks and disconnection behavior unchanged. Preserve
+  protocol compatibility with 1.8.0 clients and independent per-player selections.
+- Document mixed client servers in the English and Chinese READMEs.
+
+Install the complete client package when updating a client, and update the separate
+server ZIP on servers. No model files are included in the public Release.
+See `docs/release-1.8.1-validation.md` and `docs/SERVER-SYNC.md`.
+
+服务器允许未安装 Mod 的玩家正常加入；他们显示原版角色，不参与模型同步。
+服务端最多探测三次，不向未握手客户端发送外观快照，不增加强制安装或踢人规则。
+保留 1.8.0 的玩家独立同步与 F8 物理权重功能。
+
 ## 1.8.0 — Per-player server synchronization and adjustable physics
 
 - Add an optional, separate server addon. Each client installs the same local

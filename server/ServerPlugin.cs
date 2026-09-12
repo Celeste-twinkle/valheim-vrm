@@ -7,7 +7,7 @@ using ValheimVRM.Sync;
 
 namespace ValheimVRM.Server
 {
-    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "1.8.0")]
+    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "1.8.1")]
     public sealed class ServerPlugin : BaseUnityPlugin
     {
         sealed class Session
@@ -16,6 +16,7 @@ namespace ValheimVRM.Server
             public bool Handshake, Enabled;
             public string Model = "", Hash = "";
             public float NextHello;
+            public int HelloAttempts;
             public long SentRevision = -1;
         }
         readonly Dictionary<ZRpc, Session> sessions = new Dictionary<ZRpc, Session>();
@@ -30,7 +31,7 @@ namespace ValheimVRM.Server
         void Awake()
         {
             syncEnabled = Config.Bind("Sync", "Enabled", true, "Relay per-player avatar selections. No VRM files or shaders are loaded by the server.");
-            Logger.LogInfo("Avatar sync server 1.8.0 ready; player identity uses authenticated peer and character ZDO IDs.");
+            Logger.LogInfo("Avatar sync server 1.8.1 ready; player identity uses authenticated peer and character ZDO IDs.");
         }
 
         void Update()
@@ -49,8 +50,12 @@ namespace ValheimVRM.Server
                     s = new Session { Peer = peer }; sessions.Add(peer.m_rpc, s);
                     peer.m_rpc.Register<ZPackage>(AvatarSyncWire.Select, ReceiveSelection);
                 }
-                if (!s.Handshake && Time.realtimeSinceStartup >= s.NextHello)
+                // Vanilla clients silently ignore unknown ZRpc methods. Discovery
+                // is bounded, and no snapshot is sent until a client opts in.
+                // Missing the addon never changes admission or disconnects a peer.
+                if (!s.Handshake && s.HelloAttempts < 3 && Time.realtimeSinceStartup >= s.NextHello)
                 {
+                    s.HelloAttempts++;
                     s.NextHello = Time.realtimeSinceStartup + 3;
                     peer.m_rpc.Invoke(AvatarSyncWire.Hello, syncEnabled.Value ? AvatarSyncRules.Version : 0);
                 }

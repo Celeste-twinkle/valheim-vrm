@@ -52,6 +52,7 @@ public sealed class AvatarSyncEngineTests : BaseUnityPlugin
         WireTests(names,hashes);
         report.Add("Real ZRpc serialization over isolated in-memory sockets: two senders, three receivers, snapshots and malformed data passed");
         ServerRelayProbe.Run(names,hashes);
+        report.Add("Unmodded ZRpc client: no avatar handlers, three discovery packets maximum, zero avatar snapshots, 60 ordinary request/reply exchanges, no errors or disconnects");
         report.Add("Production server plugin: handshake, authenticated ZDO ownership, forged character rejection, respawn, rapid changes, late join, opt-out and disconnect passed over real ZRpc");
         var prefab=(GameObject)AccessTools.Field(typeof(FejdStartup),"m_playerPrefab").GetValue(menu);
         var a=MakePlayer(prefab,101,1001,1);var b=MakePlayer(prefab,202,2002,2);

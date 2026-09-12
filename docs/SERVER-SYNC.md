@@ -2,15 +2,15 @@
 
 ## 中文
 
-客户端和服务器均使用 1.8.0。每位玩家在自己的游戏根目录安装同一套
+客户端和服务器推荐使用 1.8.1；同步协议仍兼容 1.8.0 客户端。参与外观同步的玩家在自己的游戏根目录安装同一套
 `ValheimVRM` 文件夹，模型文件名（含大小写）及 VRM 内容必须一致。
 各客户端仍可保留自己的角色选择、渲染开关和物理摆动权重。
 
-1. 服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.0.zip`
+1. 服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.1.zip`
    解压到服务器程序所在目录。目标为
    `BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll`。
    服务器只需该同步插件，不需要客户端的着色器、UniVRM DLL 或角色模型。
-2. 每位玩家安装完整客户端 `ValheimVRM-1.8.0.zip` 和相同的模型文件夹。
+2. 参与外观同步的玩家安装完整客户端 `ValheimVRM-1.8.1.zip` 和相同的模型文件夹。
 3. 重启服务器和客户端。进入世界后，F8 应显示“服务器同步已连接”。
 4. 保持“服务器外观同步（服务器支持时）”勾选，点击模型。只有进行切换的
    玩家改变外观；其他玩家各自的选择不变。
@@ -24,6 +24,10 @@
 取消勾选同步也会进入本地模式：本机保留自己的模型，停止接收其他玩家的
 选择，并通知服务器清除自己的公开选择。其他客户端眼中的该玩家恢复为原版外观。
 服务器未安装此插件时，客户端不会发送本协议的模型选择请求。
+
+未安装客户端 Mod 的玩家也能正常加入：服务端不修改登录、版本校验或踢人逻辑。
+原版客户端忽略未知 RPC，最多三次探测后服务端停止探测，不发送模型快照；
+这类玩家看到原版角色，自己的外观也保持原版。此兼容路径有受控引擎测试覆盖。
 
 服务器只中转模型名称与 SHA-256 指纹，不接收、导入或分发 VRM 文件。
 接收方缺少模型或文件指纹不一致时，显示提示并保留已有可用外观（首次
@@ -46,17 +50,23 @@ Linux 服务器使用同一个托管 DLL，但本次引擎验证环境为 Window
 
 ## English
 
-Install the full 1.8.0 client on every player and distribute an identical top-level
+Install the full 1.8.1 client on every participating player and distribute an identical top-level
 `ValheimVRM` model folder. File names are case-sensitive protocol identifiers;
 SHA-256 must match the sender's VRM. Model settings should also be distributed
 consistently. Personal avatar selections, lighting and physics-weight preferences
 remain local.
 
 The dedicated server needs BepInEx 5 and only the DLL from
-`ValheimVRM-Server-1.8.0.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
+`ValheimVRM-Server-1.8.1.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
 It does not load avatar files, UniVRM or shaders. Restart, join, and enable
 **Server avatar sync** in F8. A client-hosted server can install the same server
 addon alongside its client plugin.
+
+Unmodded clients may join normally and see vanilla characters. Discovery stops
+after three unanswered messages, and no avatar snapshot is sent without the mod
+handshake. Admission and game version checks are unchanged; missing this optional
+addon never triggers a disconnect. Protocol version 1 remains compatible with
+1.8.0 clients.
 
 The server authenticates the sender by its connection, validates ownership of its
 character ZDO, and broadcasts a per-player snapshot. A selecting model 1 never
