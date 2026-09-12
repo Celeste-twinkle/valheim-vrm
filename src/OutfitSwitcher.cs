@@ -336,6 +336,10 @@ namespace ValheimVRM
             GUILayout.Label(sync.Connected && sync.SyncEnabled
                 ? Text("Server sync connected · Each player's choice is independent", "服务器同步已连接 · 每位玩家独立选择")
                 : Text("Local mode · Your choice stays on this computer", "本地模式 · 切换仅在本机生效"));
+            if (sync.Connected && sync.SyncEnabled)
+                GUILayout.Label(sync.SequencedRequests
+                    ? Text("Request order protection active", "请求顺序保护已启用")
+                    : Text("Legacy server compatibility · Update the server for request order protection", "旧版服务器兼容模式 · 更新服务端可启用请求顺序保护"));
             if (!string.IsNullOrEmpty(sync.LastError)) GUILayout.Label(sync.LastError, new GUIStyle(GUI.skin.label) { wordWrap = true });
         }
 

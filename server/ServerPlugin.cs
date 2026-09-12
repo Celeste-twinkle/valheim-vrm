@@ -7,7 +7,7 @@ using ValheimVRM.Sync;
 
 namespace ValheimVRM.Server
 {
-    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "1.8.2")]
+    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "1.8.3")]
     public sealed class ServerPlugin : BaseUnityPlugin
     {
         sealed class Session
@@ -18,6 +18,7 @@ namespace ValheimVRM.Server
             public float NextHello;
             public int HelloAttempts;
             public long SentRevision = -1;
+            public readonly AvatarRequestOrder Order = new AvatarRequestOrder();
         }
         readonly Dictionary<ZRpc, Session> sessions = new Dictionary<ZRpc, Session>();
         AvatarSyncRegistry registry = new AvatarSyncRegistry();
@@ -26,12 +27,13 @@ namespace ValheimVRM.Server
         float nextPoll;
         bool hostEnabled;
         string hostModel = "", hostHash = "";
+        AvatarRequestOrder hostOrder = new AvatarRequestOrder();
         public bool SyncAvailable => syncEnabled != null && syncEnabled.Value;
 
         void Awake()
         {
             syncEnabled = Config.Bind("Sync", "Enabled", true, "Relay per-player avatar selections. No VRM files or shaders are loaded by the server.");
-            Logger.LogInfo("Avatar sync server 1.8.2 ready; player identity uses authenticated peer and character ZDO IDs.");
+            Logger.LogInfo("Avatar sync server 1.8.3 ready; player identity uses authenticated peer and character ZDO IDs.");
         }
 
         void Update()
@@ -57,7 +59,9 @@ namespace ValheimVRM.Server
                 {
                     s.HelloAttempts++;
                     s.NextHello = Time.realtimeSinceStartup + 3;
-                    peer.m_rpc.Invoke(AvatarSyncWire.Hello, syncEnabled.Value ? AvatarSyncRules.Version : 0);
+                    int version = syncEnabled.Value ? AvatarSyncRules.Version : 0;
+                    peer.m_rpc.Invoke(AvatarSyncWire.SequencedHello, version);
+                    peer.m_rpc.Invoke(AvatarSyncWire.Hello, version);
                 }
                 UpdateCharacter(peer.m_uid, peer.m_characterID, syncEnabled.Value && s.Enabled, s.Model, s.Hash);
             }
@@ -77,16 +81,21 @@ namespace ValheimVRM.Server
             {
                 sessions.Clear(); registry = new AvatarSyncRegistry(); network = net;
                 hostModel = hostHash = ""; hostEnabled = false;
+                hostOrder = new AvatarRequestOrder();
             }
             return net;
         }
 
         void ReceiveSelection(ZRpc rpc, ZPackage package)
         {
-            if (network == null || !network.IsServer() || !sessions.TryGetValue(rpc, out var s) || !s.Peer.IsReady()) return;
-            if (!AvatarSyncWire.ReadSelection(package, out var accept, out var model, out var hash)) return;
-            // Coalesce rapid changes into the most recent request. Applying state is
-            // limited by Update's 5 Hz cadence; a client cannot name another player.
+            var net = ResetNetworkIfNeeded();
+            if (net == null || !net.IsServer() || !sessions.TryGetValue(rpc, out var s) ||
+                !s.Peer.IsReady() || !net.GetPeers().Contains(s.Peer)) return;
+            if (!AvatarSyncWire.ReadSelection(package, out var accept, out var model, out var hash, out var sequence) ||
+                !s.Order.TryAccept(sequence)) return;
+            // Validate the entire packet before advancing the connection's order.
+            // Keep its watermark across respawn and opt-out; reset only on a new
+            // connection. Rejected requests never change state or its revision.
             s.Handshake = true; s.Enabled = accept; s.Model = model; s.Hash = hash;
             s.SentRevision = -1;
         }
@@ -103,11 +112,20 @@ namespace ValheimVRM.Server
         // types so the client does not require a reference to the server assembly.
         public void SetHostSelection(bool accept, string model, string hash)
         {
+            ApplyHostSelection(0, accept, model, hash);
+        }
+        public void SetHostSelectionSequenced(long sequence, bool accept, string model, string hash)
+        {
+            if (sequence > 0) ApplyHostSelection(sequence, accept, model, hash);
+        }
+        void ApplyHostSelection(long sequence, bool accept, string model, string hash)
+        {
             // The client bridge may run before our first Update after joining.
             // Reset first, so the next server tick cannot erase that initial choice.
             var net = ResetNetworkIfNeeded();
             if (net == null || !net.IsServer()) return;
-            if (model != "" && (!AvatarSyncRules.ValidModel(model) || !AvatarSyncRules.ValidHash(hash))) return;
+            if (!(model == "" && hash == "" || AvatarSyncRules.ValidModel(model) && AvatarSyncRules.ValidHash(hash)) ||
+                !hostOrder.TryAccept(sequence)) return;
             hostEnabled = accept; hostModel = model; hostHash = hash;
         }
         public ZPackage ReadHostSnapshot()

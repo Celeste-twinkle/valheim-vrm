@@ -1,3 +1,22 @@
+## 1.8.3 — Ordered avatar selection requests
+
+- Add positive 64-bit request sequences after capability negotiation. The server
+  accepts only increasing sequences per authenticated connection, so a later-sent
+  choice remains authoritative even when delivery is reversed.
+- Reject duplicates, stale requests and late legacy-format packets on upgraded
+  connections. Opt-out shares the sequence; respawn does not reset it. Reconnects
+  get a fresh counter and old RPC callbacks cannot affect the new connection.
+- Apply the same rule to the listen-host bridge. New clients also ignore equal
+  snapshot revisions and show the negotiated protection state in F8.
+- Preserve legacy 1.8.0–1.8.2 compatibility and unmodded admission. Upstream
+  ordering requires both sender and server to run 1.8.3; legacy mode retains its
+  original arrival-order behavior. Update the complete client and server ZIPs.
+
+请求序号按每位玩家的连接独立递增；先发 A、后发 B，即使 B 先到，也不会被迟到的 A 覆盖。
+死亡重生和开关同步不重置序号，重连才重置。F8 可查看保护是否启用。
+
+See `docs/release-1.8.3-validation.md` and `docs/SERVER-SYNC.md`.
+
 ## 1.8.2 — Safe fallback for different avatar folders
 
 - Different client/server folders never become an admission requirement. The

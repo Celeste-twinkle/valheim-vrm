@@ -14,6 +14,7 @@ namespace ValheimVRM
     {
         public static AvatarSyncClient Instance { get; private set; }
         public bool Connected { get; private set; }
+        public bool SequencedRequests { get; private set; }
         public bool SyncEnabled => syncEnabled.Value;
         public string LastError { get; private set; } = "";
         ConfigEntry<bool> syncEnabled;
@@ -22,6 +23,7 @@ namespace ValheimVRM
         object hostPlugin;
         MethodInfo hostSubmit, hostRead;
         long revision = -1;
+        long requestSequence;
         float nextPoll;
         string lastSent;
         AvatarSelection[] states = new AvatarSelection[0];
@@ -41,13 +43,26 @@ namespace ValheimVRM
         {
             if (peer?.m_rpc == null || !registered.Add(peer.m_rpc)) return;
             peer.m_rpc.Register<int>(AvatarSyncWire.Hello, ReceiveHello);
+            peer.m_rpc.Register<int>(AvatarSyncWire.SequencedHello, ReceiveSequencedHello);
             peer.m_rpc.Register<ZPackage>(AvatarSyncWire.State, ReceiveState);
         }
         void ReceiveHello(ZRpc rpc, int version)
         {
+            ProcessHello(rpc, version, false);
+        }
+        void ReceiveSequencedHello(ZRpc rpc, int version)
+        {
+            ProcessHello(rpc, version, true);
+        }
+        void ProcessHello(ZRpc rpc, int version, bool sequenced)
+        {
             if (ZNet.instance == null || ZNet.instance.IsServer() || ZNet.instance.GetServerPeer()?.m_rpc != rpc) return;
             ResetConnectionIfNeeded();
+            // Discovery packets may themselves arrive out of order. A legacy
+            // hello cannot downgrade an already upgraded connection.
+            if (SequencedRequests && !sequenced && version == AvatarSyncRules.Version) return;
             Connected = version == AvatarSyncRules.Version; server = rpc; lastSent = null;
+            if (Connected && sequenced) SequencedRequests = true;
             if (!Connected) LastError = "Server sync protocol is unavailable or incompatible.";
             SendSelection();
         }
@@ -58,7 +73,7 @@ namespace ValheimVRM
         }
         void AcceptSnapshot(ZPackage package)
         {
-            if (!AvatarSyncWire.ReadSnapshot(package, out var next, out var selections) || next < revision) return;
+            if (!AvatarSyncWire.ReadSnapshot(package, out var next, out var selections) || next <= revision) return;
             revision = next; states = selections;
         }
         void ResetConnectionIfNeeded()
@@ -67,13 +82,16 @@ namespace ValheimVRM
             var rpc = net != null && !net.IsServer() ? net.GetServerPeer()?.m_rpc : null;
             if (network == net && (net == null || net.IsServer() || server == rpc)) return;
             network = net; server = rpc; Connected = false; revision = -1;
+            requestSequence = 0; SequencedRequests = false;
             states = new AvatarSelection[0]; lastSent = null; hostPlugin = null; failed.Clear(); LastError = "";
             // Keep only live registrations so reconnects cannot retain stale sockets.
             registered.RemoveWhere(r => net == null || !net.GetPeers().Any(p => p.m_rpc == r));
             if (net != null && net.IsServer() && Chainloader.PluginInfos.TryGetValue(AvatarSyncWire.ServerGuid, out var plugin))
             {
                 hostPlugin = plugin.Instance;
-                hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelection");
+                hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionSequenced");
+                SequencedRequests = hostSubmit != null;
+                if (hostSubmit == null) hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelection");
                 hostRead = hostPlugin.GetType().GetMethod("ReadHostSnapshot");
                 Connected = hostSubmit != null && hostRead != null &&
                     hostPlugin.GetType().GetProperty("SyncAvailable")?.GetValue(hostPlugin, null) is bool available && available;
@@ -109,7 +127,15 @@ namespace ValheimVRM
             if (SyncEnabled && model == "" && lastSent != null) return;
             string token = SyncEnabled + ":" + model + ":" + hash;
             if (token == lastSent) return;
-            if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { SyncEnabled, model, hash });
+            if (SequencedRequests)
+            {
+                if (requestSequence == long.MaxValue)
+                { LastError = "Avatar request sequence exhausted. Reconnect to start a new session."; return; }
+                long sequence = ++requestSequence;
+                if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { sequence, SyncEnabled, model, hash });
+                else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash, sequence));
+            }
+            else if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { SyncEnabled, model, hash });
             else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash));
             lastSent = token;
         }

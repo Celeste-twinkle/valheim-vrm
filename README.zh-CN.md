@@ -6,7 +6,7 @@
 
 适用于 Windows x64 客户端，已在英灵神殿 1.0.12 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
-可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.2.zip`。
+可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.3.zip`。
 
 ## Fork 继承链
 
@@ -48,8 +48,8 @@ Valheim/
 
 | 安装位置 | 安装包 | 使用方法 |
 | --- | --- | --- |
-| 每位玩家的客户端 | `ValheimVRM-1.8.2.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
-| 专用服务器 | `ValheimVRM-Server-1.8.2.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
+| 每位玩家的客户端 | `ValheimVRM-1.8.3.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
+| 专用服务器 | `ValheimVRM-Server-1.8.3.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
 | 通过游戏“启动服务器”的房主 | 客户端包 + 服务器端包 | 两个包都安装到房主的游戏目录；其他玩家只安装客户端包。 |
 
 服务器插件的最终路径为
@@ -64,6 +64,8 @@ Valheim/
 **服务器外观同步（服务器支持时）**勾选，确认显示**服务器同步已连接**，再点击模型。
 例如 A 选模型 1、B 选模型 2，其他玩家看到的就是 A = 模型 1、B = 模型 2；
 A 再切换只影响 A，同名玩家或使用相同模型也各自独立。
+发送端与服务端均为 1.8.3 时，每条请求携带递增序号，迟到或重复请求不会覆盖最后选择。
+F8 显示“请求顺序保护已启用”；旧版仍可联机，但需要双方升级才能启用此保护。
 
 未安装服务器插件时自动使用本地模式，模型菜单仍可正常使用。
 取消 F8 同步勾选会保留自己的本地模型、撤回公开选择，并恢复本机其他玩家的原版外观。
@@ -146,8 +148,8 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-编译输出为 `release/ValheimVRM-1.8.2.zip`。
-服务器打包命令输出 `release/ValheimVRM-Server-1.8.2.zip`，应在客户端构建之后执行。
+编译输出为 `release/ValheimVRM-1.8.3.zip`。
+服务器打包命令输出 `release/ValheimVRM-Server-1.8.3.zip`，应在客户端构建之后执行。
 除非显式传入 `-p:InstallToGame=true`，否则编译不会自动将插件安装到游戏中。
 模型目录测试使用 .NET 7 和临时文件，插件目标框架为 .NET Framework 4.7.1。
 着色器源码及重建说明见
@@ -156,7 +158,7 @@ powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALH
 
 验证范围见[运行时依赖来源](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md)、
 [兼容性验证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md)和
-[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.2-validation.md)。
+[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.3-validation.md)。
 此版本已在 Windows／D3D11 下完成受控引擎验证，包括实际 ZRpc 序列化、服务器处理逻辑
 及两名角色的独立模型绑定。尚未完成真实 Steam／PlayFab 专用服务器联机验收，
 Linux、macOS 和 Vulkan 未验证；完整范围见上述记录。

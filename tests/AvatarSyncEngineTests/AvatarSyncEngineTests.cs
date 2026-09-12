@@ -52,8 +52,12 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         WireTests(names,hashes);
         report.Add("Real ZRpc serialization over isolated in-memory sockets: two senders, three receivers, snapshots and malformed data passed");
         ServerRelayProbe.Run(names,hashes);
-        report.Add("Unmodded ZRpc client: no avatar handlers, three discovery packets maximum, zero avatar snapshots, 60 ordinary request/reply exchanges, no errors or disconnects");
+        report.Add("Unmodded ZRpc client: no avatar handlers, three discovery rounds maximum (six compatibility/capability packets), zero avatar snapshots, 60 ordinary request/reply exchanges, no errors or disconnects");
         report.Add("Production server plugin: handshake, authenticated ZDO ownership, forged character rejection, respawn, rapid changes, late join, opt-out and disconnect passed over real ZRpc");
+        SequencedRelayProbe.Run(names, hashes);
+        report.Add("Sequenced production relay: actual reversed ZRpc delivery, duplicate/legacy downgrade rejection, malformed packet isolation, independent players, opt-out ordering, respawn watermark retention, reconnect reset, old connection rejection and listen-host ordering passed");
+        ClientSequenceProbe.Run();
+        report.Add("Production client: old-server format, capability upgrade, monotonic 1/2/3/4 requests, late legacy hello, opt-out/refresh, new RPC reset, stale connection rejection, overflow guard and no-addon local mode passed");
         var prefab=(GameObject)AccessTools.Field(typeof(FejdStartup),"m_playerPrefab").GetValue(menu);
         var a=MakePlayer(prefab,101,1001,1);var b=MakePlayer(prefab,202,2002,2);
         var sync=AvatarSyncClient.Instance;sync.enabled=false;
@@ -90,6 +94,9 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         var stale=AvatarSyncWire.Snapshot(0,new AvatarSelection[0]);stale.SetPos(0);
         AccessTools.Method(typeof(AvatarSyncClient),"AcceptSnapshot").Invoke(sync,new object[]{stale});
         Check(desired.Invoke(sync,new object[]{b})!=null,"Stale snapshot cleared B");
+        var duplicate=AvatarSyncWire.Snapshot(registry.Revision,new AvatarSelection[0]);duplicate.SetPos(0);
+        AccessTools.Method(typeof(AvatarSyncClient),"AcceptSnapshot").Invoke(sync,new object[]{duplicate});
+        Check(desired.Invoke(sync,new object[]{b})!=null,"Equal-revision snapshot replaced current state");
         var local=Player.m_localPlayer;Player.m_localPlayer=b;
         Check(desired.Invoke(sync,new object[]{b})==null,"Remote snapshot overwrites the local player");Player.m_localPlayer=local;
         sync.SetEnabled(false);Check(desired.Invoke(sync,new object[]{b})==null,"Local mode still accepts remote state");sync.SetEnabled(true);

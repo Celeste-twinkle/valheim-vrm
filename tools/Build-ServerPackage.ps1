@@ -14,7 +14,7 @@ $files = [ordered]@{
     'BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll' = 'server/bin/Release/net471/ValheimVRM.Server.dll'
     'ValheimVRM.Server/README.md' = 'docs/SERVER-SYNC.md'
     'ValheimVRM.Server/LICENSE' = 'LICENSE'
-    'ValheimVRM.Server/release-1.8.2-validation.md' = 'docs/release-1.8.2-validation.md'
+    'ValheimVRM.Server/release-1.8.3-validation.md' = 'docs/release-1.8.3-validation.md'
 }
 $stream = [IO.File]::Open($destination, [IO.FileMode]::Create)
 $archive = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)

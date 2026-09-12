@@ -84,6 +84,7 @@ static class ServerRelayProbe
             }
             Check(vanilla.IsConnected()&&vanillaPeer.IsReady()&&normalRequests==60&&normalReplies==60,"Unmodded player was disconnected or game RPC stopped");
             Check(vanillaRight.SentMethods.Count(h=>h==AvatarSyncWire.Hello.GetStableHashCode())==3,"Discovery did not stop after three unanswered hellos");
+            Check(vanillaRight.SentMethods.Count(h=>h==AvatarSyncWire.SequencedHello.GetStableHashCode())==3,"Sequence discovery exceeded three rounds");
             Check(!vanillaRight.SentMethods.Contains(AvatarSyncWire.State.GetStableHashCode()),"Unmodded client received avatar snapshots");
             Check(received[404].All(s=>s.Peer!=505),"Unmodded player acquired another player's avatar");
         }
@@ -95,11 +96,12 @@ static class ServerRelayProbe
         }
     }
     static void Check(bool ok,string message){if(!ok)throw new Exception(message);}
-    sealed class RelaySocket:ISocket
+    internal sealed class RelaySocket:ISocket
     {
         public RelaySocket Other;public readonly List<int> SentMethods=new List<int>();readonly Queue<ZPackage> packets=new Queue<ZPackage>();bool open=true;
         public bool IsConnected()=>open;public void Send(ZPackage p){var copy=new ZPackage(p.GetArray());SentMethods.Add(copy.ReadInt());copy.SetPos(0);Other.packets.Enqueue(copy);}
         public ZPackage Recv()=>packets.Count>0?packets.Dequeue():null;
+        public void ReversePending() { var pending=packets.Reverse().ToArray();packets.Clear();foreach(var p in pending)packets.Enqueue(p); }
         public int GetSendQueueSize()=>0;public int GetCurrentSendRate()=>0;public bool IsHost()=>false;
         public void Dispose(){open=false;}public bool GotNewData()=>packets.Count>0;public void Close(){open=false;}
         public string GetEndPointString()=>"isolated-relay";public void GetAndResetStats(out int sent,out int received){sent=received=0;}

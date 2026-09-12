@@ -6,6 +6,7 @@ namespace ValheimVRM.Sync
     public static class AvatarSyncWire
     {
         public const string Hello = "ValheimVRM.Sync.Hello";
+        public const string SequencedHello = "ValheimVRM.Sync.SequencedHello";
         public const string Select = "ValheimVRM.Sync.Select";
         public const string State = "ValheimVRM.Sync.State";
         public const string ServerGuid = "com.celestetwinkle.valheimvrm.server";
@@ -15,13 +16,30 @@ namespace ValheimVRM.Sync
             var p = new ZPackage(); p.Write(AvatarSyncRules.Version); p.Write(enabled);
             p.Write(model ?? ""); p.Write(hash ?? ""); return p;
         }
+        // Negotiated extension of the legacy packet. Old servers reject trailing
+        // bytes, so clients append this only after SequencedHello.
+        public static ZPackage Selection(bool enabled, string model, string hash, long sequence)
+        {
+            if (sequence <= 0) throw new ArgumentOutOfRangeException(nameof(sequence));
+            var p = Selection(enabled, model, hash); p.Write(sequence); return p;
+        }
         public static bool ReadSelection(ZPackage p, out bool enabled, out string model, out string hash)
         {
-            enabled = false; model = hash = "";
+            return ReadSelection(p, out enabled, out model, out hash, out var sequence) && sequence == 0;
+        }
+        public static bool ReadSelection(ZPackage p, out bool enabled, out string model, out string hash, out long sequence)
+        {
+            enabled = false; model = hash = ""; sequence = 0;
             try
             {
                 if (p == null || p.Size() > 2048 || p.ReadInt() != AvatarSyncRules.Version) return false;
                 enabled = p.ReadBool(); model = p.ReadString(); hash = p.ReadString();
+                if (p.GetPos() != p.Size())
+                {
+                    if (p.Size() - p.GetPos() != sizeof(long)) return false;
+                    sequence = p.ReadLong();
+                    if (sequence <= 0) return false;
+                }
                 return p.GetPos() == p.Size() && (model == "" && hash == "" ||
                     AvatarSyncRules.ValidModel(model) && AvatarSyncRules.ValidHash(hash));
             }

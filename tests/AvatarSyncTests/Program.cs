@@ -8,6 +8,13 @@ static class Program
     static void Check(bool value, string message) { if (!value) throw new Exception(message); }
     static void Main()
     {
+        var orderA = new AvatarRequestOrder(); var orderB = new AvatarRequestOrder();
+        Check(orderA.TryAccept(0), "Legacy connection no longer accepted");
+        Check(orderA.TryAccept(2) && !orderA.TryAccept(1), "Late older request replaced newer request");
+        Check(!orderA.TryAccept(2) && !orderA.TryAccept(0) && !orderA.TryAccept(-1), "Duplicate, downgrade or negative request accepted");
+        Check(orderB.TryAccept(1) && orderA.TryAccept(3), "Player request counters are not independent");
+        Check(new AvatarRequestOrder().TryAccept(1), "New connection retained a previous watermark");
+        Check(orderA.TryAccept(long.MaxValue) && !orderA.TryAccept(long.MinValue), "Sequence overflow was accepted");
         var server = new AvatarSyncRegistry();
         Check(server.Set(101,1001,1,"模型 1",Hash('a')), "A selects model 1");
         Check(server.Set(202,2002,2,"模型 2",Hash('b')), "B selects model 2");
@@ -34,6 +41,6 @@ static class Program
         // Equal model names still represent separate players and separate instances.
         Check(server.Set(101,1001,2,b.Model,b.Sha256), "Shared asset cannot be selected twice");
         Check(server.Snapshot().Length==2, "Shared asset merged players");
-        Console.WriteLine("PASS: independent player identities, rapid switches, respawn, reconnect, late join, opt-out, duplicate-character and path/hash rejection.");
+        Console.WriteLine("PASS: request ordering, duplicate/downgrade/overflow rejection, independent player identities, rapid switches, respawn, reconnect, late join, opt-out and path/hash rejection.");
     }
 }

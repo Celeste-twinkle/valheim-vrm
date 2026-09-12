@@ -28,6 +28,20 @@ namespace ValheimVRM.Sync
             hash.All(c => c >= '0' && c <= '9' || c >= 'a' && c <= 'f');
     }
 
+    // One instance per authenticated connection, not per character or nickname.
+    // Zero denotes legacy packets; after the first sequenced packet, late legacy
+    // packets cannot downgrade the connection and overwrite its newer state.
+    public sealed class AvatarRequestOrder
+    {
+        public long LastSequence { get; private set; }
+        public bool TryAccept(long sequence)
+        {
+            if (sequence == 0) return LastSequence == 0;
+            if (sequence < 0 || sequence <= LastSequence) return false;
+            LastSequence = sequence; return true;
+        }
+    }
+
     // Keys are authenticated connection IDs; character IDs come from the server's
     // player ZDO. Neither character names nor a global selected model identify a player.
     public sealed class AvatarSyncRegistry
