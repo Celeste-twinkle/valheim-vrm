@@ -7,7 +7,7 @@
 Windows x64 client build for Valheim 1.0.12. This fork combines the compatibility
 fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
 with an in-game avatar picker and optional rendering controls. Download
-`ValheimVRM-1.8.4.zip` from this fork's Release page for the compiled plugin.
+`ValheimVRM-1.8.5.zip` from this fork's Release page for the compiled plugin.
 
 ## Fork history
 
@@ -52,8 +52,8 @@ Server synchronization is optional. Download the packages from this fork's
 
 | Install on | Package | Setup |
 | --- | --- | --- |
-| Every player's client | `ValheimVRM-1.8.4.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
-| Dedicated server | `ValheimVRM-Server-1.8.4.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
+| Every player's client | `ValheimVRM-1.8.5.zip` | Install the complete client as above and distribute the same `ValheimVRM` model folder. |
+| Dedicated server | `ValheimVRM-Server-1.8.5.zip` | Install BepInEx 5 first, extract beside the server executable, then restart the server. |
 | A player hosting through **Start server** | Both packages | Install both in the host's game directory; other players only need the client package. |
 
 The server DLL must end up at
@@ -133,14 +133,14 @@ The panel includes three controls for **VRM 1.0 MToon materials**:
 | Receive shadows | On | Receive shadow-map shadows. Turning this off preserves light direction and point-light distance attenuation; the avatar can still cast shadows. |
 | Avatar bloom | Off | Allow the avatar surface to contribute to bloom. When off, scene, fire and weapon bloom remain enabled. |
 
-**This plugin imposes no brightness ceiling or highlight compression and has no
-brightness-limit setting.**
+**Since 1.8.5, imported MToon10 base/shade color factors are automatically
+limited to the brightness reference below. No F8 adjustment is needed.**
 
 Changes apply immediately and are saved in `ValheimVRM/rendering_options.json`.
 They also apply when switching avatars or creating death ragdolls. Turning scene
 lighting off temporarily disables the receive-shadows control while remembering
 its selection. Restoring lighting and shadows restores the original shader and
-exported material parameters.
+imported material parameters, including the brightness limits.
 
 These controls do not rewrite VRM files or change global graphics settings.
 VRM 0.x can still be imported, but its legacy MToon/game materials, Standard and
@@ -158,19 +158,26 @@ supplied models are not included in the public plugin release.
 | Base color (`pbrMetallicRoughness.baseColorFactor`, RGB) | **0.45 per channel** for a neutral white tint; colored tints may use lower channel values. Preserve the original alpha. |
 | Shade color (`VRMC_materials_mtoon.shadeColorFactor`, RGB) | **0.2025 per channel** for a neutral tint; colored shade values may be lower. |
 
-**Base-color values above 0.45 may cause overexposure in game**, making skin,
-hair or clothing look washed out under Valheim's lighting and post-processing.
-Strong emission, matcap reflections or rim highlights can also make a model
-too bright. This is a calibration reference, not an enforced limit or a guarantee
-against overexposure; check the exported avatar in game with scene lighting both
-on and off.
+At import, if the largest linear RGB channel exceeds its reference, the plugin
+scales that entire RGB color down proportionally. Base color is limited to
+**0.45** and shade color to **0.2025**, independently. For example, base RGB
+`(1, 0.5, 0.2)` becomes `(0.45, 0.225, 0.09)`. Alpha is unchanged, and values
+at or below the reference are preserved exactly. Already calibrated models do
+not get darker on another import, model switch or rendering-option toggle.
+The limit is applied before UniVRM captures the default expression colors.
 
-These numbers describe color factors stored in the exported VRM, not texture
-pixel values or the `ModelBrightness` setting in `settings_ModelName.txt`.
-The calibrated models already contain this adjustment and keep that setting at
-`ModelBrightness=1`. The current VRM 1.0 MToon path preserves authored material
-values and does not apply that legacy setting; edit the material factors when
-exporting or adjusting the VRM itself.
+Higher base-color values can cause washed-out skin, hair or clothing in older
+clients. The new import limit reduces that risk. Emission, matcap/rim effects,
+lights, animated color overrides and game post-processing still affect the final
+image; this does not clamp final pixel brightness. The limiter applies to
+**VRM 1.0 MToon** materials, including remote avatars loaded from matching local
+files; VRM 0.x, Standard and other shaders keep their existing behavior.
+
+The reference uses linear color factors stored in the VRM. The importer handles
+the conversion to Unity's sRGB material properties. Original `.vrm` files,
+textures and synchronization hashes are unchanged. This is separate from the
+legacy `ModelBrightness` setting in `settings_ModelName.txt`, which is not applied
+to MToon10; existing model settings can keep `ModelBrightness=1`.
 
 If F8 does not open the menu, check that you are alive and in a world, close other
 menus, and check `BepInEx/LogOutput.log`. Setting `EnableAvatarPicker=false` in
@@ -197,10 +204,10 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Build output is `release/ValheimVRM-1.8.4.zip`. Building does not install the plugin
+Build output is `release/ValheimVRM-1.8.5.zip`. Building does not install the plugin
 into your game unless you explicitly pass `-p:InstallToGame=true`.
 Run the server packaging command after the client build to produce
-`release/ValheimVRM-Server-1.8.4.zip`.
+`release/ValheimVRM-Server-1.8.5.zip`.
 The catalog tests use .NET 7 and temporary files; the plugin targets .NET Framework 4.7.1.
 Shader source/rebuild instructions are in
 [shaders/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md).
@@ -209,7 +216,7 @@ is insufficient for a distributable DLL.
 
 Read [runtime dependency provenance](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md),
 [compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md), and
-[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.4-validation.md)
+[release validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.5-validation.md)
 for the tested scope. Windows/D3D11 engine probes cover actual ZRpc serialization,
 production server handlers and independent model attachment to two player fixtures.
 A real Steam/PlayFab dedicated-server session, Linux, macOS and Vulkan have not

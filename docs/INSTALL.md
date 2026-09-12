@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.8.4 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.5 (Celeste-twinkle fork)
 
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
@@ -14,7 +14,7 @@ release, not a release by the upstream maintainer. No avatars are included.
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.4.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.5.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx`, `valheim_Data`, and `ValheimVRM` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -64,13 +64,18 @@ selected models and ragdolls. Defaults match the maintained local build:
 
 | Control | Default | Effect |
 | --- | --- | --- |
-| Scene lighting | On | Use the model's authored material with scene lights. Off shows its base color and emission without scene-light shading. |
+| Scene lighting | On | Use the imported material with scene lights. Off shows its base color and emission without scene-light shading. |
 | Receive shadows | On | Use normal shadow reception. Off bypasses shadow maps while retaining light direction, light cookies and point-light distance attenuation. It does not disable shadow casting. |
 | Avatar bloom | Off | Exclude the model's visible surface from the game's bloom input. World/fire/weapon bloom remains enabled. |
 
-The options are saved immediately to `ValheimVRM/rendering_options.json`. There is
-**no brightness ceiling or highlight compression**, and no brightness-limit option.
-Lighting and shadows on restores the original shader and exported material values.
+The options are saved immediately to `ValheimVRM/rendering_options.json`.
+Since 1.8.5, MToon10 imports cap linear base RGB at **0.45** and shade RGB at
+**0.2025**: only colors exceeding their reference are scaled down proportionally;
+lower/equal values and alpha remain unchanged. No F8 adjustment is needed.
+The original VRM files and sync hashes are preserved. This limits imported color
+factors, not the final brightness from emission, animated overrides or lighting.
+See [model brightness reference](../README.md#model-brightness-reference).
+Lighting and shadows on restores the original shader with the import limits intact.
 Turning off lighting also removes received shading; the shadow preference is retained
 for when lighting is turned back on. Bloom originating elsewhere can still overlap
 the avatar, and screen-space post-processing remains controlled by the game.
@@ -104,7 +109,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.4.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.5.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -114,7 +119,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.4**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.5**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

@@ -6,7 +6,7 @@
 
 适用于 Windows x64 客户端，已在英灵神殿 1.0.12 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
-可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.4.zip`。
+可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.5.zip`。
 
 ## Fork 继承链
 
@@ -48,8 +48,8 @@ Valheim/
 
 | 安装位置 | 安装包 | 使用方法 |
 | --- | --- | --- |
-| 每位玩家的客户端 | `ValheimVRM-1.8.4.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
-| 专用服务器 | `ValheimVRM-Server-1.8.4.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
+| 每位玩家的客户端 | `ValheimVRM-1.8.5.zip` | 按上文安装完整客户端，并准备相同的 `ValheimVRM` 模型文件夹。 |
+| 专用服务器 | `ValheimVRM-Server-1.8.5.zip` | 先安装 BepInEx 5，再解压到服务器程序所在目录，重启服务器。 |
 | 通过游戏“启动服务器”的房主 | 客户端包 + 服务器端包 | 两个包都安装到房主的游戏目录；其他玩家只安装客户端包。 |
 
 服务器插件的最终路径为
@@ -115,11 +115,11 @@ F8 显示“请求顺序保护已启用”；旧版仍可联机，但需要双�
 | 接收阴影 | 开 | 接收阴影贴图产生的阴影。关闭后仍保留光照方向和点光源距离衰减，模型也仍可向场景投射阴影。 |
 | 模型泛光 | 关 | 开启后允许模型表面产生泛光。关闭时保留场景、火焰和武器的泛光。 |
 
-**本插件没有亮度上限、亮部压缩或亮度封顶选项。**
+**1.8.5 起，加载时自动将 MToon10 的基础色和阴影色限制到下述亮度基准，无需在 F8 中调整。**
 
 修改立即生效，并保存在 `ValheimVRM/rendering_options.json`，切换模型及死亡生成布娃娃后同样有效。
 关闭场景光照时，接收阴影开关暂时不可操作，但会保留所选状态。
-重新开启光照和接收阴影时，会恢复原始着色器及导出材质参数。
+重新开启光照和接收阴影时，会恢复原始着色器，并保留导入时的亮度限制。
 
 这些开关不改写 VRM 文件，也不修改游戏的全局图像设置。
 VRM 0.x 仍可导入，但旧版 MToon／游戏材质、Standard 和第三方材质不受这三个开关控制。
@@ -135,15 +135,21 @@ VRM 0.x 仍可导入，但旧版 MToon／游戏材质、Standard 和第三方材
 | 基础色（`pbrMetallicRoughness.baseColorFactor` 的 RGB） | 中性白色材质的各通道为 **0.45**；有颜色的材质可使用更低的通道值。透明度 Alpha 保持原值。 |
 | 阴影色（`VRMC_materials_mtoon.shadeColorFactor` 的 RGB） | 中性色的各通道为 **0.2025**；有颜色的阴影可使用更低的通道值。 |
 
-**基础色数值高于 0.45 时，模型在游戏内可能过曝**，皮肤、头发或衣服可能在英灵神殿的
-光照与后处理下发白、丢失细节。过强的自发光、Matcap 反射或边缘高光也会使模型偏亮。
-这个数值是本套模型的校准参考，插件不会强制限制亮度，也不保证低于此值就一定不会过曝；
-导出后应在游戏内分别开启、关闭场景光照检查效果。
+加载时，若某个颜色的最大线性 RGB 通道超过基准，程序会将该颜色的 RGB **整体按比例压低**：
+基础色上限为 **0.45**，阴影色上限为 **0.2025**，两者独立处理。例如基础色
+`(1, 0.5, 0.2)` 会变为 `(0.45, 0.225, 0.09)`，保持色彩比例与透明度 Alpha。
+**等于或低于基准的颜色完全不动**；已校准的模型不会因再次加载、切换模型或渲染开关而继续变暗。
+处理发生在 UniVRM 记录默认表情颜色之前，表情重置会恢复到处理后的基准。
 
-上述数值指 VRM 文件内的材质颜色系数，不是贴图像素值，也不是 `settings_模型名.txt`
-中的 `ModelBrightness` 配置。已校准的模型已内置此调整，配置保持 `ModelBrightness=1`。
-当前 VRM 1.0 MToon 导入路径保留模型原有材质数值，不应用这个旧版亮度配置；
-需要调整时，应在导出或修改 VRM 时修改材质颜色系数。
+较高的基础色数值在旧版客户端中可能造成皮肤、头发和衣服过曝发白；新版本会在导入时压低它。
+自发光、反射、边缘高光、动画颜色覆盖、灯光和后处理仍会影响最终画面，因此这不是最终像素亮度封顶。
+目前作用于 **VRM 1.0 MToon 材质**，本地角色与通过服务器同步加载的远端角色均适用；
+VRM 0.x、Standard 和其他着色器保持原有处理方式。
+
+基准对应 VRM 文件中的线性颜色系数，程序会处理与 Unity 材质 sRGB 颜色的转换。
+原始 `.vrm` 文件、贴图及服务器同步使用的文件指纹均不改动。
+这与 `settings_模型名.txt` 中的旧版 `ModelBrightness` 配置是独立的；
+MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 即可。
 
 如果 F8 无法打开菜单，请确认角色存活且已进入世界，关闭其他菜单，并检查 `BepInEx/LogOutput.log`。
 在 `ValheimVRM/global_settings.txt` 中设置 `EnableAvatarPicker=false` 会禁用此菜单。
@@ -168,8 +174,8 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-编译输出为 `release/ValheimVRM-1.8.4.zip`。
-服务器打包命令输出 `release/ValheimVRM-Server-1.8.4.zip`，应在客户端构建之后执行。
+编译输出为 `release/ValheimVRM-1.8.5.zip`。
+服务器打包命令输出 `release/ValheimVRM-Server-1.8.5.zip`，应在客户端构建之后执行。
 除非显式传入 `-p:InstallToGame=true`，否则编译不会自动将插件安装到游戏中。
 模型目录测试使用 .NET 7 和临时文件，插件目标框架为 .NET Framework 4.7.1。
 着色器源码及重建说明见
@@ -178,7 +184,7 @@ powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALH
 
 验证范围见[运行时依赖来源](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md)、
 [兼容性验证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/valheim-1.0-validation.md)和
-[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.4-validation.md)。
+[发布版验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.5-validation.md)。
 此版本已在 Windows／D3D11 下完成受控引擎验证，包括实际 ZRpc 序列化、服务器处理逻辑
 及两名角色的独立模型绑定。尚未完成真实 Steam／PlayFab 专用服务器联机验收，
 Linux、macOS 和 Vulkan 未验证；完整范围见上述记录。

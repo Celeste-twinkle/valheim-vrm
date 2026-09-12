@@ -1,3 +1,23 @@
+## 1.8.5 — Apply the avatar brightness reference at import
+
+- Automatically cap VRM 1.0 MToon base color at 0.45 and shade color at 0.2025
+  in linear RGB space. Only colors above their reference are scaled down;
+  preserve RGB ratios, alpha and every lower/equal color exactly.
+- Apply the limit during material creation, before expression baselines are
+  captured. Calibrated models, repeated imports and rendering-option toggles do
+  not accumulate further darkening.
+- Keep source VRM files, textures and synchronization hashes unchanged. The same
+  import path covers local and synchronized remote avatars. VRM0 and non-MToon10
+  shaders retain their previous behavior. Emission and animated color overrides
+  are outside this import-only base/shade limit.
+- Update bilingual README and installation instructions. Server protocol remains
+  compatible with 1.8.3/1.8.4; the server package has a matching version number.
+
+加载时自动压低超过基准的材质颜色，未超过的完全不动；保持色彩比例、透明度和模型文件指纹。
+现有已校准的 Shinano 与 KUMALY 无需重新导出，也不会再次变暗。
+
+See `docs/release-1.8.5-validation.md` and `docs/SERVER-SYNC.md`.
+
 ## 1.8.4 — Release unused avatar resources
 
 - Dispose native GLB import buffers and importer contexts on success and failure.

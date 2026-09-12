@@ -134,7 +134,7 @@ namespace ValheimVRM
 			{
 				ImporterContext context;
 				try { context = new VRMImporterContext(new VRMData(data), null, new TextureDeserializer()); }
-				catch (NotVrm0Exception) { context = new Vrm10Importer(Vrm10Data.Parse(data), null, null); }
+				catch (NotVrm0Exception) { context = new Vrm10Importer(Vrm10Data.Parse(data), null, null, new AvatarBrightness()); }
 				using (context)
 				{
 					try
