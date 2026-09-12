@@ -4,7 +4,7 @@
 
 [下载编译版](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [发布版源码](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)
 
-适用于 Windows x64 客户端，已在英灵神殿 1.0.7 上验证。本 fork 将
+适用于 Windows x64 客户端，已在英灵神殿 1.0.12 上验证。本 fork 将
 [上游 PR #53](https://github.com/nyaarium/valheim-vrm/pull/53) 中的兼容性修复与游戏内模型选择菜单、
 可选渲染控制整合为独立发布版。请从本仓库的 Release 页面下载 `ValheimVRM-1.8.1.zip`。
 

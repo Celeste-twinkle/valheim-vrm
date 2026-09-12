@@ -4,7 +4,7 @@
 
 [Download the compiled release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [Release source](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [English installation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) · [中文安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)
 
-Windows x64 client build for Valheim 1.0.7. This fork combines the compatibility
+Windows x64 client build for Valheim 1.0.12. This fork combines the compatibility
 fixes proposed in [upstream PR #53](https://github.com/nyaarium/valheim-vrm/pull/53)
 with an in-game avatar picker and optional rendering controls. Download
 `ValheimVRM-1.8.1.zip` from this fork's Release page for the compiled plugin.

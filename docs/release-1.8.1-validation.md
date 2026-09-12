@@ -1,6 +1,12 @@
 # 1.8.1 mixed client server validation
 
-The Windows/D3D11 isolated game probe uses the production server addon and the
+The current Windows x64 / D3D11 probes run on Valheim 1.0.12 (Steam build
+25253764), Unity 6000.0.75f1 and BepInEx 5.4.23.3. The normal game and isolated
+copy have the same `assembly_valheim.dll` SHA-256:
+`27a766a8d23a7bd8b6a54fb9ad0452a96c305fb3629b39c40527c09a1c393a84`.
+Earlier validation records describe their original game versions.
+
+The isolated game probe uses the production server addon and the
 game's actual ZRpc serializer. One client registers no ValheimVRM RPC handlers,
 matching how an unmodded client dispatches unknown methods. Modded clients in
 the same fixture still switch models independently.

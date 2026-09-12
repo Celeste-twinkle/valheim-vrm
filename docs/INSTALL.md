@@ -3,7 +3,7 @@
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
 
-Windows x64 client release, tested with Valheim 1.0.7, Unity 6000.0.75f1 and
+Windows x64 client release, tested with Valheim 1.0.12, Unity 6000.0.75f1 and
 BepInExPack Valheim 5.4.2333 (BepInEx 5.4.23.3). This is an independent fork
 release, not a release by the upstream maintainer. No avatars are included.
 
