@@ -34,6 +34,17 @@ The public release includes **no avatars**. Unity packages, FBX files and VRChat
 
 Neither public runtime ZIP includes BepInEx. See the [installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) for the loader and dependency provenance.
 
+### Prerequisite downloads
+
+| Dependency | Download | Installation notes |
+| --- | --- | --- |
+| **BepInExPack Valheim (recommended)** | [Valheim-specific package](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) | Preconfigured for Valheim. The tested package is **5.4.2333**, with BepInEx core **5.4.23.3**. |
+| BepInEx upstream | [5.4.23.3 Release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.3) · [All releases](https://github.com/BepInEx/BepInEx/releases) | Upstream downloads and version history. For Windows, use BepInEx **5 / x64 / Mono**; the Valheim pack above supplies the game-specific configuration. |
+
+Install the loader once per game/server directory. The complete client ZIP already provides the matching UniVRM runtime libraries and shaders; the server addon does not need those client dependencies.
+
+The separately shared **local Windows x64 bundles** `09_ValheimVRM_1.8.11_完整插件.zip` and `10_ValheimVRM_Server_1.8.11.zip` both include BepInEx **5.4.23.3**, so a fresh installation needs no separate loader download. Stop the game/server before installing. On a server that already has compatible BepInEx, copy only `BepInEx/plugins/ValheimVRM.Server` from the local server ZIP and preserve the existing loader and configuration.
+
 ### Player setup
 
 1. Exit Valheim. If necessary, install BepInEx 5, launch the game once, then exit.
