@@ -39,7 +39,7 @@ namespace ValheimVRM
                     {
                         if (skin.sharedMesh == null) continue;
                         // Ignore loose renderer bounds; baking also includes authored blend shapes.
-                        skin.BakeMesh(baked);
+                        skin.BakeMesh(baked, true);
                         mesh = baked;
                     }
                     else if (renderer is MeshRenderer)

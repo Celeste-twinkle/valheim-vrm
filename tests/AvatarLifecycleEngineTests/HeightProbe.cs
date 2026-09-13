@@ -47,10 +47,34 @@ public sealed partial class AvatarLifecycleEngineTests
             Check(sizing != null && sizing.UnscaledHeight > .01f, "Standing height was not captured: " + path);
             float final = sizing.UnscaledHeight * root.transform.localScale.y;
             Check(final >= 1.9999f, "Imported model below 2 m: " + path);
+            float rendered = RenderedHeight(root);
+            Check(Mathf.Abs(rendered - final) < .002f, "Rendered mesh height differs from scaled import measurement: " + path + " actual=" + rendered + " expected=" + final);
             if (sizing.UnscaledHeight >= 2f) Check(root.transform.localScale == Vector3.one, "Tall model was changed");
-            Log(Path.GetFileName(path) + ": standing mesh " + sizing.UnscaledHeight.ToString("F3") + " m, scale " + root.transform.localScale.y.ToString("F3") + ", final " + final.ToString("F3") + " m");
+            Log(Path.GetFileName(path) + ": standing mesh " + sizing.UnscaledHeight.ToString("F3") + " m, scale " + root.transform.localScale.y.ToString("F3") + ", rendered " + rendered.ToString("F3") + " m");
             Object.Destroy(root);
             yield return null; yield return null;
         }
+    }
+
+    static float RenderedHeight(GameObject root)
+    {
+        float bottom = float.PositiveInfinity, top = float.NegativeInfinity;
+        var baked = new Mesh();
+        try
+        {
+            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                if (!skin.enabled || skin.sharedMesh == null) continue;
+                skin.BakeMesh(baked, true);
+                var matrix = skin.transform.localToWorldMatrix;
+                foreach (var vertex in baked.vertices)
+                {
+                    float y = matrix.MultiplyPoint3x4(vertex).y;
+                    bottom = Mathf.Min(bottom, y); top = Mathf.Max(top, y);
+                }
+            }
+        }
+        finally { Object.Destroy(baked); }
+        return top - bottom;
     }
 }

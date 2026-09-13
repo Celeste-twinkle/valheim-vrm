@@ -22,13 +22,15 @@ namespace ValheimVRM
 		private readonly Quaternion[] boneRotationOffsets = new Quaternion[(int)HumanBodyBones.LastBone];
 		private readonly bool[] hasBoneRotationOffset = new bool[(int)HumanBodyBones.LastBone];
 		private HumanBodyBones[] ragdollBones;
-		private GroundSitFootSupport groundSitSupport;
+		private AvatarGroundContact sourceContact, targetContact;
+		private Character character;
 
 		public void Setup(Animator orgAnim, Settings.VrmSettingsContainer settings, bool isRagdoll = false)
 		{
 			this.ragdoll = isRagdoll;
 			this.settings = settings;
 			this.orgAnim = orgAnim;
+			character = orgAnim.GetComponentInParent<Character>();
 			this.vrmAnim = GetComponent<Animator>();
 			this.vrmAnim.applyRootMotion = true;
 			this.vrmAnim.updateMode = orgAnim.updateMode;
@@ -43,7 +45,8 @@ namespace ValheimVRM
 			}
 			else
 			{
-				groundSitSupport = new GroundSitFootSupport(vrmAnim);
+				sourceContact = new AvatarGroundContact(orgAnim);
+				targetContact = new AvatarGroundContact(vrmAnim);
 			}
 		}
 
@@ -123,13 +126,6 @@ namespace ValheimVRM
 		const int HoldingMast = -2110678410;
 		const int HoldingDragon = -2076823180; // that thing in a front of longship
 
-		private static List<int> adjustHipHashes = new List<int>()
-		{
-			SittingChair,
-			SittingThrone,
-			SittingShip,
-			Sleeping
-		};
 		private Vector3 StateHashToOffset(int stateHash, out float interpSpeed)
 		{
 			interpSpeed = Time.deltaTime * 5;
@@ -209,8 +205,6 @@ namespace ValheimVRM
 				return;
 			}
 
-			float playerScaleFactor = settings.PlayerHeight / 1.85f;
-
 			vrmAnim.transform.localPosition = Vector3.zero;
 
 			orgPose.GetHumanPose(ref hp);
@@ -224,6 +218,24 @@ namespace ValheimVRM
 			var orgHip = orgAnim.GetBoneTransform(HumanBodyBones.Hips);
 
 			vrmHip.position = orgAnim.GetBoneTransform(HumanBodyBones.Hips).position;
+			sourceContact.Sample(out float sourceFeet, out float sourceSeat, out _);
+			targetContact.Sample(out float targetFeet, out float targetSeat, out float targetLower);
+			// Preserve the game's airborne foot motion. On land its visual soles
+			// can already sit slightly below the character's support plane.
+			if (character == null || (character.IsOnGround() && !character.IsSwimming()))
+				sourceFeet = Mathf.Max(sourceFeet, orgAnim.transform.position.y);
+			float footAlignment = sourceFeet - targetFeet;
+			float seatAlignment = sourceSeat - targetSeat;
+			float groundAlignment = orgAnim.transform.position.y - targetLower;
+			float contactAdjustment = ContactAdjustment(curStateHash, footAlignment, seatAlignment, groundAlignment);
+			float heightOffset = HeightOffset(curStateHash);
+			if (orgAnim.IsInTransition(0) && nextStateHash != 0)
+			{
+				float blend = Mathf.Clamp01(orgAnim.GetAnimatorTransitionInfo(0).normalizedTime);
+				contactAdjustment = Mathf.Lerp(contactAdjustment, ContactAdjustment(nextStateHash, footAlignment, seatAlignment, groundAlignment), blend);
+				heightOffset = Mathf.Lerp(heightOffset, HeightOffset(nextStateHash), blend);
+			}
+			vrmHip.position += Vector3.up * (contactAdjustment + heightOffset);
 
 			Vector3 actualAdjustHipPos;
 			float actualInterpSpeed;
@@ -231,14 +243,6 @@ namespace ValheimVRM
 			// Phase 1: Calculate current state adjustment
 
 			var curAdjustPos = Vector3.zero;
-
-			if (!adjustHipHashes.Contains(curStateHash))
-			{
-				Vector3 curOrgHipPos = orgHip.position - orgHip.parent.position;
-				Vector3 curVrmHipPos = curOrgHipPos * playerScaleFactor;
-
-				curAdjustPos = curVrmHipPos - curOrgHipPos;
-			}
 
 			float curInterpSpeed = Time.deltaTime * 5;
 			Vector3 curOffset = StateHashToOffset(curStateHash, out curInterpSpeed);
@@ -250,14 +254,6 @@ namespace ValheimVRM
 
 			if (nextStateHash != 0)
 			{
-				if (!adjustHipHashes.Contains(nextStateHash))
-				{
-					Vector3 nextOrgHipPos = orgHip.position - orgHip.parent.position;
-					Vector3 nextVrmHipPos = nextOrgHipPos * playerScaleFactor;
-
-					nextAdjustPos = nextVrmHipPos - nextOrgHipPos;
-				}
-
 				float nextInterpSpeed = Time.deltaTime * 5;
 				Vector3 nextOffset = StateHashToOffset(nextStateHash, out nextInterpSpeed);
 				if (nextOffset != Vector3.zero) nextAdjustPos += orgHip.transform.rotation * nextOffset;
@@ -280,15 +276,6 @@ namespace ValheimVRM
 			adjustPos = adjustPos.HasValue ? Vector3.Lerp(adjustPos.Value, actualAdjustHipPos, actualInterpSpeed) : curAdjustPos;
 
 			vrmHip.position += adjustPos.Value;
-
-			// The game's seated hip pivot can be below the floor. Copying it to a
-			// differently proportioned avatar buries its legs and pelvis. Keep its
-			// posed soles above the character's ground plane for ground sitting only.
-			if (IsGroundSitState(curStateHash) || IsGroundSitState(nextStateHash))
-			{
-				float lift = groundSitSupport.GetLift(orgAnim.transform.position.y);
-				vrmHip.position += Vector3.up * lift;
-			}
 
 			if (!ragdoll)
 			{
@@ -320,6 +307,21 @@ namespace ValheimVRM
 		private static bool IsGroundSitState(int stateHash)
 		{
 			return stateHash == StartToSitDown || stateHash == SittingIdle || stateHash == StandingUpFromSit;
+		}
+
+		private static float ContactAdjustment(int state, float feet, float seat, float ground)
+		{
+			if (IsGroundSitState(state)) return ground;
+			if (state == SittingChair || state == SittingThrone || state == SittingShip) return seat;
+			if (state == Sleeping || state == StartSleeping || state == GetUpFromBed) return 0;
+			return feet;
+		}
+
+		private float HeightOffset(int state)
+		{
+			if (state == Sleeping || state == StartSleeping || state == GetUpFromBed) return 0;
+			return AvatarHeightOffsets.Clamp(IsGroundSitState(state) || state == SittingChair || state == SittingThrone || state == SittingShip
+				? settings.SittingHeightOffset : settings.StandingHeightOffset);
 		}
 	}
 }

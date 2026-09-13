@@ -1,4 +1,4 @@
-# ValheimVRM 1.8.8 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 1.8.9 安装说明（Celeste-twinkle 分支）
 
 多人外观同步需要服务器另外安装独立服务端插件，详见[服务器同步与本地模式](SERVER-SYNC.md)。
 
@@ -12,7 +12,7 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-1.8.8.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-1.8.9.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
@@ -84,16 +84,25 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 - 选择模型后生成 `avatar_selections.json`。
 - 调整并保存物理滑块后生成 `physics_options.json`。
 - 修改渲染选项后生成 `rendering_options.json`。
+- 调整 F8 站姿／坐姿高度偏移后，生成或更新 `settings_模型名.txt`，并保留已有其他参数。
 
-缺少这些文件或整个配置目录时，使用默认值正常工作。TXT 是可选手动配置，不会自动生成。
+缺少这些文件或整个配置目录时，使用默认值正常工作。TXT 仍是可选配置；1.8.9 起，保存 F8 高度微调会自动创建当前模型的 TXT。
 1.8.6 起不再读取或自动迁移模型目录中的旧配置，也不再读取 `selected_models.json`。
 升级前可把想保留的 TXT 和上述三类 JSON 移到新配置目录，否则使用默认值。
 说明、许可证和配置示例位于 `BepInEx/plugins/ValheimVRM`。
 
+## 自动贴地与高度微调
+
+1.8.9 根据每个模型的实际蒙皮网格计算站姿脚底、坐地支撑点和椅子座面接触位置，包含当前缩放，不按模型名硬编码。最低高度仍为 **2 米**。
+F8 新增“站姿高度偏移”和“坐姿高度偏移”，默认均为 **0 厘米**；默认就执行自动定位。
+两项范围分别为 −50～+50 厘米，正值抬高、负值降低，拖动实时生效，松开按模型保存。
+“两项恢复为 0”恢复自动位置。它们对应 TXT 的 `StandingHeightOffset`、`SittingHeightOffset`，单位为米。
+这些微调只作用于本机，不通过服务端同步；既有 `ModelOffsetY` 全局偏移仍会叠加。
+
 ## 配置和联机
 
 模型专用配置命名为 `settings_模型文件名.txt`（不含 `.vrm` 后缀）。
-这是可选的纯文本文件，不是 Unity/VRM 导出产物，插件目前也不会自动生成它。
+这是可选的纯文本文件，不是 Unity/VRM 导出产物。保存 F8 高度微调会自动生成它，其他参数也可以手动添加。
 没有配置文件时仍能加载模型，使用内置默认参数。
 
 创建方法：复制 `BepInEx/plugins/ValheimVRM/settings_Example.txt.example` 模板。例如模型为 `MyAvatar.vrm`，将副本命名为
@@ -109,7 +118,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。
 
 只改变本机外观时，无需服务器安装。多人同步时，在已安装 BepInEx 5 的服务器上
-解压 `ValheimVRM-Server-1.8.8.zip`，并让各客户端安装相同模型文件，详见
+解压 `ValheimVRM-Server-1.8.9.zip`，并让各客户端安装相同模型文件，详见
 [服务器安装说明](SERVER-SYNC.md)。F8 可随时退出同步；通过游戏“启动服务器”的
 房主也可同时安装服务端插件。旧版整文件分享协议默认通过
 `EnableLegacyVrmSharing=false` 停用，使用新同步时请保持关闭。分发模型仍需遵守其许可。
@@ -118,7 +127,7 @@ VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.8**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.9**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。
@@ -139,4 +148,4 @@ Unity 和显卡驱动可能保留内存池，因此任务管理器中的占用�
 
 ## 抗锯齿与透明衣服
 
-1.8.8 修复 TAA 开启时身体与半透明衣物使用不同投影，导致丝袜出现缺口的问题。可继续开启游戏抗锯齿；修复对本机显示的自己、其他玩家模型生效，模型文件及其透明度保持。好友视角出现异常时，请让好友更新客户端插件；只更新服务器无法修复客户端画面。
+1.8.8 修复 TAA 开启时身体与半透明衣物使用不同投影，导致丝袜出现缺口的问题；1.8.9 保留该修复。可继续开启游戏抗锯齿；修复对本机显示的自己、其他玩家模型生效，模型文件及其透明度保持。好友视角出现异常时，请让好友更新客户端插件；只更新服务器无法修复客户端画面。

@@ -52,6 +52,7 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
     IEnumerator Run()
     {
         PhysicsWeightProbe.CheckSettings();
+        GroundingProbe.CheckSettings();
         report.Add("physics settings: atomic save/reload and finite 0..1 bounds passed");
         float deadline = Time.realtimeSinceStartup + 90;
         FejdStartup menu;
@@ -77,7 +78,7 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
             yield return ValheimVRM.VRM.ImportVisualAsync(File.ReadAllBytes(path), path, 1, root => imported = root);
             if (imported == null) throw new Exception("Import failed: " + path);
             imported.SetActive(false);
-            report.Add(PhysicsWeightProbe.Run(imported));
+            if (Environment.GetEnvironmentVariable("VRM_GROUNDING_DIAGNOSTIC") != "1") report.Add(PhysicsWeightProbe.Run(imported));
             var model = Object.Instantiate(imported);
             model.transform.SetParent(holder.transform, false);
             AccessTools.Method(typeof(ValheimVRM.VRM), "PrepareVrm10Clone").Invoke(null, new object[] { imported, model });
@@ -88,66 +89,20 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
             sync.Setup(source, new ValheimVRM.Settings.VrmSettingsContainer { ModelScale = 1, ModelOffsetY = 0, PlayerHeight = 1.85f });
             sync.enabled = false;
             report.Add("MODEL " + Path.GetFileName(path));
-            CheckGroundSitting(holder, model, source, sync);
+            if (Environment.GetEnvironmentVariable("VRM_GROUNDING_DIAGNOSTIC") == "1")
+            {
+                GroundingProbe.Run(holder, model, source, sync, report);
+                Object.Destroy(holder); Object.Destroy(imported);
+                yield return null;
+                continue;
+            }
+            GroundingProbe.Run(holder, model, source, sync, report);
             EquipmentProbe.Run(source, target, sync, output);
             report.Add("grips: both hands, identity mapping, three scales, four poses, switch/unbind restoration passed");
             CheckSpringClone(imported, model, source, sync);
             Object.Destroy(holder); Object.Destroy(imported);
             yield return null;
         }
-    }
-
-    void CheckGroundSitting(GameObject holder, GameObject model, Animator source, VRMAnimationSync sync)
-    {
-        var target = model.GetComponent<Animator>();
-        var feet = new[] { HumanBodyBones.LeftFoot, HumanBodyBones.LeftToes, HumanBodyBones.RightFoot, HumanBodyBones.RightToes }
-            .Select(b => target.GetBoneTransform(b)).Where(t => t != null).ToArray();
-        var meshes = new List<Tuple<SkinnedMeshRenderer, int[]>>();
-        foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>())
-        {
-            var mesh = renderer.sharedMesh; var bones = renderer.bones;
-            if (mesh == null || !mesh.isReadable) continue;
-            var weights = mesh.boneWeights;
-            var indices = new List<int>();
-            for (int i = 0; i < weights.Length; i++)
-            {
-                var w = weights[i];
-                var ids = new[] { w.boneIndex0, w.boneIndex1, w.boneIndex2, w.boneIndex3 };
-                var values = new[] { w.weight0, w.weight1, w.weight2, w.weight3 };
-                if (Enumerable.Range(0, 4).Any(k => values[k] >= .5f && ids[k] < bones.Length && bones[ids[k]] != null &&
-                    feet.Any(f => bones[ids[k]] == f || bones[ids[k]].IsChildOf(f)))) indices.Add(i);
-            }
-            if (indices.Count > 0) meshes.Add(Tuple.Create(renderer, indices.ToArray()));
-        }
-        if (meshes.Count == 0) throw new Exception("Fixture has no weighted foot vertices");
-        float minimum = float.PositiveInfinity;
-        var baked = new Mesh();
-        foreach (float scale in new[] { .6f, 1f, 1.4f })
-        {
-            model.transform.localScale = Vector3.one * scale;
-            holder.transform.position = new Vector3(3, scale * 2 - 1, -4);
-            holder.transform.rotation = Quaternion.Euler(0, scale * 50, 0);
-            foreach (int state in new[] { 890925016, -1544306596, -805461806 })
-            for (int frame = 0; frame <= 10; frame++)
-            {
-                source.Rebind(); source.Play(state, 0, frame * .099f); source.Update(0);
-                Synchronize.Invoke(sync, null);
-                foreach (var item in meshes)
-                {
-                    item.Item1.BakeMesh(baked); var vertices = baked.vertices;
-                    foreach (int index in item.Item2)
-                        minimum = Mathf.Min(minimum, item.Item1.transform.TransformPoint(vertices[index]).y - source.transform.position.y);
-                }
-            }
-            source.Rebind(); source.Play(229373857, 0, .75f); source.Update(0);
-            Synchronize.Invoke(sync, null);
-            float residual = Vector3.Distance(source.GetBoneTransform(HumanBodyBones.Hips).position, target.GetBoneTransform(HumanBodyBones.Hips).position);
-            if (residual > .0001f) throw new Exception("Seated lift leaked into standing: " + residual);
-        }
-        Object.Destroy(baked);
-        report.Add("ground sit: 99 samples, three scales/translated roots, lowest foot=" + minimum.ToString("F6") + " m; standing reset passed");
-        if (minimum < -.02f) throw new Exception("Feet penetrated the ground: " + minimum);
-        model.transform.localScale = Vector3.one; holder.transform.position = Vector3.zero; holder.transform.rotation = Quaternion.identity;
     }
 
     void CheckSpringClone(GameObject imported, GameObject model, Animator source, VRMAnimationSync sync)

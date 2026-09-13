@@ -5,6 +5,10 @@ ModelScale=1.1
 
 // Y-coordinate offset of the model
 ModelOffsetY=0
+// Optional F8 posture adjustments in meters; default 0 keeps automatic grounding.
+// Positive raises, negative lowers. Values are limited to -0.5 .. 0.5.
+StandingHeightOffset=0
+SittingHeightOffset=0
 
 // Player collider height
 PlayerHeight=1.85

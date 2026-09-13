@@ -1,3 +1,12 @@
+## 1.8.9 — Correct scaled foot/seat placement and add posture offsets
+
+- Keep the minimum visible model height at 2 m and correct mesh-bake scale compensation.
+- Replace original-hip anchoring and the approximate seated foot lift with per-avatar weighted mesh contacts. Standing soles and ground/seat support adapt to the current pose and scale without model-specific height constants.
+- Add independent F8 standing and sitting height offsets, default 0 cm, range −50 to +50 cm. Changes preview live and save per model; resetting both restores automatic placement. Existing settings and model files are preserved.
+- Keep small-screen F8 controls reachable with a scrolling panel. Height adjustments are local configuration; the server protocol is unchanged.
+
+Validation: `docs/release-1.8.9-validation.md`. Four VRM 0.x/1.0 models pass 1,320 actual posed-mesh checks, with maximum contact error below 4 mm, independent posture offsets, equipment grips and spring physics regression checks.
+
 ## 1.8.8 — Fix TAA clothing/bloom artifacts and raise minimum height to 2 m
 
 - Keep transparent avatar layers in the same jittered camera projection as the opaque body while Valheim's TAA is active. Previously, close-fitting stockings could disappear in jagged moving strips because they tested against depth from a different projection.

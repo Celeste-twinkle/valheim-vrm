@@ -196,6 +196,8 @@ namespace ValheimVRM
 
             public float ModelScale = 1.0f;
             public float ModelOffsetY = 0.0f;
+            public float StandingHeightOffset = 0.0f;
+            public float SittingHeightOffset = 0.0f;
             public float PlayerHeight = 1.85f;
             public float PlayerRadius = 0.5f;
 

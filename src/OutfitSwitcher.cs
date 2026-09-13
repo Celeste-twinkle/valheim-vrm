@@ -22,6 +22,7 @@ namespace ValheimVRM
         Font font;
         string loadingName;
         bool physicsDirty;
+        readonly HashSet<string> heightDirty = new HashSet<string>();
         sealed class RemoteAvatarUnavailableException : Exception
         {
             public RemoteAvatarUnavailableException(string message) : base(message) { }
@@ -227,7 +228,7 @@ namespace ValheimVRM
 
         public void SetMenuOpen(bool value)
         {
-            if (!value) SavePhysicsOptions();
+            if (!value) { SavePhysicsOptions(); SaveHeightOptions(); }
             MenuOpen = value && Player.m_localPlayer != null && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InIntro();
             if (!MenuOpen) return;
             RefreshModels();
@@ -239,6 +240,7 @@ namespace ValheimVRM
         void Update()
         {
             if (physicsDirty && GUIUtility.hotControl == 0) SavePhysicsOptions();
+            if (heightDirty.Count > 0 && GUIUtility.hotControl == 0) SaveHeightOptions();
             if (Player.m_localPlayer == null || Player.m_localPlayer.IsDead() || !Settings.globalSettings.EnableAvatarPicker)
             {
                 MenuOpen = false;
@@ -282,13 +284,14 @@ namespace ValheimVRM
                 if (GUILayout.Button((name == current ? "✓  " : "    ") + display, button, GUILayout.Height(36))) RequestSwitch(name);
             }
             GUI.enabled = true;
-            GUILayout.EndScrollView();
             if (Catalog.Names.Length == 0)
                 GUILayout.Label(Text("Add .vrm files to the ValheimVRM folder beside valheim.exe, then refresh.", "将 .vrm 放入 valheim.exe 旁的 ValheimVRM 文件夹，然后刷新列表。"), label);
             GUILayout.Label(IsBusy ? Text("Loading: ", "正在载入：") + loadingName : LastError, label);
             DrawRenderingOptions();
             DrawPhysicsOptions();
+            DrawHeightOptions(current);
             DrawSyncOptions();
+            GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();
             GUI.enabled = !IsBusy;
             if (GUILayout.Button(Text("Refresh list", "刷新列表"), GUILayout.Height(30))) RefreshModels();
@@ -343,6 +346,43 @@ namespace ValheimVRM
             if (!string.IsNullOrEmpty(sync.LastError)) GUILayout.Label(sync.LastError, new GUIStyle(GUI.skin.label) { wordWrap = true });
         }
 
+        void DrawHeightOptions(string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName)) return;
+            var settings = Settings.GetSettings(modelName);
+            if (settings == null || settings.Name != modelName) return;
+            GUILayout.Space(6);
+            GUILayout.Label(Text("Height adjustment · current avatar", "高度微调 · 当前模型"));
+            GUI.enabled = !IsBusy;
+            float standing = HeightSlider(Text("Standing height offset", "站姿高度偏移"), settings.StandingHeightOffset);
+            float sitting = HeightSlider(Text("Sitting height offset", "坐姿高度偏移"), settings.SittingHeightOffset);
+            if (GUILayout.Button(Text("Reset both to 0", "两项恢复为 0"))) standing = sitting = 0;
+            GUI.enabled = true;
+            if (standing != settings.StandingHeightOffset || sitting != settings.SittingHeightOffset)
+            {
+                settings.StandingHeightOffset = standing; settings.SittingHeightOffset = sitting;
+                heightDirty.Add(modelName);
+            }
+            GUILayout.Label(Text("+ raises · − lowers · saved per avatar on this computer", "正值抬高，负值降低；按模型保存在本机"));
+        }
+
+        float HeightSlider(string label, float value)
+        {
+            value = AvatarHeightOffsets.Clamp(value);
+            GUILayout.Label(label + "  " + (value * 100).ToString("+0;-0;0") + " cm");
+            return Mathf.Round(GUILayout.HorizontalSlider(value, -.5f, .5f) * 100) / 100;
+        }
+
+        void SaveHeightOptions()
+        {
+            foreach (var modelName in heightDirty)
+            {
+                try { AvatarHeightOffsets.Save(modelName); }
+                catch (Exception ex) { ReportError("Cannot save avatar height offsets", ex); }
+            }
+            heightDirty.Clear();
+        }
+
         void SavePhysicsOptions()
         {
             if (!physicsDirty) return;
@@ -354,6 +394,7 @@ namespace ValheimVRM
         void OnDestroy()
         {
             SavePhysicsOptions();
+            SaveHeightOptions();
             if (font != null) Destroy(font);
             if (Instance == this) Instance = null;
         }
