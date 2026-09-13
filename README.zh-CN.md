@@ -34,6 +34,17 @@
 
 公开客户端、服务器 ZIP 均不附带 BepInEx。前置加载器与依赖来源见[详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)。
 
+### 前置依赖下载
+
+| 前置 | 下载直达 | 安装说明 |
+| --- | --- | --- |
+| **BepInExPack Valheim（推荐）** | [Valheim 专用整合包](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) | 已配置 Valheim 所需的加载入口。本项目验证的整合包版本为 **5.4.2333**，BepInEx 核心版本为 **5.4.23.3**。 |
+| BepInEx 上游 | [5.4.23.3 Release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.3) · [全部 Release](https://github.com/BepInEx/BepInEx/releases) | 上游下载及版本记录。Windows 使用 **BepInEx 5／x64／Mono**；上方专用整合包已包含游戏所需配置。 |
+
+同一个游戏／服务器目录只需安装一份加载器。完整客户端 ZIP 已提供配套 UniVRM 运行库和着色器，无需另行下载；服务端不需要这些客户端依赖。
+
+另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_1.8.11_完整插件.zip` 和 `10_ValheimVRM_Server_1.8.11.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
+
 ### 玩家安装步骤
 
 1. 正常退出游戏。尚未安装 BepInEx 5 时先安装加载器，启动一次游戏后退出。
