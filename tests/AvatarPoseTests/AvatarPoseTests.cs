@@ -91,6 +91,11 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
             sync.Setup(source, new ValheimVRM.Settings.VrmSettingsContainer { ModelScale = 1, ModelOffsetY = 0, PlayerHeight = 1.85f });
             sync.enabled = false;
             report.Add("MODEL " + Path.GetFileName(path));
+            if (Environment.GetEnvironmentVariable("VRM_LOCOMOTION") == "1")
+            {
+                yield return LocomotionProbe.Run(model, source, sync, report, output);
+                Object.Destroy(holder); Object.Destroy(imported); yield return null; continue;
+            }
             if (Environment.GetEnvironmentVariable("VRM_LIVE_GROUNDING") == "1")
             {
                 yield return LivePoseProbe.Run(model, source, sync, report, output);

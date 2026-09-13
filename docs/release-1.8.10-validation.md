@@ -62,6 +62,10 @@ checks. That was useful for geometry accuracy but did not test the full
 frame sequence and therefore missed the regression. Its validation record
 has been corrected to make this limitation explicit.
 
+Walking and running were not included in that frame suite. The native-bone
+feedback fix remains valid, but extremal-foot tracking added an independent
+gait bobbing signal. The 1.8.11 validation covers this additional regression.
+
 ## Scope
 
 The continuous tests use the real player animation controller and real avatar

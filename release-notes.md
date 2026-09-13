@@ -1,3 +1,12 @@
+## 1.8.11 — Calibrate locomotion height from the avatar skeleton
+
+- Fix extra vertical bobbing introduced by following the lowest animated sole during walking and running. Calibrate a standing reference once from each avatar's humanoid rest skeleton, skin bind matrices and sole geometry. Locomotion then uses a constant lift while retaining the original animated hip motion.
+- Calibration is independent of the pose at loading and does not modify the native skeleton. Mesh vertices can use different authored coordinate axes, so evaluate their bind-weighted reference positions before measuring soles.
+- Keep the 2 m minimum visible height, independent F8 posture offsets and separate seated contact handling. Stable animation takes priority over forcing every foot vertex to touch the floor; small pose-dependent foot intersections or gaps can remain.
+- Add real Walk New, Jog New and Run New frame tests, measuring the avatar-minus-native hip offset across idle/start/walk/jog/run/stop and checking that locomotion performs no dynamic contact samples.
+
+Validation: `docs/release-1.8.11-validation.md`. The final locomotion run passed 4,320 continuous frames across four avatars, with zero dynamic contact samples during locomotion and reference standing sole errors below 9 mm. The synchronization protocol, rendering shaders and physics controls are unchanged; update the viewing player's client.
+
 ## 1.8.10 — Stop avatar height feedback into the native skeleton
 
 - Fix the 1.8.9 regression where loading a scaled avatar made it rise continuously. Remove both writes of corrected VRM bone positions into the game's native humanoid bones. Every rendered pose starts from the current native animation and receives one contact correction.

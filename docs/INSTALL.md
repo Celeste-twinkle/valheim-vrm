@@ -153,3 +153,5 @@ covered by the Windows/D3D11 validation. Report fork-build issues at
 including the game version, release tag and relevant log excerpt.
 
 1.8.10 fixes continuously rising avatars in 1.8.9 by removing VRM-to-native bone position writes. Model dimensions and contact geometry are cached at import/attachment; each frame applies an independent contact delta to the native animation pose. The minimum stays at 2 m and both F8 posture offsets default to zero.
+
+1.8.11 calibrates a fixed standing/locomotion offset at load from the humanoid reference skeleton and sole geometry. Walking and running keep native hip animation without live lowest-foot correction. Sitting retains independent contact handling; small pose-dependent foot intersections are possible.

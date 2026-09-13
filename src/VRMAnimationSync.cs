@@ -23,14 +23,13 @@ namespace ValheimVRM
 		private readonly bool[] hasBoneRotationOffset = new bool[(int)HumanBodyBones.LastBone];
 		private HumanBodyBones[] ragdollBones;
 		private AvatarGroundContact sourceContact, targetContact;
-		private Character character;
+		private AvatarStandingReference standingReference;
 
 		public void Setup(Animator orgAnim, Settings.VrmSettingsContainer settings, bool isRagdoll = false)
 		{
 			this.ragdoll = isRagdoll;
 			this.settings = settings;
 			this.orgAnim = orgAnim;
-			character = orgAnim.GetComponentInParent<Character>();
 			this.vrmAnim = GetComponent<Animator>();
 			this.vrmAnim.applyRootMotion = true;
 			this.vrmAnim.updateMode = orgAnim.updateMode;
@@ -47,6 +46,7 @@ namespace ValheimVRM
 			{
 				sourceContact = new AvatarGroundContact(orgAnim);
 				targetContact = new AvatarGroundContact(vrmAnim);
+				standingReference = AvatarStandingReference.Measure(orgAnim, vrmAnim);
 			}
 		}
 
@@ -194,15 +194,17 @@ namespace ValheimVRM
 			var orgHip = orgAnim.GetBoneTransform(HumanBodyBones.Hips);
 
 			vrmHip.position = orgAnim.GetBoneTransform(HumanBodyBones.Hips).position;
-			sourceContact.Sample(out float sourceFeet, out float sourceSeat, out _);
-			targetContact.Sample(out float targetFeet, out float targetSeat, out float targetLower);
-			// Preserve the game's airborne foot motion. On land its visual soles
-			// can already sit slightly below the character's support plane.
-			if (character == null || (character.IsOnGround() && !character.IsSwimming()))
-				sourceFeet = Mathf.Max(sourceFeet, orgAnim.transform.position.y);
-			float footAlignment = sourceFeet - targetFeet;
-			float seatAlignment = sourceSeat - targetSeat;
-			float groundAlignment = orgAnim.transform.position.y - targetLower;
+			// Locomotion uses a constant calibrated lift, retaining the game's hip
+			// motion. Following the lowest animated sole adds a second gait signal.
+			float footAlignment = standingReference.Offset(orgAnim, vrmAnim);
+			float seatAlignment = 0, groundAlignment = 0;
+			if (UsesSeatContact(curStateHash) || (orgAnim.IsInTransition(0) && UsesSeatContact(nextStateHash)))
+			{
+				sourceContact.Sample(out _, out float sourceSeat, out _);
+				targetContact.Sample(out _, out float targetSeat, out float targetLower);
+				seatAlignment = sourceSeat - targetSeat;
+				groundAlignment = orgAnim.transform.position.y - targetLower;
+			}
 			float contactAdjustment = ContactAdjustment(curStateHash, footAlignment, seatAlignment, groundAlignment);
 			float heightOffset = HeightOffset(curStateHash);
 			if (orgAnim.IsInTransition(0) && nextStateHash != 0)
@@ -270,6 +272,11 @@ namespace ValheimVRM
 			if (state == SittingChair || state == SittingThrone || state == SittingShip) return seat;
 			if (state == Sleeping || state == StartSleeping || state == GetUpFromBed) return 0;
 			return feet;
+		}
+
+		private static bool UsesSeatContact(int state)
+		{
+			return IsGroundSitState(state) || state == SittingChair || state == SittingThrone || state == SittingShip;
 		}
 
 		private float HeightOffset(int state)
