@@ -4,7 +4,7 @@
 
 将英灵神殿角色替换为自己的 VRM 人形模型，游戏内按 **F8** 切换。可以只在本机生效，也可以安装独立服务器插件，让其他玩家看到各自选择的模型。
 
-**当前发布版：1.8.8** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
+**当前发布版：1.8.9** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
 
 [下载 Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [发布版源码](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [更新记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -27,10 +27,10 @@
 
 | 使用场景 | 安装内容 |
 | --- | --- |
-| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.8.zip` + 自备 `.vrm`。 |
-| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.8.zip`；无需模型或客户端依赖。 |
+| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.9.zip` + 自备 `.vrm`。 |
+| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.9.zip`；无需模型或客户端依赖。 |
 | 通过游戏“启动服务器”的房主，需要外观同步 | 在房主游戏目录安装客户端包和服务器包；其他玩家按客户端方式安装。 |
-| 仅下载源码 | `ValheimVRM-1.8.8-source.zip` 用于开发，不能代替编译好的插件包。 |
+| 仅下载源码 | `ValheimVRM-1.8.9-source.zip` 用于开发，不能代替编译好的插件包。 |
 
 公开客户端、服务器 ZIP 均不附带 BepInEx。前置加载器与依赖来源见[详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)。
 
@@ -40,7 +40,7 @@
 2. 将**完整客户端 ZIP**解压到 `valheim.exe` 所在目录，合并 `BepInEx` 和 `valheim_Data`。不能只复制 `ValheimVRM.dll`。
 3. 在游戏根目录创建 `ValheimVRM`，把自己的 `.vrm` 直接放进去。一个模型就能使用。
 4. 启动游戏，进入世界后关闭聊天、物品栏等菜单，按 **F8** 选择模型。
-5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.8**。
+5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.9**。
 
 ```text
 Valheim/
@@ -75,7 +75,7 @@ Valheim/
 | `BepInEx/config/ValheimVRM/avatar_selections.json` | 各游戏角色的模型选择。 | Mod 保存选择时生成。 |
 | `BepInEx/config/ValheimVRM/physics_options.json` | 本机统一的物理摆动权重。 | Mod 保存滑块设置时生成。 |
 | `BepInEx/config/ValheimVRM/rendering_options.json` | 本机渲染开关。 | Mod 修改选项时生成。 |
-| `BepInEx/config/ValheimVRM/settings_模型名.txt` | 可选模型缩放、偏移、装备等参数。 | 用户手动创建，不会自动生成。 |
+| `BepInEx/config/ValheimVRM/settings_模型名.txt` | 可选模型缩放、偏移、装备等参数。 | 保存 F8 高度微调时自动创建；其他参数可手动填写。 |
 | `BepInEx/config/ValheimVRM/global_settings.txt` | 可选全局参数，如是否启用 F8 菜单。 | 用户手动创建，不会自动生成。 |
 | `BepInEx/plugins/ValheimVRM/` | 插件、着色器、说明、示例和许可证。 | 解压插件包。 |
 
@@ -98,6 +98,14 @@ ModelOffsetY=0
 - 增删模型后点“刷新列表”。替换同名模型文件或修改 TXT 后重启游戏。
 - 列表没有固定数量上限，也不会预加载整个文件夹；大型模型仍需要相应内存和显存。
 - “服务器外观同步（服务器支持时）”控制是否公开自己的选择并接收其他玩家外观，详见下方同步说明。
+
+### 站姿和坐姿高度微调
+
+两个滑块默认均为 **0 厘米**，此时自动计算贴地。1.8.9 按当前模型的真实脚部／鞋底网格计算站姿；坐地使用腿部与臀部较低的支撑点；椅子坐姿对齐原版角色的座面接触位置。计算包含实际蒙皮权重与当前缩放，不按模型名称硬编码高度。腾空时保留游戏动画的垂直运动，同时修正导入高度测量中的缩放补偿。
+
+F8 的 **“站姿高度偏移”** 和 **“坐姿高度偏移”** 可分别调整 **−50～+50 厘米**，步长 1 厘米。正值抬高、负值降低；拖动即时预览，松开保存；点击“两项恢复为 0”回到自动定位。站姿偏移作用于通常的站立与移动；坐姿偏移作用于坐地、椅子、船上坐姿和坐地的坐下／起身过程。睡眠与死亡布娃娃保留原有定位。
+
+微调按模型写入 `BepInEx/config/ValheimVRM/settings_模型名.txt` 的 `StandingHeightOffset`、`SittingHeightOffset`（单位米）。缺少文件时自动创建，保留其他参数和注释。微调只影响本机渲染，不通过服务器同步；原有 `ModelOffsetY` 仍会叠加全局偏移。滑块用于特殊鞋底、服装形状的补充校准；默认自动定位仍然生效，也不会为所有椅子自动增加屈膝 IK。
 
 ### 物理摆动权重
 
@@ -172,7 +180,7 @@ MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 
 
 ### 服务端怎么安装
 
-在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.8.zip` 解压到服务器根目录，再按原启动方式启动：
+在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.9.zip` 解压到服务器根目录，再按原启动方式启动：
 
 ```text
 专用服务器目录/
@@ -183,7 +191,7 @@ MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 
 
 **这两个 `ValheimVRM.Server` 目录都不需要放客户端模型文件。** 服务器不导入模型，不需要客户端 UniVRM DLL 或着色器；服务器自己的 `ValheimVRM` 目录可以不存在。
 
-参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.8**。
+参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.9**。
 
 ### 不同安装组合的行为
 
@@ -218,12 +226,12 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 | --- | --- |
 | F8 无法打开 | 进入世界、保持角色存活并关闭其他菜单；确认没有设置 `EnableAvatarPicker=false`，检查插件加载日志。 |
 | 列表为空／刚放入的模型不显示 | `.vrm` 必须直接位于模型目录；`.unitypackage` 不能直接使用。点“刷新列表”，自定义启动脚本需检查工作目录，扫描异常见日志。 |
-| 缺少 `settings_*.txt` 或 JSON | 不影响正常加载；TXT 可选且需手动创建，JSON 在保存相应选项时自动生成。 |
+| 缺少 `settings_*.txt` 或 JSON | 不影响正常加载；TXT 可选；保存 F8 高度微调时会自动创建当前模型的 TXT，JSON 在保存相应选项时自动生成。 |
 | 自己换装了，好友看不到 | 检查服务器插件、双方 F8 同步状态，以及接收方是否具有相同名称和内容的模型文件。服务器不自动下载模型给玩家。 |
 | 进服提示“版本不兼容” | 核对客户端与服务器的游戏版本，并查看双方连接日志。VRM 服务端不会因客户端缺少本插件而拒绝入服。 |
 | 摆动过大／衣服与身体穿模 | 降低 F8 物理权重；仍穿模时检查导出资产的蒙皮、形态键和碰撞设置。 |
 | 身体有树叶状暗斑／关闭接收阴影仍存在 | 阴影贴图与屏幕空间后处理不同。本版为不透明／裁剪 MToon 表面补充深度与法线；检查是否装全新依赖，反馈时附材质类型及渲染选项。 |
-| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.8** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
+| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.9** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
 | 模型退出视野后内存没有立刻下降 | 镜头外的活动角色仍需模型；只有最后一个实例销毁后才进入释放等待，详见下一节。 |
 
 反馈问题请提供游戏版本、Mod 版本、触发步骤和相关日志片段：
@@ -238,7 +246,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 
 Unity 和显卡驱动可能保留内存池，因此资源已释放不代表任务管理器占用立刻下降。1.8.7 已通过持续 4K 泛光分配／释放、三次实际主菜单重载、异步挂接取消、模型缩放、坐姿、持物、物理权重及资源生命周期测试。
 
-联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。1.8.8 的抗锯齿渲染回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.8-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
+联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。1.8.9 的贴地与姿态回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.9-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
 
 ## 开发与来源
 
@@ -256,7 +264,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-输出为 `release/ValheimVRM-1.8.8.zip` 和 `release/ValheimVRM-Server-1.8.8.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
+输出为 `release/ValheimVRM-1.8.9.zip` 和 `release/ValheimVRM-Server-1.8.9.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
 
 [着色器重建](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [依赖来源与许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [项目许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [问题反馈](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 
