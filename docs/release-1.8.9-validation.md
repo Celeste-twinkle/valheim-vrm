@@ -46,7 +46,11 @@ stand-up and chair sitting at three scales and two root heights (0 and 1200 m),
 with translated/rotated roots. Independent Unity mesh skinning measures the
 actual sole, lower-body support and seat surfaces. All **1,320 samples pass**
 with zero manual offsets. Maximum contact error in this run was **0.003540 m**.
-Repeated ordinary animation updates do not accumulate height corrections.
+Those checks manually evaluated the animator and invoked the synchronizer's
+LateUpdate. They did not exercise its real Update/animation/LateUpdate order.
+A later continuous-frame test reproduced rising avatars in 1.8.9 because
+corrected VRM bones were written back into the native skeleton. Therefore
+this test did not establish runtime stability; see the 1.8.10 validation.
 
 Standing +17 cm and sitting −8 cm are checked independently on standing,
 ground-sitting and chair poses. Save/reload preserves both values, existing

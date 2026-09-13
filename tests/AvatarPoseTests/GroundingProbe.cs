@@ -8,7 +8,7 @@ using ValheimVRM;
 static class GroundingProbe
 {
     static readonly System.Reflection.MethodInfo Synchronize = AccessTools.Method(typeof(VRMAnimationSync), "LateUpdate");
-    sealed class Surface : IDisposable
+    internal sealed class Surface : IDisposable
     {
         sealed class Entry { public SkinnedMeshRenderer Skin; public bool[] Feet, Seat, Lower; }
         readonly List<Entry> entries = new List<Entry>();

@@ -158,33 +158,6 @@ namespace ValheimVRM
 					return Vector3.zero;
 			}
 		}
-		void Update()
-		{
-			vrmAnim.transform.localPosition = Vector3.zero;
-			if (!ragdoll)
-			{
-				for (var i = 0; i < 55; i++)
-				{
-					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
-					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-
-					if (i > 0 && orgTrans != null && vrmTrans != null)
-					{
-						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot)
-						{
-							orgTrans.position = vrmTrans.position;
-						}
-						else
-						{
-							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
-						}
-					}
-				}
-			}
-
-			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
-		}
-
 		void LateUpdate()
 		{
 			if (ragdoll)
@@ -207,6 +180,9 @@ namespace ValheimVRM
 
 			vrmAnim.transform.localPosition = Vector3.zero;
 
+			// One-way transfer: the game skeleton is an input, never a destination.
+			// Start from this frame's animation before applying an absolute contact delta.
+			// Writing corrected VRM bones back would feed last frame's lift into the next.
 			orgPose.GetHumanPose(ref hp);
 			vrmPose.SetHumanPose(ref hp);
 
@@ -276,27 +252,6 @@ namespace ValheimVRM
 			adjustPos = adjustPos.HasValue ? Vector3.Lerp(adjustPos.Value, actualAdjustHipPos, actualInterpSpeed) : curAdjustPos;
 
 			vrmHip.position += adjustPos.Value;
-
-			if (!ragdoll)
-			{
-				for (var i = 0; i < 55; i++)
-				{
-					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
-					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-
-					if (i > 0 && orgTrans != null && vrmTrans != null)
-					{
-						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot)
-						{
-							orgTrans.position = vrmTrans.position;
-						}
-						else
-						{
-							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
-						}
-					}
-				}
-			}
 
 			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
 

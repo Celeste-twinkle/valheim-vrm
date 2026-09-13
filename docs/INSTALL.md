@@ -151,3 +151,5 @@ Linux, macOS, Vulkan, multiplayer sharing and combinations with other mods are n
 covered by the Windows/D3D11 validation. Report fork-build issues at
 [Celeste-twinkle/valheim-vrm](https://github.com/Celeste-twinkle/valheim-vrm/issues),
 including the game version, release tag and relevant log excerpt.
+
+1.8.10 fixes continuously rising avatars in 1.8.9 by removing VRM-to-native bone position writes. Model dimensions and contact geometry are cached at import/attachment; each frame applies an independent contact delta to the native animation pose. The minimum stays at 2 m and both F8 posture offsets default to zero.

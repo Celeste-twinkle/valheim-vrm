@@ -10,7 +10,7 @@ namespace ValheimVRM
     {
         sealed class Grip
         {
-            internal Transform Mount, SourceHand, TargetHand;
+            internal Transform Mount, SourceBone, TargetBone;
             internal Vector3 OriginalPosition, TargetPosition;
             internal Quaternion OriginalRotation, TargetRotation;
             internal bool HasPalm;
@@ -18,10 +18,10 @@ namespace ValheimVRM
 
             internal void Apply()
             {
-                if (Mount == null || SourceHand == null || TargetHand == null) return;
-                Mount.position = HasPalm ? TargetHand.TransformPoint(TargetPosition) :
-                    TargetHand.position + SourceHand.TransformVector(TargetPosition) * FallbackScale;
-                Mount.rotation = (HasPalm ? TargetHand.rotation : SourceHand.rotation) * TargetRotation;
+                if (Mount == null || SourceBone == null || TargetBone == null) return;
+                Mount.position = HasPalm ? TargetBone.TransformPoint(TargetPosition) :
+                    TargetBone.position + SourceBone.TransformVector(TargetPosition) * FallbackScale;
+                Mount.rotation = (HasPalm ? TargetBone.rotation : SourceBone.rotation) * TargetRotation;
             }
 
             internal void Restore()
@@ -38,7 +38,7 @@ namespace ValheimVRM
             internal Vector3 Size;
         }
 
-        readonly List<Grip> grips = new List<Grip>(2);
+        readonly List<Grip> grips = new List<Grip>(10);
         Animator target;
 
         public void Setup(Animator original, Animator avatar, VisEquipment equipment)
@@ -50,6 +50,44 @@ namespace ValheimVRM
             var targetPose = GetBindPose(avatar);
             AddGrip(original, avatar, equipment.m_leftHand, true, sourcePose, targetPose);
             AddGrip(original, avatar, equipment.m_rightHand, false, sourcePose, targetPose);
+            foreach (var mount in new[] { equipment.m_helmet, equipment.m_backShield,
+                equipment.m_backMelee, equipment.m_backTwohandedMelee, equipment.m_backBow,
+                equipment.m_backTool, equipment.m_backAtgeir })
+                AddBodyMount(original, avatar, mount);
+        }
+
+        void AddBodyMount(Animator original, Animator avatar, Transform mount)
+        {
+            if (!SafeMount(original, mount)) return;
+            foreach (var grip in grips) if (grip.Mount == mount) return;
+            // Move only the equipment socket. Native humanoid bones must retain
+            // their animated positions for grounding, gameplay and other mods.
+            for (var parent = mount.parent; parent != null; parent = parent.parent)
+                for (int i = 0; i < (int)HumanBodyBones.LastBone; i++)
+                {
+                    if (original.GetBoneTransform((HumanBodyBones)i) != parent) continue;
+                    var destination = avatar.GetBoneTransform((HumanBodyBones)i);
+                    if (destination == null) continue;
+                    grips.Add(new Grip {
+                        Mount = mount, SourceBone = parent, TargetBone = destination,
+                        OriginalPosition = mount.localPosition, OriginalRotation = mount.localRotation,
+                        TargetPosition = parent.InverseTransformPoint(mount.position),
+                        TargetRotation = Quaternion.Inverse(parent.rotation) * mount.rotation,
+                        FallbackScale = 1
+                    });
+                    return;
+                }
+        }
+
+        static bool SafeMount(Animator original, Transform mount)
+        {
+            if (mount == null || !mount.IsChildOf(original.transform)) return false;
+            for (int i = 0; i < (int)HumanBodyBones.LastBone; i++)
+            {
+                var bone = original.GetBoneTransform((HumanBodyBones)i);
+                if (bone != null && (bone == mount || bone.IsChildOf(mount))) return false;
+            }
+            return true;
         }
 
         void AddGrip(Animator original, Animator avatar, Transform mount, bool left,
@@ -58,11 +96,11 @@ namespace ValheimVRM
             var bone = left ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand;
             var sourceHand = original.GetBoneTransform(bone);
             var targetHand = avatar.GetBoneTransform(bone);
-            if (mount == null || sourceHand == null || targetHand == null || !mount.IsChildOf(sourceHand)) return;
+            if (!SafeMount(original, mount) || sourceHand == null || targetHand == null || !mount.IsChildOf(sourceHand)) return;
             var point = sourceHand.InverseTransformPoint(mount.position);
             var rotation = Quaternion.Inverse(sourceHand.rotation) * mount.rotation;
             var grip = new Grip {
-                Mount = mount, SourceHand = sourceHand, TargetHand = targetHand,
+                Mount = mount, SourceBone = sourceHand, TargetBone = targetHand,
                 OriginalPosition = mount.localPosition, OriginalRotation = mount.localRotation,
                 TargetPosition = point, TargetRotation = rotation,
                 FallbackScale = avatar.humanScale / Mathf.Max(original.humanScale, .0001f)

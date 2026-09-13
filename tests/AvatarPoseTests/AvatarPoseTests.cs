@@ -85,10 +85,19 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
             model.SetActive(true);
             foreach (var behaviour in model.GetComponents<MonoBehaviour>()) behaviour.enabled = false;
             var target = model.GetComponent<Animator>();
+            if (Environment.GetEnvironmentVariable("VRM_ATTACH_SITTING") == "1")
+            { source.Play(-1544306596, 0, .5f); source.Update(0); }
             var sync = model.AddComponent<VRMAnimationSync>();
             sync.Setup(source, new ValheimVRM.Settings.VrmSettingsContainer { ModelScale = 1, ModelOffsetY = 0, PlayerHeight = 1.85f });
             sync.enabled = false;
             report.Add("MODEL " + Path.GetFileName(path));
+            if (Environment.GetEnvironmentVariable("VRM_LIVE_GROUNDING") == "1")
+            {
+                yield return LivePoseProbe.Run(model, source, sync, report, output);
+                Object.Destroy(holder); Object.Destroy(imported);
+                yield return null;
+                continue;
+            }
             if (Environment.GetEnvironmentVariable("VRM_GROUNDING_DIAGNOSTIC") == "1")
             {
                 GroundingProbe.Run(holder, model, source, sync, report);
@@ -98,7 +107,7 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
             }
             GroundingProbe.Run(holder, model, source, sync, report);
             EquipmentProbe.Run(source, target, sync, output);
-            report.Add("grips: both hands, identity mapping, three scales, four poses, switch/unbind restoration passed");
+            report.Add("equipment: both hands and seven body sockets, three scales/four poses, native skeleton protection and unbind restoration passed");
             CheckSpringClone(imported, model, source, sync);
             Object.Destroy(holder); Object.Destroy(imported);
             yield return null;

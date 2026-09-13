@@ -1,3 +1,12 @@
+## 1.8.10 — Stop avatar height feedback into the native skeleton
+
+- Fix the 1.8.9 regression where loading a scaled avatar made it rise continuously. Remove both writes of corrected VRM bone positions into the game's native humanoid bones. Every rendered pose starts from the current native animation and receives one contact correction.
+- Keep imported height/scale and contact geometry cached. Only animated contact positions are evaluated each frame; the previous frame's height correction is never a new input. The minimum height remains 2 m, and the independent F8 standing/sitting offsets still default to zero.
+- Move hand, helmet and back-item sockets directly to the avatar, preserving socket restoration and protecting actual native bones from accidental socket configuration.
+- Add continuous Unity frame regression tests alongside the existing sampled pose, equipment and spring tests. Correct the earlier validation's runtime-stability claim, which was based on manually stepped animation and missed the feedback.
+
+Validation: `docs/release-1.8.10-validation.md`. 8,640 continuous Unity frames and 1,320 sampled poses passed across four avatars, including seated attachment, equipment restoration and physics regression checks. Model files and server synchronization protocol are unchanged. Update the viewing player's client to receive the fix.
+
 ## 1.8.9 — Correct scaled foot/seat placement and add posture offsets
 
 - Keep the minimum visible model height at 2 m and correct mesh-bake scale compensation.
