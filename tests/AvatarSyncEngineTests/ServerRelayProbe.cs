@@ -85,6 +85,7 @@ static class ServerRelayProbe
             Check(vanilla.IsConnected()&&vanillaPeer.IsReady()&&normalRequests==60&&normalReplies==60,"Unmodded player was disconnected or game RPC stopped");
             Check(vanillaRight.SentMethods.Count(h=>h==AvatarSyncWire.Hello.GetStableHashCode())==3,"Discovery did not stop after three unanswered hellos");
             Check(vanillaRight.SentMethods.Count(h=>h==AvatarSyncWire.SequencedHello.GetStableHashCode())==3,"Sequence discovery exceeded three rounds");
+            Check(vanillaRight.SentMethods.Count(h=>h==AvatarSyncWire.HeightHello.GetStableHashCode())==3,"Height discovery exceeded three rounds");
             Check(!vanillaRight.SentMethods.Contains(AvatarSyncWire.State.GetStableHashCode()),"Unmodded client received avatar snapshots");
             Check(received[404].All(s=>s.Peer!=505),"Unmodded player acquired another player's avatar");
         }

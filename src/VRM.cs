@@ -158,19 +158,19 @@ namespace ValheimVRM
 			}
 		}
 
-		public IEnumerator SetToPlayer(Player player)
+		public IEnumerator SetToPlayer(Player player, float? height = null)
 		{
 			using (AvatarResidency.Acquire(this))
 			{
 				// Drive the child here so cancellation/errors unwind the attachment
 				// lease in this iterator instead of escaping a nested Unity coroutine.
-				var attachment = AttachToPlayer(player);
+				var attachment = AttachToPlayer(player, height);
 				try { while (attachment.MoveNext()) yield return attachment.Current; }
 				finally { (attachment as IDisposable)?.Dispose(); }
 			}
 		}
 
-		private IEnumerator AttachToPlayer(Player player)
+		private IEnumerator AttachToPlayer(Player player, float? height)
 		{
 			if (player == null) yield break;
 			var animator = player.GetField<Player, Animator>("m_animator") ?? player.GetComponentInChildren<Animator>();
@@ -209,6 +209,11 @@ namespace ValheimVRM
 
 			vrmModel.transform.SetParent(parent, false);
 			vrmModel.transform.localPosition = animator.transform.localPosition;
+			// Scale the clone before springs, camera, and both posture calibrations.
+			// The imported template and any other player's clone remain unchanged.
+			AvatarScale.ApplyHeight(vrmModel, height ?? (player == Player.m_localPlayer
+				? OutfitSwitcher.Instance?.Heights?.Get(player.GetPlayerName()) ?? AvatarScale.DefaultHeight
+				: AvatarSyncClient.Instance?.RemoteHeight(player) ?? AvatarScale.DefaultHeight));
 			// Initialize springs at the player's location, not at the import origin.
 			PrepareVrm10Clone(VisualModel, vrmModel);
 			var physicsWeight = vrmModel.GetComponent<AvatarPhysicsWeight>() ?? vrmModel.AddComponent<AvatarPhysicsWeight>();

@@ -52,11 +52,13 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         WireTests(names,hashes);
         report.Add("Real ZRpc serialization over isolated in-memory sockets: two senders, three receivers, snapshots and malformed data passed");
         ServerRelayProbe.Run(names,hashes);
-        report.Add("Unmodded ZRpc client: no avatar handlers, three discovery rounds maximum (six compatibility/capability packets), zero avatar snapshots, 60 ordinary request/reply exchanges, no errors or disconnects");
+        report.Add("Unmodded ZRpc client: no avatar handlers, three discovery rounds maximum (nine compatibility/capability packets), zero avatar snapshots, 60 ordinary request/reply exchanges, no errors or disconnects");
         report.Add("Production server plugin: handshake, authenticated ZDO ownership, forged character rejection, respawn, rapid changes, late join, opt-out and disconnect passed over real ZRpc");
         SequencedRelayProbe.Run(names, hashes);
         report.Add("Sequenced production relay: actual reversed ZRpc delivery, duplicate/legacy downgrade rejection, malformed packet isolation, independent players, opt-out ordering, respawn watermark retention, reconnect reset, old connection rejection and listen-host ordering passed");
         ClientSequenceProbe.Run();
+        HeightRelayProbe.Run(names[0], hashes[0]);
+        report.Add("Height relay: same model with independent 1.4/2/2.2 m heights, reversed delivery, stale/duplicate/invalid height rejection, legacy fallback, opt-out and host bridge passed");
         report.Add("Production client: old-server format, capability upgrade, monotonic 1/2/3/4 requests, late legacy hello, opt-out/refresh, new RPC reset, stale connection rejection, overflow guard and no-addon local mode passed");
         var prefab=(GameObject)AccessTools.Field(typeof(FejdStartup),"m_playerPrefab").GetValue(menu);
         if (Environment.GetEnvironmentVariable("VRM_ONLY_LIBRARY_TEST") == "restart") VrmOnlyRestart(prefab, names);
@@ -84,6 +86,8 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         Check(VrmManager.PlayerToVrmInstance[b]==rootB,"A changing to B's asset replaced B's instance");
         Check(VrmManager.PlayerToVrmInstance[a]!=rootB,"Shared asset merged player instances");
         report.Add("Same-named game Player fixtures: A and B own distinct VRM clones; A switching to B's asset leaves B's object/bones untouched; remote collider unchanged");
+        yield return HeightInstanceTests(sync, registry, a, b, names[1], hashes[1]);
+        rootB = VrmManager.PlayerToVrmInstance[b];
         yield return FolderMismatchTests(prefab, sync, registry, a, b, names, hashes);
         rootB = VrmManager.PlayerToVrmInstance[b];
         var desired=AccessTools.Method(typeof(AvatarSyncClient),"Desired");
@@ -117,7 +121,7 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         var selection=(AvatarSelection)desired.Invoke(sync,new object[]{target});
         bool done=false,success=false;
         AccessTools.Method(typeof(OutfitSwitcher),"RequestRemoteSwitch").Invoke(OutfitSwitcher.Instance,new object[]{target,name,hash,
-            new Func<bool>(()=>selection.SameAs((AvatarSelection)desired.Invoke(sync,new object[]{target}))),new Action<bool>(ok=>{success=ok;done=true;})});
+            new Func<bool>(()=>selection.SameAs((AvatarSelection)desired.Invoke(sync,new object[]{target}))),new Action<bool>(ok=>{success=ok;done=true;}),selection.Height});
         float deadline=Time.realtimeSinceStartup+120;
         while(!done){if(Time.realtimeSinceStartup>deadline)throw new Exception("Remote import timeout");yield return null;}
         Check(success,"Remote import failed: "+OutfitSwitcher.Instance.LastError);
@@ -141,7 +145,7 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
     }
     static void SetState(AvatarSyncClient client,AvatarSyncRegistry registry)
     {
-        var p=AvatarSyncWire.Snapshot(registry.Revision,registry.Snapshot());p.SetPos(0);
+        var p=AvatarSyncWire.Snapshot(registry.Revision,registry.Snapshot(),true);p.SetPos(0);
         AccessTools.Method(typeof(AvatarSyncClient),"AcceptSnapshot").Invoke(client,new object[]{p});
     }
     static string Hash(byte[] bytes){using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant();}

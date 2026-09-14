@@ -25,7 +25,8 @@ static class ClientSequenceProbe
             var peer = new ZNetPeer(left, true) { m_uid = 900 }; var server = new ZRpc(right);
             rpcs.Add(peer.m_rpc); rpcs.Add(server); peers.Clear(); peers.Add(peer); sync.Register(peer);
             server.Register<ZPackage>(AvatarSyncWire.Select, (rpc, p) => {
-                Check(AvatarSyncWire.ReadSelection(p, out _, out _, out _, out var seq), "Production client emitted malformed request"); sequences.Add(seq);
+                Check(AvatarSyncWire.ReadSelection(p, out _, out _, out _, out var seq, out _, out var withHeight), "Production client emitted malformed request");
+                Check(withHeight == sync.HeightSync, "Client sent height without capability negotiation"); sequences.Add(seq);
             });
             return server;
         };
@@ -55,12 +56,21 @@ static class ClientSequenceProbe
             Check(sequences.Last() == 3 && sequences.Count == 4, "Refresh emitted a duplicate unchanged request");
             hello(server, AvatarSyncWire.SequencedHello);
             Check(sequences.Last() == 4, "Repeated discovery reset the request sequence");
+            hello(server, AvatarSyncWire.HeightHello);
+            Check(sync.HeightSync && sequences.Last() == 5, "Height capability failed to upgrade sequence");
+            count = sequences.Count; hello(server, AvatarSyncWire.SequencedHello); hello(server, AvatarSyncWire.Hello);
+            Check(sync.HeightSync && sequences.Count == count, "Late capability downgraded height negotiation");
+            var accept = AccessTools.Method(typeof(AvatarSyncClient), "AcceptSnapshot");
+            var latest = AvatarSyncWire.Snapshot(10, new AvatarSelection[0], true); latest.SetPos(0); accept.Invoke(sync,new object[]{latest});
+            var legacy = AvatarSyncWire.Snapshot(11, new AvatarSelection[0]); legacy.SetPos(0); accept.Invoke(sync,new object[]{legacy});
+            Check((long)AccessTools.Field(typeof(AvatarSyncClient), "revision").GetValue(sync)==10, "Late legacy snapshot replaced height state");
 
             // Replacement RPC on the same ZNet is a fresh connection; old RPCs
             // cannot negotiate or reset its order, even before a polling tick.
             var oldPeer = peers[0]; var oldRpcServer = server;
             server = connect(); hello(server, AvatarSyncWire.SequencedHello);
             Check(sequences.Last() == 1 && sync.Connected, "Reconnect did not reset sequence for the new RPC");
+            Check(!sync.HeightSync, "Height capability leaked into legacy reconnect");
             count = sequences.Count;
             oldRpcServer.Invoke(AvatarSyncWire.SequencedHello, AvatarSyncRules.Version); oldPeer.m_rpc.Update(.01f); oldRpcServer.Update(.01f);
             Check(sequences.Count == count, "Old connection hello was accepted");

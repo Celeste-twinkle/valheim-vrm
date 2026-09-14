@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using ValheimVRM.Sync;
 
 namespace ValheimVRM
 {
@@ -7,17 +8,29 @@ namespace ValheimVRM
     // Serialized scalar data survives Instantiate; clones never measure a seated pose.
     public sealed class AvatarScale : MonoBehaviour
     {
-        public const float MinimumHeight = 2f;
+        public const float MinimumHeight = AvatarHeightRules.Minimum;
+        public const float DefaultHeight = AvatarHeightRules.Default;
+        public const float MaximumHeight = AvatarHeightRules.Maximum;
         [SerializeField] float unscaledHeight;
+        [SerializeField] float targetHeight = DefaultHeight;
         public float UnscaledHeight => unscaledHeight;
+        public float TargetHeight => targetHeight;
 
         public static float Apply(GameObject root, float requestedScale)
         {
+            return ApplyHeight(root, DefaultHeight, requestedScale);
+        }
+
+        // A target height is absolute, never a multiplier of the previous scale.
+        // Only player clones receive personal height; the shared import stays at 2 m.
+        public static float ApplyHeight(GameObject root, float height, float fallbackScale = 1f)
+        {
             var sizing = root.GetComponent<AvatarScale>() ?? root.AddComponent<AvatarScale>();
             if (sizing.unscaledHeight <= 0) sizing.unscaledHeight = Measure(root);
-            if (!Finite(requestedScale) || requestedScale <= 0) requestedScale = 1;
+            sizing.targetHeight = AvatarHeightRules.Clamp(height);
+            if (!Finite(fallbackScale) || fallbackScale <= 0) fallbackScale = 1;
             float scale = sizing.unscaledHeight > 0
-                ? Mathf.Max(requestedScale, MinimumHeight / sizing.unscaledHeight) : requestedScale;
+                ? sizing.targetHeight / sizing.unscaledHeight : fallbackScale;
             root.transform.localScale = Vector3.one * scale;
             return scale;
         }

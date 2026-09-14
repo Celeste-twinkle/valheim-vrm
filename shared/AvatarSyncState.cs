@@ -11,9 +11,18 @@ namespace ValheimVRM.Sync
         public uint CharacterId;
         public string Model;
         public string Sha256;
+        public float Height = AvatarHeightRules.Default;
         public bool SameAs(AvatarSelection other) => other != null && Peer == other.Peer &&
             CharacterUser == other.CharacterUser && CharacterId == other.CharacterId &&
-            Model == other.Model && Sha256 == other.Sha256;
+            Model == other.Model && Sha256 == other.Sha256 && Height == other.Height;
+    }
+
+    public static class AvatarHeightRules
+    {
+        public const float Default = 2f, Minimum = 1.4f, Maximum = 2.2f;
+        public static bool Valid(float value) => !float.IsNaN(value) && !float.IsInfinity(value) && value >= Minimum && value <= Maximum;
+        public static float Clamp(float value) => float.IsNaN(value) || float.IsInfinity(value)
+            ? Default : Math.Max(Minimum, Math.Min(Maximum, value));
     }
 
     public static class AvatarSyncRules
@@ -54,14 +63,14 @@ namespace ValheimVRM.Sync
             if (!selections.Remove(peer)) return false;
             Revision++; return true;
         }
-        public bool Set(long authenticatedPeer, long characterUser, uint characterId, string model, string hash)
+        public bool Set(long authenticatedPeer, long characterUser, uint characterId, string model, string hash, float height = AvatarHeightRules.Default)
         {
             if (authenticatedPeer == 0 || characterUser == 0 || characterId == 0 ||
-                !AvatarSyncRules.ValidModel(model) || !AvatarSyncRules.ValidHash(hash)) return false;
+                !AvatarSyncRules.ValidModel(model) || !AvatarSyncRules.ValidHash(hash) || !AvatarHeightRules.Valid(height)) return false;
             if (!selections.ContainsKey(authenticatedPeer) && selections.Count >= AvatarSyncRules.MaxPlayers) return false;
             if (selections.Values.Any(s => s.Peer != authenticatedPeer && s.CharacterUser == characterUser && s.CharacterId == characterId)) return false;
             var next = new AvatarSelection { Peer = authenticatedPeer, CharacterUser = characterUser,
-                CharacterId = characterId, Model = model, Sha256 = hash };
+                CharacterId = characterId, Model = model, Sha256 = hash, Height = height };
             if (selections.TryGetValue(authenticatedPeer, out var current) && current.SameAs(next)) return false;
             selections[authenticatedPeer] = next; Revision++; return true;
         }

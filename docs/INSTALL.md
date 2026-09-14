@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.8.11 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.12 (Celeste-twinkle fork)
 
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
@@ -16,7 +16,7 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.11.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.12.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -93,20 +93,22 @@ settings. Rendering in another VRM viewer is determined by that viewer.
 
 Only `.vrm` files are needed in `ValheimVRM`. Models need no TXT sidecar, manifest,
 fixed companion models, `___Default.vrm` or initialization script. Built-in
-appearance defaults are scale 1.0, brightness 1.0, MToon enabled and player fade
-disabled. Optional settings can override these values, subject to the minimum
-model height: since 1.8.7 the visible standing mesh (including hair/headwear) is
-uniformly scaled using `max(ModelScale, 1.6 / originalHeight)`. A 1.2 m model
-becomes 1.6 m; taller models and larger explicit scales are preserved. Measurement
-is cached before animation and is shared by local and remote import paths.
+appearance defaults are brightness 1.0, MToon enabled and player fade disabled.
+F8 model height is 1.4–2.2 m, default 2 m. Release the slider to reattach the
+cached model at `selected height / original mesh height`, recalibrating standing
+and seated placement. Geometry is measured once before animation; the shared
+import remains unchanged. For measurable models, `ModelScale` does not override
+the height slider. Server and participating clients 1.8.12+ synchronize height
+per player; no server addon is needed for local height adjustment.
 
 The mod creates its configuration directory and these files on demand:
 
 - `avatar_selections.json`: after selecting a model.
+- `avatar_heights.json`: after applying height; stored per local game character.
 - `physics_options.json`: after saving a physics slider adjustment.
 - `rendering_options.json`: after changing a rendering option.
 
-All three go under `BepInEx/config/ValheimVRM`. Missing files use defaults.
+These files go under `BepInEx/config/ValheimVRM`. Missing files use defaults.
 Since 1.8.6, old model-folder configurations and `selected_models.json` are ignored;
 there is no automatic migration. Move any wanted TXT files and the three current
 JSON files into the new configuration folder before upgrading. Documentation,
@@ -133,7 +135,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.11.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.12.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -143,7 +145,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.11**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.12**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models
@@ -156,4 +158,4 @@ including the game version, release tag and relevant log excerpt.
 
 1.8.10 fixes continuously rising avatars in 1.8.9 by removing VRM-to-native bone position writes. Model dimensions and contact geometry are cached at import/attachment; each frame applies an independent contact delta to the native animation pose. The minimum stays at 2 m and both F8 posture offsets default to zero.
 
-1.8.11 calibrates a fixed standing/locomotion offset at load from the humanoid reference skeleton and sole geometry. Walking and running keep native hip animation without live lowest-foot correction. Sitting retains independent contact handling; small pose-dependent foot intersections are possible.
+1.8.12 calibrates a fixed standing/locomotion offset at load from the humanoid reference skeleton and sole geometry. Walking and running keep native hip animation without live lowest-foot correction. Sitting retains independent contact handling; small pose-dependent foot intersections are possible.

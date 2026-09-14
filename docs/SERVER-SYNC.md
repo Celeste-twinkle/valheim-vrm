@@ -2,21 +2,31 @@
 
 ## 中文
 
+### 玩家身高同步（1.8.12+）
+
+服务端、发送方和观察方客户端均升级到 1.8.12 后，F8 显示“玩家身高同步已启用”。模型身高范围 1.4–2.2 米，默认 2 米；A 的身高只作用于 A，B 的身高只作用于 B，即使用同一模型也不共享实例缩放。身高与模型选择一起使用递增请求序号，防止乱序覆盖；服务器快照保留每位玩家的身高，支持重生和后来加入。
+
+发送端松开滑块后重新标定该玩家显示实例，观察方收到新身高后按相同加载流程标定脚底和坐姿。身高按本机游戏角色保存到 `BepInEx/config/ValheimVRM/avatar_heights.json`；不会写入其他玩家的配置。站姿／坐姿手动偏移仍仅本机生效。
+
+无服务端插件、关闭同步或旧服务器时仍可本地调整。旧版本继续使用原模型同步格式；新版观察者对旧发送方采用默认 2 米，旧观察者无法显示自定义身高。只有协商成功的客户端接收带身高的新快照；不要求未装 Mod 的玩家安装插件。
+
+### 安装
+
 前置下载：[Valheim 专用 BepInEx 整合包（推荐）](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) · [BepInEx 5.4.23.3 Release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.3) · [全部 Release](https://github.com/BepInEx/BepInEx/releases)。验证版本为整合包 5.4.2333／核心 5.4.23.3。
 
-**本地 `10_ValheimVRM_Server_1.8.11.zip` 已附带 Windows x64 BepInEx 5.4.23.3。** 首次安装时，停止服务器，将包内 `BepInEx`、`winhttp.dll`、`doorstop_config.ini`、`.doorstop_version` 放到 `valheim_server.exe` 同级目录，再按原启动方式启动。已有兼容 BepInEx 时，只更新 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器、配置和其他插件。GitHub 公开包 `ValheimVRM-Server-1.8.11.zip` 不附带前置；Linux 需要按专用整合包说明安装对应平台加载器。
+**本地 `10_ValheimVRM_Server_1.8.12.zip` 已附带 Windows x64 BepInEx 5.4.23.3。** 首次安装时，停止服务器，将包内 `BepInEx`、`winhttp.dll`、`doorstop_config.ini`、`.doorstop_version` 放到 `valheim_server.exe` 同级目录，再按原启动方式启动。已有兼容 BepInEx 时，只更新 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器、配置和其他插件。GitHub 公开包 `ValheimVRM-Server-1.8.12.zip` 不附带前置；Linux 需要按专用整合包说明安装对应平台加载器。
 
-客户端和服务器推荐使用 1.8.11；同步协议仍兼容 1.8.0 客户端。推荐为参与外观同步的玩家统一分发
+客户端和服务器推荐使用 1.8.12；同步协议仍兼容 1.8.0 客户端。推荐为参与外观同步的玩家统一分发
 `ValheimVRM` 文件夹，但文件夹不一致不是入服限制：缺失、多出或不同的文件都不影响连接和正常游戏。
 只有显示某位玩家选择的模型时，接收方才需要该文件的相同名称（含大小写）和 VRM 内容。
 客户端模型目录只需 `.vrm`，不需要任何 TXT 或 JSON；服务端也不需要这些文件。
 个人选项由客户端按需保存在 `BepInEx/config/ValheimVRM`，各玩家可保留自己的选择、渲染开关和物理权重。
 
-1. 使用 GitHub 公开包时，服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.11.zip`
+1. 使用 GitHub 公开包时，服务器先安装兼容的 BepInEx 5，再将 `ValheimVRM-Server-1.8.12.zip`
    解压到服务器程序所在目录。目标为
    `BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll`。
    服务器只需该同步插件，不需要客户端的着色器、UniVRM DLL 或角色模型。
-2. 参与外观同步的玩家安装完整客户端 `ValheimVRM-1.8.11.zip` 和相同的模型文件夹。
+2. 参与外观同步的玩家安装完整客户端 `ValheimVRM-1.8.12.zip` 和相同的模型文件夹。
 3. 重启服务器和客户端。进入世界后，F8 应显示“服务器同步已连接”。
 4. 保持“服务器外观同步（服务器支持时）”勾选，点击模型。只有进行切换的
    玩家改变外观；其他玩家各自的选择不变。
@@ -79,7 +89,22 @@ Linux 服务器使用同一个托管 DLL，但本次引擎验证环境为 Window
 
 ## English
 
-Install the full 1.8.11 client on participating players. Their top-level
+Height sync requires server, sender and viewer 1.8.12+. F8 accepts 1.4–2.2 m,
+default 2 m, applied on release and saved per local character in
+`BepInEx/config/ValheimVRM/avatar_heights.json`. Each player's model and height
+share one authenticated selection and increasing request sequence. Same-model
+players retain independent scale; respawn/late-join snapshots carry height.
+Each receiver reattaches a cached clone and recalibrates foot/seat placement.
+Manual standing/sitting offsets remain local.
+
+HeightHello negotiates the extension: selection packets append a float after
+the request sequence, and capable receivers use snapshot format 2. Other peers
+retain format 1 and default height 2 m. Invalid/nonfinite/out-of-range heights
+are rejected before advancing the sequence. Capability upgrades cannot be
+downgraded by delayed legacy messages. Without the addon, height works locally.
+Unmodded clients retain admission and receive no avatar snapshots.
+
+Install the full 1.8.12 client on participating players. Their top-level
 `ValheimVRM` folders may differ without affecting admission or normal play. To
 display a selected remote avatar, its case-sensitive filename and SHA-256 must
 match the sender's VRM. Extra files are ignored; folder equality is not enforced. Model settings should also be distributed
@@ -88,10 +113,10 @@ remain local.
 
 Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) · [BepInEx 5.4.23.3 Release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.3) · [All releases](https://github.com/BepInEx/BepInEx/releases). Tested pack/core: 5.4.2333 / 5.4.23.3.
 
-The local `10_ValheimVRM_Server_1.8.11.zip` includes Windows x64 BepInEx 5.4.23.3. For a fresh installation, stop the server and extract its `BepInEx`, `winhttp.dll`, `doorstop_config.ini` and `.doorstop_version` beside `valheim_server.exe`, then start normally. If compatible BepInEx is already installed, update only `BepInEx/plugins/ValheimVRM.Server`, preserving the loader, configuration and other plugins. The public GitHub ZIP excludes the loader; Linux needs the platform-specific setup documented by the Valheim pack.
+The local `10_ValheimVRM_Server_1.8.12.zip` includes Windows x64 BepInEx 5.4.23.3. For a fresh installation, stop the server and extract its `BepInEx`, `winhttp.dll`, `doorstop_config.ini` and `.doorstop_version` beside `valheim_server.exe`, then start normally. If compatible BepInEx is already installed, update only `BepInEx/plugins/ValheimVRM.Server`, preserving the loader, configuration and other plugins. The public GitHub ZIP excludes the loader; Linux needs the platform-specific setup documented by the Valheim pack.
 
 For the public package, the dedicated server needs BepInEx 5 and only the DLL from
-`ValheimVRM-Server-1.8.11.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
+`ValheimVRM-Server-1.8.12.zip`, under `BepInEx/plugins/ValheimVRM.Server/`.
 It does not load avatar files, UniVRM or shaders. Restart, join, and enable
 **Server avatar sync** in F8. A client-hosted server can install the same server
 addon alongside its client plugin.

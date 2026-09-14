@@ -16,12 +16,15 @@ namespace ValheimVRM
         public bool MenuOpen { get; private set; }
         public string LastError { get; private set; } = "";
         public AvatarCatalog Catalog { get; private set; }
+        public AvatarHeightOptions Heights { get; private set; }
 
         Rect window;
         Vector2 scroll;
         Font font;
         string loadingName;
         bool physicsDirty;
+        float? pendingModelHeight;
+        Player pendingHeightPlayer;
         readonly HashSet<string> heightDirty = new HashSet<string>();
         sealed class RemoteAvatarUnavailableException : Exception
         {
@@ -37,6 +40,9 @@ namespace ValheimVRM
             RefreshModels();
             try { Catalog.LoadSelections(); }
             catch (Exception ex) { ReportError("Cannot read avatar selections", ex); }
+            Heights = new AvatarHeightOptions(Settings.ConfigDir);
+            try { Heights.Load(); }
+            catch (Exception ex) { ReportError("Cannot read avatar heights", ex); }
         }
 
         public void RefreshModels()
@@ -80,11 +86,11 @@ namespace ValheimVRM
 
         // Unity runs nested enumerators separately. Drive them here so an import
         // exception clears the busy state and is shown in the same menu.
-        internal void RequestRemoteSwitch(Player player, string name, string hash, Func<bool> stillCurrent, Action<bool> completed)
+        internal void RequestRemoteSwitch(Player player, string name, string hash, Func<bool> stillCurrent, Action<bool> completed, float height = AvatarScale.DefaultHeight)
         {
             if (IsBusy || player == null || player == Player.m_localPlayer) { completed(false); return; }
             IsBusy = true; LastError = ""; loadingName = name;
-            StartCoroutine(RunSwitch(Switch(player, name, false, hash, stillCurrent), completed));
+            StartCoroutine(RunSwitch(Switch(player, name, false, hash, stillCurrent, height), completed));
         }
 
         IEnumerator RunSwitch(IEnumerator routine, Action<bool> onCompleted = null)
@@ -129,7 +135,7 @@ namespace ValheimVRM
             }
         }
 
-        IEnumerator Switch(Player player, string name, bool localSelection = true, string expectedHash = null, Func<bool> stillCurrent = null)
+        IEnumerator Switch(Player player, string name, bool localSelection = true, string expectedHash = null, Func<bool> stillCurrent = null, float? height = null)
         {
             Func<bool> valid = () => player != null && !player.IsDead() &&
                 (localSelection ? player == Player.m_localPlayer : player != Player.m_localPlayer && stillCurrent != null && stillCurrent());
@@ -206,7 +212,7 @@ namespace ValheimVRM
             float priorScale = hadAvatar && priorName != null ? Settings.GetSettings(priorName).InteractionDistanceScale : 1f;
             float priorDistance = player.m_maxInteractDistance;
             VrmManager.PlayerToName[player] = name;
-            yield return candidate.SetToPlayer(player);
+            yield return candidate.SetToPlayer(player, height);
             if (player == null || player.IsDead()) yield break;
             var visual = player.GetComponent<VrmController>()?.visual;
             if (visual == null || visual == priorVisual) throw new InvalidOperationException("Could not attach the selected avatar.");
@@ -228,7 +234,7 @@ namespace ValheimVRM
 
         public void SetMenuOpen(bool value)
         {
-            if (!value) { SavePhysicsOptions(); SaveHeightOptions(); }
+            if (!value) { SavePhysicsOptions(); SaveHeightOptions(); ApplyPendingModelHeight(); }
             MenuOpen = value && Player.m_localPlayer != null && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InIntro();
             if (!MenuOpen) return;
             RefreshModels();
@@ -239,6 +245,7 @@ namespace ValheimVRM
 
         void Update()
         {
+            if (pendingModelHeight.HasValue && GUIUtility.hotControl == 0) ApplyPendingModelHeight();
             if (physicsDirty && GUIUtility.hotControl == 0) SavePhysicsOptions();
             if (heightDirty.Count > 0 && GUIUtility.hotControl == 0) SaveHeightOptions();
             if (Player.m_localPlayer == null || Player.m_localPlayer.IsDead() || !Settings.globalSettings.EnableAvatarPicker)
@@ -340,6 +347,10 @@ namespace ValheimVRM
                 ? Text("Server sync connected · Each player's choice is independent", "服务器同步已连接 · 每位玩家独立选择")
                 : Text("Local mode · Your choice stays on this computer", "本地模式 · 切换仅在本机生效"));
             if (sync.Connected && sync.SyncEnabled)
+                GUILayout.Label(sync.HeightSync
+                    ? Text("Player height synchronization active", "玩家身高同步已启用")
+                    : Text("Height is local only · Update the server to sync height", "身高仅本机生效 · 更新服务端可同步身高"));
+            if (sync.Connected && sync.SyncEnabled)
                 GUILayout.Label(sync.SequencedRequests
                     ? Text("Request order protection active", "请求顺序保护已启用")
                     : Text("Legacy server compatibility · Update the server for request order protection", "旧版服务器兼容模式 · 更新服务端可启用请求顺序保护"));
@@ -354,6 +365,7 @@ namespace ValheimVRM
             GUILayout.Space(6);
             GUILayout.Label(Text("Height adjustment · current avatar", "高度微调 · 当前模型"));
             GUI.enabled = !IsBusy;
+            DrawModelHeight();
             float standing = HeightSlider(Text("Standing height offset", "站姿高度偏移"), settings.StandingHeightOffset);
             float sitting = HeightSlider(Text("Sitting height offset", "坐姿高度偏移"), settings.SittingHeightOffset);
             if (GUILayout.Button(Text("Reset both to 0", "两项恢复为 0"))) standing = sitting = 0;
@@ -371,6 +383,42 @@ namespace ValheimVRM
             value = AvatarHeightOffsets.Clamp(value);
             GUILayout.Label(label + "  " + (value * 100).ToString("+0;-0;0") + " cm");
             return Mathf.Round(GUILayout.HorizontalSlider(value, -.5f, .5f) * 100) / 100;
+        }
+
+        void DrawModelHeight()
+        {
+            var player = Player.m_localPlayer;
+            if (player == null) return;
+            float saved = Heights.Get(player.GetPlayerName());
+            float value = pendingHeightPlayer == player && pendingModelHeight.HasValue ? pendingModelHeight.Value : saved;
+            GUILayout.Label(Text("Model height", "模型身高") + "  " + value.ToString("F2") + " m");
+            float next = Mathf.Round(GUILayout.HorizontalSlider(value, AvatarScale.MinimumHeight, AvatarScale.MaximumHeight) * 100) / 100;
+            if (GUILayout.Button(Text("Reset height to 2 m", "身高恢复为 2 米"))) next = AvatarScale.DefaultHeight;
+            if (next != value) { pendingModelHeight = next; pendingHeightPlayer = player; }
+            GUILayout.Label(Text("1.4–2.2 m · Release to apply and recalibrate · Saved per character", "1.4–2.2 米；松开后应用并重新标定贴地位置；按游戏角色保存"));
+        }
+
+        // Reattach a fresh clone of the cached import, using the same rest-pose
+        // calibration as initial loading. Never measure an already animated pose.
+        public bool RequestHeight(float height)
+        {
+            var player = Player.m_localPlayer;
+            if (IsBusy || player == null || player.IsDead() || player.InIntro() || VrmManager.LoadingPlayers.Contains(player) ||
+                !VrmManager.PlayerToName.TryGetValue(player, out var name) || !Catalog.TryGetPath(name, out _)) return false;
+            Heights.Set(player.GetPlayerName(), height);
+            return RequestSwitch(name);
+        }
+
+        void ApplyPendingModelHeight()
+        {
+            if (!pendingModelHeight.HasValue) return;
+            if (pendingHeightPlayer == null || pendingHeightPlayer != Player.m_localPlayer)
+            { pendingModelHeight = null; pendingHeightPlayer = null; return; }
+            if (IsBusy || VrmManager.LoadingPlayers.Contains(pendingHeightPlayer)) return;
+            float height = pendingModelHeight.Value;
+            pendingModelHeight = null; pendingHeightPlayer = null;
+            try { RequestHeight(height); }
+            catch (Exception ex) { ReportError("Cannot save avatar height", ex); }
         }
 
         void SaveHeightOptions()

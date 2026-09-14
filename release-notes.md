@@ -1,3 +1,13 @@
+## 1.8.12 — Adjustable per-player avatar height
+
+- Add an F8 model-height slider: 1.4–2.2 m in 1 cm steps, default 2 m. Save height per local game character in `BepInEx/config/ValheimVRM/avatar_heights.json`; model folders still only need `.vrm` files.
+- Apply exact target height to each player's clone of the cached import, without changing shared model settings, source files or another player's scale. Release the slider to reattach and recalibrate sole/hip clearance, seated contacts, camera height, equipment and spring references through the normal initialization path.
+- Synchronize height together with model selection under authenticated player/character identity and the existing increasing request sequence. Same-model players can have different heights. Negotiate height-capable packets/snapshots; reject nonfinite/out-of-range heights before advancing the request order. Preserve local mode, old-peer model synchronization, missing-model fallback and unmodded admission.
+- Keep the fixed standing/walking/running reference; height changes never accumulate scale or add animated-foot correction. Update both server and participating clients to enable height synchronization.
+- Local Windows client and server distribution bundles include BepInEx 5.4.23.3; public GitHub runtime ZIPs require a separate loader installation. README links both upstream BepInEx releases and the Valheim-specific pack.
+
+Validation: `docs/release-1.8.12-validation.md`.
+
 ## 1.8.11 — Calibrate locomotion height from the avatar skeleton
 
 - Fix extra vertical bobbing introduced by following the lowest animated sole during walking and running. Calibrate a standing reference once from each avatar's humanoid rest skeleton, skin bind matrices and sole geometry. Locomotion then uses a constant lift while retaining the original animated hip motion.

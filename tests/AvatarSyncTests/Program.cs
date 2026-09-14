@@ -41,6 +41,15 @@ static class Program
         // Equal model names still represent separate players and separate instances.
         Check(server.Set(101,1001,2,b.Model,b.Sha256), "Shared asset cannot be selected twice");
         Check(server.Snapshot().Length==2, "Shared asset merged players");
+        Check(server.Set(101,1001,2,b.Model,b.Sha256,1.4f), "Height-only change was ignored");
+        Check(server.Snapshot().Single(s=>s.Peer==101).Height==1.4f && server.Snapshot().Single(s=>s.Peer==202).Height==2f,
+            "Shared avatar height changed the other player");
+        long heightRevision=server.Revision;
+        foreach(float value in new[]{float.NaN,float.PositiveInfinity,float.NegativeInfinity,1.39f,2.21f})
+            Check(!server.Set(101,1001,2,b.Model,b.Sha256,value), "Invalid height accepted");
+        Check(server.Revision==heightRevision, "Invalid height changed revision");
+        Check(server.Set(101,1001,2,b.Model,b.Sha256,2.2f), "Maximum height rejected");
+        Check(!server.Set(101,1001,2,b.Model,b.Sha256,2.2f), "Unchanged height advanced revision");
         Console.WriteLine("PASS: request ordering, duplicate/downgrade/overflow rejection, independent player identities, rapid switches, respawn, reconnect, late join, opt-out and path/hash rejection.");
     }
 }
