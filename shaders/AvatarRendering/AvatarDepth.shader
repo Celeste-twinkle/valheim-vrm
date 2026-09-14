@@ -12,6 +12,7 @@ Shader "Hidden/ValheimVRM/AvatarDepth"
         _UvAnimScrollXSpeed ("UV scroll X", Float) = 0
         _UvAnimScrollYSpeed ("UV scroll Y", Float) = 0
         _UvAnimRotationSpeed ("UV rotation", Float) = 0
+        _LegacyMToon ("Legacy UV mask channel", Float) = 0
     }
     SubShader
     {
@@ -30,10 +31,10 @@ Shader "Hidden/ValheimVRM/AvatarDepth"
             #pragma multi_compile __ _MTOON_PARAMETERMAP
             #include "UnityCG.cginc"
             #include "UnityStandardUtils.cginc"
-            sampler2D _MainTex, _BumpMap, _UvAnimMaskTex;
+            #include "./AvatarUv.cginc"
+            sampler2D _MainTex, _BumpMap;
             float4 _MainTex_ST, _Color;
             float _Cutoff, _BumpScale;
-            float _UvAnimScrollXSpeed, _UvAnimScrollYSpeed, _UvAnimRotationSpeed;
             struct Input { float4 vertex : POSITION; float3 normal : NORMAL; float4 tangent : TANGENT; float2 uv : TEXCOORD0; };
             struct Varyings { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 normal : TEXCOORD1; float3 tangent : TEXCOORD2; float3 bitangent : TEXCOORD3; };
             Varyings vert(Input input)
@@ -50,13 +51,7 @@ Shader "Hidden/ValheimVRM/AvatarDepth"
             Surface frag(Varyings input)
             {
                 // Match MToon's animated UV coverage, including cutout hair.
-                float time = _Time.y;
-                #if defined(_MTOON_PARAMETERMAP)
-                time *= tex2D(_UvAnimMaskTex, input.uv).b;
-                #endif
-                float angle = frac(time * _UvAnimRotationSpeed) * UNITY_TWO_PI;
-                float2 uv = input.uv + time * float2(_UvAnimScrollXSpeed, _UvAnimScrollYSpeed) - .5;
-                uv = mul(float2x2(cos(angle), -sin(angle), sin(angle), cos(angle)), uv) + .5;
+                float2 uv = AvatarUv(input.uv);
                 clip(tex2D(_MainTex, uv).a * _Color.a - _Cutoff);
                 float3 normal = normalize(input.normal);
                 #if defined(_NORMALMAP)

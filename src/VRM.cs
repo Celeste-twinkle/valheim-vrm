@@ -133,7 +133,12 @@ namespace ValheimVRM
 				: new GlbBinaryParser(buf, path).Parse())
 			{
 				ImporterContext context;
-				try { context = new VRMImporterContext(new VRMData(data), null, new TextureDeserializer()); }
+				try
+				{
+					var legacy = new VRMData(data);
+					context = new VRMImporterContext(legacy, null, new TextureDeserializer(),
+						new AvatarBrightness(new BuiltInVrmMaterialDescriptorGenerator(legacy.VrmExtension)));
+				}
 				catch (NotVrm0Exception) { context = new Vrm10Importer(Vrm10Data.Parse(data), null, null, new AvatarBrightness()); }
 				using (context)
 				{

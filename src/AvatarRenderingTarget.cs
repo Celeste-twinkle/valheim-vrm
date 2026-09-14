@@ -17,24 +17,26 @@ namespace ValheimVRM
         {
             var options = AvatarRendering.Current;
             bool useOriginal = options.SceneLighting && options.ReceiveShadows;
-            if (!useOriginal && AvatarRendering.OptionsShader == null) return;
             foreach (var renderer in GetComponentsInChildren<Renderer>(true))
             {
                 foreach (var material in renderer.sharedMaterials)
                 {
                     if (!Supports(material)) continue;
+                    bool legacy = IsLegacy(material);
+                    string originalName = legacy ? "VRM/MToon" : "VRM10/MToon10";
+                    var optionsShader = legacy ? AvatarRendering.LegacyOptionsShader : AvatarRendering.OptionsShader;
                     // Keep the material object so UniVRM expression bindings continue
                     // to animate it. These options intentionally apply to all avatars
                     // on this client, including instances sharing this material.
                     if (useOriginal)
                     {
-                        if (material.shader.name == "VRM10/MToon10") continue;
-                        var original = Shader.Find("VRM10/MToon10");
+                        if (material.shader.name == originalName) continue;
+                        var original = Shader.Find(originalName);
                         if (original != null) SetShader(material, original);
                     }
-                    else
+                    else if (optionsShader != null)
                     {
-                        SetShader(material, AvatarRendering.OptionsShader);
+                        SetShader(material, optionsShader);
                         material.SetFloat("_AvatarSceneLighting", options.SceneLighting ? 1 : 0);
                     }
                 }
@@ -53,7 +55,26 @@ namespace ValheimVRM
         internal static bool Supports(Material material)
         {
             return material != null && material.shader != null &&
-                (material.shader.name == "VRM10/MToon10" || material.shader.name == "ValheimVRM/MToon10Options");
+                (material.shader.name == "VRM10/MToon10" || material.shader.name == "ValheimVRM/MToon10Options" || IsLegacy(material));
+        }
+
+        internal static bool IsLegacy(Material material) => material != null && material.shader != null &&
+            (material.shader.name == "VRM/MToon" || material.shader.name == "ValheimVRM/MToonOptions");
+
+        internal static float AlphaMode(Material material) => material.GetFloat(IsLegacy(material) ? "_BlendMode" : "_AlphaMode");
+        internal static float CullMode(Material material) => material.GetFloat(IsLegacy(material) ? "_CullMode" : "_M_CullMode");
+        internal static float ZWrite(Material material) => material.GetFloat(IsLegacy(material) ? "_ZWrite" : "_M_ZWrite");
+
+        internal static void CopyUvAnimation(Material source, Material target)
+        {
+            bool legacy = IsLegacy(source);
+            target.SetFloat("_LegacyMToon", legacy ? 1 : 0);
+            target.SetTexture("_UvAnimMaskTex", source.GetTexture(legacy ? "_UvAnimMaskTexture" : "_UvAnimMaskTex"));
+            target.SetFloat("_UvAnimScrollXSpeed", source.GetFloat(legacy ? "_UvAnimScrollX" : "_UvAnimScrollXSpeed"));
+            target.SetFloat("_UvAnimScrollYSpeed", source.GetFloat(legacy ? "_UvAnimScrollY" : "_UvAnimScrollYSpeed"));
+            target.SetFloat("_UvAnimRotationSpeed", source.GetFloat(legacy ? "_UvAnimRotation" : "_UvAnimRotationSpeed"));
+            if (legacy || source.IsKeywordEnabled("_MTOON_PARAMETERMAP")) target.EnableKeyword("_MTOON_PARAMETERMAP");
+            else target.DisableKeyword("_MTOON_PARAMETERMAP");
         }
     }
 }

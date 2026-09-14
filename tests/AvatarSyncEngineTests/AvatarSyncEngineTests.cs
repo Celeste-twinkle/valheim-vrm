@@ -48,6 +48,12 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         while((menu=Object.FindFirstObjectByType<FejdStartup>())==null)
         { if(Time.realtimeSinceStartup>deadline)throw new Exception("Menu timeout");yield return null; }
         var names=new[]{"Shinano_LightAdjustment","Shinano_Sleep"};
+        var fixtureNames=Environment.GetEnvironmentVariable("VRM_SYNC_TEST_MODELS");
+        if(!string.IsNullOrEmpty(fixtureNames))
+        {
+            names=fixtureNames.Split('|');
+            Check(names.Length==2 && names[0]!=names[1],"Two distinct fixture model names are required");
+        }
         var hashes=names.Select(n=>Hash(File.ReadAllBytes(Path.Combine(ValheimVRM.Settings.ValheimVRMDir,n+".vrm")))).ToArray();
         WireTests(names,hashes);
         report.Add("Real ZRpc serialization over isolated in-memory sockets: two senders, three receivers, snapshots and malformed data passed");

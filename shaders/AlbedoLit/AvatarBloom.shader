@@ -8,6 +8,11 @@ Shader "Hidden/ValheimVRM/AvatarBloom"
         _ZTest ("Depth test", Float) = 3
         _BloomCutoff ("Bloom coverage cutoff", Float) = 0.5
         _Transparent ("Partial coverage", Float) = 0
+        _UvAnimMaskTex ("UV animation mask", 2D) = "white" {}
+        _UvAnimScrollXSpeed ("UV scroll X", Float) = 0
+        _UvAnimScrollYSpeed ("UV scroll Y", Float) = 0
+        _UvAnimRotationSpeed ("UV rotation", Float) = 0
+        _LegacyMToon ("Legacy UV mask channel", Float) = 0
     }
     SubShader
     {
@@ -22,7 +27,9 @@ Shader "Hidden/ValheimVRM/AvatarBloom"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile __ _MTOON_PARAMETERMAP
             #include "UnityCG.cginc"
+            #include "../AvatarRendering/AvatarUv.cginc"
             sampler2D _MainTex;
             float4 _MainTex_ST;
             float _Opacity, _BloomCutoff, _Transparent;
@@ -37,7 +44,7 @@ Shader "Hidden/ValheimVRM/AvatarBloom"
             }
             float4 frag(Output input) : SV_Target
             {
-                float alpha = tex2D(_MainTex, input.uv).a * _Opacity;
+                float alpha = tex2D(_MainTex, AvatarUv(input.uv)).a * _Opacity;
                 clip(alpha - _BloomCutoff);
                 float coverage = lerp(1, saturate(alpha), _Transparent);
                 return float4(coverage, 0, 0, coverage);

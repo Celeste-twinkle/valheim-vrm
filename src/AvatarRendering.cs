@@ -16,6 +16,7 @@ namespace ValheimVRM
 
         public static Options Current { get; private set; } = new Options();
         internal static Shader OptionsShader { get; private set; }
+        internal static Shader LegacyOptionsShader { get; private set; }
         internal static Shader DepthShader { get; private set; }
         static AssetBundle bundle;
         static string SettingsPath => Path.Combine(Settings.ConfigDir, "rendering_options.json");
@@ -41,6 +42,8 @@ namespace ValheimVRM
                 }
                 OptionsShader = bundle.LoadAsset<Shader>("Assets/AvatarRendering/MToon10/vrmc_materials_mtoon.shader");
                 if (OptionsShader == null || !OptionsShader.isSupported) throw new NotSupportedException("Rendering options shader is not supported.");
+                LegacyOptionsShader = bundle.LoadAsset<Shader>("Assets/AvatarRendering/MToon/MToon.shader");
+                if (LegacyOptionsShader == null || !LegacyOptionsShader.isSupported) throw new NotSupportedException("Legacy MToon rendering options shader is not supported.");
                 DepthShader = bundle.LoadAsset<Shader>("Assets/AvatarRendering/AvatarDepth.shader");
                 if (DepthShader == null || !DepthShader.isSupported) throw new NotSupportedException("Avatar depth shader is not supported.");
             }

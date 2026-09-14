@@ -1,4 +1,4 @@
-# ValheimVRM 1.8.12 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 1.8.13 安装说明（Celeste-twinkle 分支）
 
 多人外观同步需要服务器另外安装独立服务端插件，详见[服务器同步与本地模式](SERVER-SYNC.md)。
 
@@ -14,7 +14,7 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-1.8.12.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-1.8.13.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
@@ -52,7 +52,7 @@ VRM 1.0 模型副本会保留导出的弹簧链和碰撞体，恢复已有的头
 
 ## 光照、阴影与泛光
 
-面板的三个开关作用于本机的 **VRM 1.0 MToon 材质**，切换模型及死亡生成布娃娃后同样有效。
+面板的三个开关作用于本机的 **VRM 0.x 和 VRM 1.0 MToon 材质**，切换模型及死亡生成布娃娃后同样有效。
 默认效果与维护中的本地版一致：
 
 - **场景光照：开**。使用导入后的材质，跟随日光和灯光受光。关闭后显示基础色和自发光，去掉场景光照造成的明暗。
@@ -70,7 +70,7 @@ VRM 1.0 模型副本会保留导出的弹簧链和碰撞体，恢复已有的头
 
 选择立即保存到 `BepInEx/config/ValheimVRM/rendering_options.json`。设置不改写 `.vrm` 文件，
 不改全局图像设置，不会改变其他模型查看器的渲染效果。
-VRM 0.x 仍可导入，但它使用的旧 MToon／游戏材质以及 Standard、第三方材质不受这三个开关控制。
+1.8.13 起 VRM 0.x MToon 也应用同一亮度上限与渲染开关，并移除旧版重复光照乘色；Standard 与非 MToon 材质保留其着色器行为。
 
 ## 只放 VRM 的安装方式
 
@@ -121,7 +121,7 @@ F8 新增“站姿高度偏移”和“坐姿高度偏移”，默认均为 **0 
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。
 
 只改变本机外观时，无需服务器安装。多人同步时，在已安装 BepInEx 5 的服务器上
-解压 `ValheimVRM-Server-1.8.12.zip`，并让各客户端安装相同模型文件，详见
+解压 `ValheimVRM-Server-1.8.13.zip`，并让各客户端安装相同模型文件，详见
 [服务器安装说明](SERVER-SYNC.md)。F8 可随时退出同步；通过游戏“启动服务器”的
 房主也可同时安装服务端插件。旧版整文件分享协议默认通过
 `EnableLegacyVrmSharing=false` 停用，使用新同步时请保持关闭。分发模型仍需遵守其许可。
@@ -130,7 +130,7 @@ F8 新增“站姿高度偏移”和“坐姿高度偏移”，默认均为 **0 
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.12**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **1.8.13**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。

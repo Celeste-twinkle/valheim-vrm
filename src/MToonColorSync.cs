@@ -39,13 +39,15 @@ namespace ValheimVRM
 			matColors.Clear();
 			foreach (var smr in vrm.GetComponentsInChildren<SkinnedMeshRenderer>())
 			{
-				// MToon10/Standard need no per-instance color driver. Inspect
+				// Both MToon generations and Standard already use scene lights.
+				// Never multiply their albedo/emission by the global sun a second time.
+				// Inspect
 				// sharedMaterials first: .materials would allocate even when skipped.
 				var materials = smr.sharedMaterials;
 				for (int i = 0; i < materials.Length; i++)
 				{
 					var mat = materials[i];
-					// Standard and VRM 1.0 MToon receive real scene lighting already.
+					// Unsupported legacy unlit/game shaders retain their old driver.
 					if (mat == null || mat.shader == null || mat.shader.name == "Standard" || AvatarRenderingTarget.Supports(mat)) continue;
 					if (!ownedMaterials.Contains(mat))
 					{

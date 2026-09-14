@@ -33,7 +33,8 @@ public sealed class AvatarRenderingTests : BaseUnityPlugin
             yield return null;
         }
         yield return null;
-        var material = new Material(VRMShaders.Shaders["VRM10/MToon10"]);
+        string shaderName=Environment.GetEnvironmentVariable("VRM_RENDER_TEST_LEGACY")=="1" ? "VRM/MToon" : "VRM10/MToon10";
+        var material = new Material(VRMShaders.Shaders[shaderName]);
         var stack = new Stack<IEnumerator>(); stack.Push(ShadowProbe.Run(material, output));
         while (stack.Count > 0)
         {

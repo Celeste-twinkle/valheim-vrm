@@ -61,7 +61,7 @@ namespace ValheimVRM
                         // Blended overlays must remain transparent. Only opaque
                         // and cutout MToon surfaces own a deferred surface pixel.
                         if (!AvatarRenderingTarget.Supports(source) || source.renderQueue > 2500 ||
-                            source.GetFloat("_AlphaMode") > 1.5f || source.GetFloat("_M_ZWrite") < .5f) continue;
+                            AvatarRenderingTarget.AlphaMode(source) > 1.5f || AvatarRenderingTarget.ZWrite(source) < .5f) continue;
                         if (!drawing)
                         {
                             // Leave the lighting/emission target untouched. It can
@@ -90,16 +90,11 @@ namespace ValheimVRM
             material.SetTextureScale("_MainTex", source.GetTextureScale("_MainTex"));
             material.SetTextureOffset("_MainTex", source.GetTextureOffset("_MainTex"));
             material.SetColor("_Color", source.GetColor("_Color"));
-            material.SetFloat("_Cutoff", source.GetFloat("_AlphaMode") > .5f ? source.GetFloat("_Cutoff") : -1f);
-            material.SetFloat("_Cull", source.GetFloat("_M_CullMode"));
+            material.SetFloat("_Cutoff", AvatarRenderingTarget.AlphaMode(source) > .5f ? source.GetFloat("_Cutoff") : -1f);
+            material.SetFloat("_Cull", AvatarRenderingTarget.CullMode(source));
             material.SetTexture("_BumpMap", source.GetTexture("_BumpMap"));
             material.SetFloat("_BumpScale", source.GetFloat("_BumpScale"));
-            material.SetTexture("_UvAnimMaskTex", source.GetTexture("_UvAnimMaskTex"));
-            material.SetFloat("_UvAnimScrollXSpeed", source.GetFloat("_UvAnimScrollXSpeed"));
-            material.SetFloat("_UvAnimScrollYSpeed", source.GetFloat("_UvAnimScrollYSpeed"));
-            material.SetFloat("_UvAnimRotationSpeed", source.GetFloat("_UvAnimRotationSpeed"));
-            if (source.IsKeywordEnabled("_MTOON_PARAMETERMAP")) material.EnableKeyword("_MTOON_PARAMETERMAP");
-            else material.DisableKeyword("_MTOON_PARAMETERMAP");
+            AvatarRenderingTarget.CopyUvAnimation(source, material);
             if (source.IsKeywordEnabled("_NORMALMAP")) material.EnableKeyword("_NORMALMAP");
             else material.DisableKeyword("_NORMALMAP");
             return material;

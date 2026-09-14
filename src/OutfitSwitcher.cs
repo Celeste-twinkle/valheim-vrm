@@ -311,7 +311,7 @@ namespace ValheimVRM
         void DrawRenderingOptions()
         {
             var current = AvatarRendering.Current;
-            GUILayout.Label(Text("Rendering · VRM 1.0 MToon", "渲染设置 · VRM 1.0 MToon"));
+            GUILayout.Label(Text("Rendering · VRM 0.x / 1.0 MToon", "渲染设置 · VRM 0.x / 1.0 MToon"));
             GUI.enabled = AvatarRendering.OptionsShader != null;
             bool lighting = GUILayout.Toggle(current.SceneLighting, Text("Scene lighting", "场景光照"));
             GUI.enabled = lighting && AvatarRendering.OptionsShader != null;

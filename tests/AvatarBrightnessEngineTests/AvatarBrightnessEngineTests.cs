@@ -46,6 +46,11 @@ public sealed class AvatarBrightnessEngineTests : BaseUnityPlugin
         float deadline=Time.realtimeSinceStartup+90;
         while(!VRMShaders.Shaders.ContainsKey("VRM10/MToon10"))
         {if(Time.realtimeSinceStartup>deadline)throw new Exception("Shader timeout");yield return null;}
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VRM_BRIGHTNESS_LEGACY_MODELS")))
+        {
+            yield return LegacyBrightnessProbe.Run(report, output);
+            if (Environment.GetEnvironmentVariable("VRM_BRIGHTNESS_BASELINE") == "1") yield break;
+        }
         var shader=VRMShaders.Shaders["VRM10/MToon10"];
         var m=new Material(shader);
         foreach(float limit in new[]{AvatarBrightness.BaseColorLimit,AvatarBrightness.ShadeColorLimit})

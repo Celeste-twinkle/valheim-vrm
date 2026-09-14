@@ -44,12 +44,29 @@ static class ShadowProbe
         camera.targetTexture = texture;
         var sphere = Primitive(PrimitiveType.Sphere, "Foreground", new Vector3(0, 1, 0), Vector3.one * 1.6f);
         var material = new Material(original);
+        bool legacy=original.shader.name=="VRM/MToon";
+        Func<string,string> Property = name => {
+            if(!legacy)return name;
+            switch(name) {
+                case "_ShadeTex": return "_ShadeTexture";
+                case "_ShadingShiftFactor": return "_ShadeShift";
+                case "_ShadingToonyFactor": return "_ShadeToony";
+                case "_UvAnimScrollXSpeed": return "_UvAnimScrollX";
+                case "_UvAnimScrollYSpeed": return "_UvAnimScrollY";
+                case "_UvAnimRotationSpeed": return "_UvAnimRotation";
+                case "_AlphaMode": return "_BlendMode";
+                case "_M_ZWrite": return "_ZWrite";
+                case "_M_SrcBlend": return "_SrcBlend";
+                case "_M_DstBlend": return "_DstBlend";
+                default: return name;
+            }
+        };
         material.SetTexture("_MainTex", Texture2D.whiteTexture);
-        material.SetTexture("_ShadeTex", Texture2D.whiteTexture);
+        material.SetTexture(Property("_ShadeTex"), Texture2D.whiteTexture);
         material.SetColor("_Color", Color.white);
         material.SetColor("_ShadeColor", Color.gray * .1f);
-        material.SetFloat("_ShadingShiftFactor", 0);
-        material.SetFloat("_ShadingToonyFactor", .6f);
+        material.SetFloat(Property("_ShadingShiftFactor"), 0);
+        material.SetFloat(Property("_ShadingToonyFactor"), .6f);
         material.DisableKeyword("_NORMALMAP"); material.SetFloat("_BumpScale", 0);
         sphere.GetComponent<Renderer>().sharedMaterial = material;
         var background = Primitive(PrimitiveType.Cube, "Background", new Vector3(0, 1, -4), new Vector3(12, 12, .1f));
@@ -57,7 +74,7 @@ static class ShadowProbe
         var blocker = Primitive(PrimitiveType.Cube, "BehindModelShadowCaster", new Vector3(0, 1, -2), new Vector3(.5f, 4, .1f));
         blocker.GetComponent<Renderer>().sharedMaterial = background.GetComponent<Renderer>().sharedMaterial;
         blocker.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.ShadowsOnly;
-        var lines = new List<string>();
+        var lines = new List<string> { "Shader "+original.shader.name };
         foreach (var path in new[] { RenderingPath.Forward, RenderingPath.DeferredShading })
         foreach (var cast in new[] { ShadowCastingMode.On, ShadowCastingMode.Off })
         {
@@ -90,7 +107,23 @@ static class ShadowProbe
         }
         var ao = camera.gameObject.AddComponent<AmplifyOcclusionEffect>();
         var avatarSurface = sphere.AddComponent<ValheimVRM.AvatarRenderingTarget>();
+        ao.enabled = false;
+        blocker.transform.position = new Vector3(0, 1, 1);
+        sphere.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+        foreach (bool receive in new[] { true, false, true })
+        {
+            ValheimVRM.AvatarRendering.Set(true, receive, false);
+            blocker.SetActive(false); yield return null;
+            var clear = Capture(camera, texture, null);
+            blocker.SetActive(true); yield return null;
+            var shadow = Capture(camera, texture, null);
+            float difference = Mathf.Abs(clear[256*512+256].r-shadow[256*512+256].r);
+            lines.Add("ReceiveShadows=" + receive + " shadowDelta=" + difference);
+            if ((receive && difference < .01f) || (!receive && difference > .0001f))
+                throw new Exception("Shadow toggle failed: " + difference);
+        }
         avatarSurface.enabled = false;
+        ao.enabled = true;
         ao.FilterEnabled = false;
         ao.PerPixelNormals = AmplifyOcclusionEffect.PerPixelNormalSource.GBuffer;
         blocker.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
@@ -134,15 +167,15 @@ static class ShadowProbe
         foreach (bool occlude in new[] { false, true })
         {
             camera.allowHDR = hdr;
-            material.SetFloat("_UvAnimScrollXSpeed", animate ? .13f : 0);
-            material.SetFloat("_UvAnimScrollYSpeed", animate ? -.17f : 0);
-            material.SetFloat("_UvAnimRotationSpeed", animate ? .11f : 0);
-            material.SetFloat("_AlphaMode", mode);
+            material.SetFloat(Property("_UvAnimScrollXSpeed"), animate ? .13f : 0);
+            material.SetFloat(Property("_UvAnimScrollYSpeed"), animate ? -.17f : 0);
+            material.SetFloat(Property("_UvAnimRotationSpeed"), animate ? .11f : 0);
+            material.SetFloat(Property("_AlphaMode"), mode);
             material.SetTexture("_MainTex", mode == 0 ? Texture2D.whiteTexture : alpha);
             material.SetFloat("_Cutoff", .5f);
-            material.SetFloat("_M_ZWrite", mode == 2 ? 0 : 1);
-            material.SetFloat("_M_SrcBlend", mode == 2 ? (float)BlendMode.SrcAlpha : (float)BlendMode.One);
-            material.SetFloat("_M_DstBlend", mode == 2 ? (float)BlendMode.OneMinusSrcAlpha : (float)BlendMode.Zero);
+            material.SetFloat(Property("_M_ZWrite"), mode == 2 ? 0 : 1);
+            material.SetFloat(Property("_M_SrcBlend"), mode == 2 ? (float)BlendMode.SrcAlpha : (float)BlendMode.One);
+            material.SetFloat(Property("_M_DstBlend"), mode == 2 ? (float)BlendMode.OneMinusSrcAlpha : (float)BlendMode.Zero);
             material.renderQueue = mode == 0 ? 2000 : mode == 1 ? 2450 : 3000;
             material.DisableKeyword("_ALPHATEST_ON"); material.DisableKeyword("_ALPHABLEND_ON");
             if (mode == 1) material.EnableKeyword("_ALPHATEST_ON");

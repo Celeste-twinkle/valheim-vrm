@@ -6,19 +6,22 @@ using UnityEngine;
 
 namespace ValheimVRM
 {
-    /// <summary>Caps imported MToon10 color factors in the VRM's linear space.</summary>
+    /// <summary>Caps imported MToon color factors against the same linear-space baseline.</summary>
     public sealed class AvatarBrightness : IMaterialDescriptorGenerator
     {
         public const float BaseColorLimit = .45f;
         public const float ShadeColorLimit = .2025f;
-        readonly IMaterialDescriptorGenerator generator = new BuiltInVrm10MaterialDescriptorGenerator();
+        readonly IMaterialDescriptorGenerator generator;
+
+        public AvatarBrightness() : this(new BuiltInVrm10MaterialDescriptorGenerator()) { }
+        public AvatarBrightness(IMaterialDescriptorGenerator generator) { this.generator = generator; }
 
         public MaterialDescriptor Get(GltfData data, int index) => WithLimit(generator.Get(data, index));
         public MaterialDescriptor GetGltfDefault(string materialName = null) => WithLimit(generator.GetGltfDefault(materialName));
 
         static MaterialDescriptor WithLimit(MaterialDescriptor descriptor)
         {
-            if (descriptor.Shader == null || descriptor.Shader.name != "VRM10/MToon10") return descriptor;
+            if (descriptor.Shader == null || (descriptor.Shader.name != "VRM10/MToon10" && descriptor.Shader.name != "VRM/MToon")) return descriptor;
             var actions = new List<Action<Material>>(descriptor.Actions);
             // Runs after material properties/keywords are set, before UniVRM
             // captures expression baselines. No material copies or file edits.
@@ -45,8 +48,9 @@ namespace ValheimVRM
 
         public static Color LimitSrgb(Color color, float linearLimit)
         {
-            // UniVRM converts the glTF/VRM linear factors to sRGB for Unity's
-            // Color properties. Compare first to leave lower values bit-exact,
+            // MToon10 converts linear factors to sRGB; legacy MToon imports
+            // its already-sRGB vectors. Both expose sRGB Color properties.
+            // Compare first to leave lower values bit-exact,
             // and to make repeated application a no-op at the boundary.
             float ceiling = Mathf.LinearToGammaSpace(linearLimit);
             float peak = Mathf.Max(color.r, Mathf.Max(color.g, color.b));

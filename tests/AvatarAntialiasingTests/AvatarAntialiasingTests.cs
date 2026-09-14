@@ -89,7 +89,10 @@ public class AvatarAntialiasingTests : BaseUnityPlugin
             renderer.updateWhenOffscreen = true;
             report.Add("MESH " + renderer.name + " quality=" + renderer.quality);
             foreach (var m in renderer.sharedMaterials)
-                report.Add("MAT " + m.name + " queue=" + m.renderQueue + " alpha=" + m.GetFloat("_AlphaMode") + " zwrite=" + m.GetFloat("_M_ZWrite"));
+            {
+                bool legacy = m.shader.name == "VRM/MToon" || m.shader.name == "ValheimVRM/MToonOptions";
+                report.Add("MAT " + m.name + " queue=" + m.renderQueue + " alpha=" + m.GetFloat(legacy ? "_BlendMode" : "_AlphaMode") + " zwrite=" + m.GetFloat(legacy ? "_ZWrite" : "_M_ZWrite"));
+            }
         }
         File.WriteAllLines(Path.Combine(output, "materials.txt"), report);
         foreach (var env in Object.FindObjectsByType<EnvMan>(FindObjectsSortMode.None)) env.enabled = false;

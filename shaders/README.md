@@ -1,9 +1,10 @@
 # Rendering controls
 
-`AvatarRendering/MToon10` derives from UniVRM 0.131.2 under the MIT notices in
+`AvatarRendering/MToon10` and `AvatarRendering/MToon` derive from UniVRM 0.131.2 under the MIT notices in
 `../Libs/Managed/MToon-LICENSE.txt` and `../Libs/Managed/UniVRM-LICENSE.txt`.
 It is a Built-in Render Pipeline variant for Windows x64. The original installed
-MToon10 shader is retained whenever lighting and shadow reception are enabled.
+MToon shader for each format is retained whenever lighting and shadow reception are enabled.
+The legacy source is [UniVRM 0.131.2 MToon](https://github.com/vrm-c/UniVRM/tree/v0.131.2/Packages/VRM/MToon/Shaders).
 
 The variant bypasses `UNITY_SHADOW_ATTENUATION`, preserving distance/cookie
 attenuation in `UNITY_LIGHT_ATTENUATION`. The flat-color branch returns base color
@@ -21,6 +22,12 @@ behind it. The pass also clears background albedo/specular values in those pixel
 leaves the lighting target untouched and preserves cutout UV animation. Visible
 color still comes from the original MToon forward passes. Blended materials and
 non-MToon shaders keep their native depth behavior.
+
+Both depth and bloom coverage use `AvatarRendering/AvatarUv.cginc` to follow
+the material's UV animation. VRM 0.x MToon uses the mask's red channel and its
+legacy property names; MToon10 uses blue. Alpha mode, culling and depth-write
+properties are also mapped per shader generation rather than guessed from a
+model filename. The native material and its texture/alpha/outline bindings are retained.
 
 To rebuild the embedded bundles:
 

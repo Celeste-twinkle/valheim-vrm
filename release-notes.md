@@ -1,3 +1,13 @@
+## 1.8.13 — Consistent VRM 0.x and 1.0 behavior
+
+- Extend the existing linear base/shade brightness limits to native VRM 0.x MToon imports, before expression baselines are captured. Preserve lower colors, alpha, textures and source-file hashes.
+- Remove the legacy global sun/ambient color multiplier from already lit MToon materials. It previously multiplied scene lighting twice and bypassed the VRM 1.0 brightness treatment.
+- Apply F8 scene-lighting, shadow-reception and bloom controls to both MToon generations. Preserve original material identities, outlines, render queues, blend modes and texture bindings; support legacy property names in depth/normal and bloom passes.
+- Keep the shared 1.4–2.2 m height slider (default 2 m), absolute skeleton/sole calibration, seated contact handling and independent player height synchronization for VRM 0.x and VRM 1.0. Add legacy-avatar regression coverage for repeated height changes, locomotion, sitting and actual player-instance synchronization.
+- This is a generic client fix based on VRM/material format, without model-specific exceptions, VRM file edits or online model distribution. Server protocol remains compatible with 1.8.12.
+
+Validation: `docs/release-1.8.13-validation.md`.
+
 ## 1.8.12 — Adjustable per-player avatar height
 
 - Add an F8 model-height slider: 1.4–2.2 m in 1 cm steps, default 2 m. Save height per local game character in `BepInEx/config/ValheimVRM/avatar_heights.json`; model folders still only need `.vrm` files.

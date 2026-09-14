@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.8.12 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.13 (Celeste-twinkle fork)
 
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
@@ -16,7 +16,7 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.12.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.13.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -60,7 +60,7 @@ exported parameters; it cannot reconstruct VRChat PhysBones omitted from the VRM
 
 ## Rendering panel
 
-These controls apply to **VRM 1.0 MToon materials** on this client, including newly
+These controls apply to **VRM 0.x and VRM 1.0 MToon materials** on this client, including newly
 selected models and ragdolls. Defaults match the maintained local build:
 
 | Control | Default | Effect |
@@ -84,9 +84,9 @@ Opaque/cutout MToon avatars now contribute their own deferred depth and normals,
 preventing background ambient-occlusion silhouettes from being applied to their
 surface. This compatibility pass does not turn off the game's ambient occlusion.
 
-VRM 0.x files remain supported by the importer. Their legacy MToon/game shaders,
-Standard materials, and third-party shaders are not controlled by these three
-VRM 1.0 options. The panel does not alter the source `.vrm` file or global graphics
+Since 1.8.13, VRM 0.x MToon shares the brightness limit and all three rendering
+controls, without a second global sunlight color multiplier. Standard and
+non-MToon shaders retain their own rendering behavior. The panel does not alter the source `.vrm` file or global graphics
 settings. Rendering in another VRM viewer is determined by that viewer.
 
 ## VRM-only model folder
@@ -135,7 +135,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.12.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.13.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -145,7 +145,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.12**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.13**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

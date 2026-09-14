@@ -88,11 +88,12 @@ namespace ValheimVRM
             mask.SetTextureScale("_MainTex", source.GetTextureScale("_MainTex"));
             mask.SetTextureOffset("_MainTex", source.GetTextureOffset("_MainTex"));
             mask.SetFloat("_Opacity", source.GetColor("_Color").a);
-            float alphaMode = source.GetFloat("_AlphaMode");
+            float alphaMode = AvatarRenderingTarget.AlphaMode(source);
             mask.SetFloat("_BloomCutoff", alphaMode > 1.5f ? .001f : alphaMode > .5f ? source.GetFloat("_Cutoff") : -1f);
             mask.SetFloat("_Transparent", alphaMode > 1.5f ? 1f : 0f);
-            mask.SetFloat("_Cull", source.GetFloat("_M_CullMode"));
-            mask.SetFloat("_ZTest", (float)(source.GetFloat("_M_ZWrite") > .5f ? CompareFunction.Equal : CompareFunction.LessEqual));
+            mask.SetFloat("_Cull", AvatarRenderingTarget.CullMode(source));
+            mask.SetFloat("_ZTest", (float)(AvatarRenderingTarget.ZWrite(source) > .5f ? CompareFunction.Equal : CompareFunction.LessEqual));
+            AvatarRenderingTarget.CopyUvAnimation(source, mask);
             return mask;
         }
 
