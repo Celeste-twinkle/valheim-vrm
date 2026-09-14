@@ -37,20 +37,27 @@ advancement. A delayed legacy message cannot downgrade an upgraded connection.
 - Production player-clone checks: A repeatedly changes between 1.4/2.2/2/1.4 m
   while same-model B remains 2 m; shared import/settings and local preferences
   remain unchanged. Missing/different/unreadable VRM files retain safe fallback.
-- Local F8 action uses the production picker's RequestHeight path, applies 2.2 m,
-  saves/reloads the character preference and leaves the other player unchanged.
+- Local F8 action uses the production picker's RequestHeight path for 12
+  consecutive changes between 1.4, 2.0 and 2.2 m, saves/reloads the character
+  preference and leaves the other player unchanged.
   An ordinary external remote reattachment retains its synchronized height.
 - Four fixtures (Shinano Light Adjustment, Moe, KUMALY 2 and VRM 0.x AliciaSolid):
   4,320 continuous Unity start/walk/run/stop frames at 1.4, 2.0 and 2.2 m.
   Additional avatar-minus-native hip variation is at most 0.000001 m.
   Native bone positions remain unchanged.
+- Repeated recalibration on those four fixtures: 144 height changes and 4,320
+  manually stepped pose updates across standing, ground sitting and chair
+  sitting. Applying the same absolute scale twice is idempotent; returning to
+  the same height and pose produces 0.000000000 m drift in every fixture.
+  Native hips and shared import templates remain unchanged.
 - 900 independent baked-mesh contact checks initialize from standing, ground
   sitting and chair sitting and sample standing, ground-sit transitions and
   chair sitting. Maximum sampled contact error is 0.027805 m (standing);
   seated contacts remain within the 0.008 m test limit. Small standing sole
   gaps/intersections are retained instead of adding gait-dependent correction.
 
-Evidence: `pose-1/results.txt` and `sync-final/results.txt` under the output
+Evidence: `pose-1/results.txt`, `repeat-1/results.txt` and
+`sync-repeat/results.txt` under the output
 directory. An initial isolated run could not initialize Steam while Steam was
 closed; it did not execute the test suite. The subsequent runs used Steam.
 

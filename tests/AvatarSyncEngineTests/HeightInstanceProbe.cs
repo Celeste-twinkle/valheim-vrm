@@ -47,13 +47,20 @@ public sealed partial class AvatarSyncEngineTests
         try
         {
             Player.m_localPlayer=a; heightField.SetValue(picker,testHeights); catalogField.SetValue(picker,testCatalog);
-            Check(picker.RequestHeight(2.2f),"Local height UI request was rejected");
-            float deadline=Time.realtimeSinceStartup+120;
-            while(picker.IsBusy) { if(Time.realtimeSinceStartup>deadline)throw new Exception("Local height timeout"); yield return null; }
+            for(int change=0;change<12;change++)
+            {
+                float height=new[]{1.4f,2f,2.2f}[change%3];
+                Check(picker.RequestHeight(height),"Local height UI request was rejected");
+                float deadline=Time.realtimeSinceStartup+120;
+                while(picker.IsBusy) { if(Time.realtimeSinceStartup>deadline)throw new Exception("Local height timeout"); yield return null; }
+                var current=VrmManager.PlayerToVrmInstance[a].GetComponent<AvatarScale>();
+                Check(Mathf.Abs(current.UnscaledHeight*current.transform.localScale.y-height)<.0001f,"Repeated UI adjustments accumulated scale");
+                Check(template.transform.localScale==templateScale && VrmManager.PlayerToVrmInstance[b]==rootB,"Repeated UI adjustments changed template or B");
+            }
             Check(VrmManager.PlayerToVrmInstance[a].GetComponent<AvatarScale>().TargetHeight==2.2f,"Local slider did not apply selected height");
             testHeights.Load(); Check(testHeights.Get(a.GetPlayerName())==2.2f,"Local height was not persisted by character");
             Check(VrmManager.PlayerToVrmInstance[b]==rootB,"Local height changed remote B");
-            report.Add("Local height UI action: RequestHeight applies 2.2 m through the production picker, persists/reloads per character and leaves B unchanged; external remote refresh retains height");
+            report.Add("Local height UI action: 12 consecutive RequestHeight changes (1.4/2/2.2 m) never accumulate scale, persist/reload per character and leave B unchanged; external remote refresh retains height");
         }
         finally { Player.m_localPlayer=local; heightField.SetValue(picker,originalHeights); catalogField.SetValue(picker,originalCatalog); }
         registry.Set(101,1001,1,model,hash,2f); SetState(sync,registry); yield return PumpRemote(sync);
