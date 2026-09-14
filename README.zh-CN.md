@@ -4,7 +4,7 @@
 
 将英灵神殿角色替换为自己的 VRM 人形模型，游戏内按 **F8** 切换。可以只在本机生效，也可以安装独立服务器插件，让其他玩家看到各自选择的模型。
 
-**当前发布版：1.8.12** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
+**当前发布版：1.8.13** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
 
 [下载 Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [发布版源码](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [更新记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -15,7 +15,7 @@
 - 支持导入 VRM 0.x／VRM 1.0 人形模型；模型列表可滚动，支持中文、空格文件名。
 - 选择按游戏角色保存，切换后保留已装备物品及属性；持物挂点按模型手部骨骼适配。
 - 提供物理摆动权重、场景光照、接收阴影和模型泛光控制。
-- 模型身高 **1.4–2.2 米**可调，默认 **2 米**，可按玩家独立同步；加载时执行 MToon10 亮度基准上限。
+- 模型身高 **1.4–2.2 米**可调，默认 **2 米**，可按玩家独立同步；加载时执行 VRM 0.x／1.0 MToon 亮度基准上限。
 - 可选服务器同步按玩家独立记录选择，并用递增请求序号处理乱序消息。
 - 释放不再使用的模型资源；**1.8.7 修复退回主菜单时重复安装补丁造成的显存泄漏，以及场景卸载期间的模型挂接异常。**
 
@@ -27,10 +27,10 @@
 
 | 使用场景 | 安装内容 |
 | --- | --- |
-| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.12.zip` + 自备 `.vrm`。 |
-| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.12.zip`；无需模型或客户端依赖。 |
+| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.13.zip` + 自备 `.vrm`。 |
+| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.13.zip`；无需模型或客户端依赖。 |
 | 通过游戏“启动服务器”的房主，需要外观同步 | 在房主游戏目录安装客户端包和服务器包；其他玩家按客户端方式安装。 |
-| 仅下载源码 | `ValheimVRM-1.8.12-source.zip` 用于开发，不能代替编译好的插件包。 |
+| 仅下载源码 | `ValheimVRM-1.8.13-source.zip` 用于开发，不能代替编译好的插件包。 |
 
 公开客户端、服务器 ZIP 均不附带 BepInEx。前置加载器与依赖来源见[详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)。
 
@@ -43,7 +43,7 @@
 
 同一个游戏／服务器目录只需安装一份加载器。完整客户端 ZIP 已提供配套 UniVRM 运行库和着色器，无需另行下载；服务端不需要这些客户端依赖。
 
-另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_1.8.12_完整插件.zip` 和 `10_ValheimVRM_Server_1.8.12.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
+另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_1.8.13_完整插件.zip` 和 `10_ValheimVRM_Server_1.8.13.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
 
 ### 玩家安装步骤
 
@@ -51,7 +51,7 @@
 2. 将**完整客户端 ZIP**解压到 `valheim.exe` 所在目录，合并 `BepInEx` 和 `valheim_Data`。不能只复制 `ValheimVRM.dll`。
 3. 在游戏根目录创建 `ValheimVRM`，把自己的 `.vrm` 直接放进去。一个模型就能使用。
 4. 启动游戏，进入世界后关闭聊天、物品栏等菜单，按 **F8** 选择模型。
-5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.12**。
+5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.13**。
 
 ```text
 Valheim/
@@ -129,7 +129,7 @@ F8 的 **“站姿高度偏移”** 和 **“坐姿高度偏移”** 可分别�
 
 ### 渲染开关
 
-三个开关作用于 **VRM 1.0 MToon 材质**，保存后对本机显示的模型和死亡布娃娃生效：
+三个开关作用于 **VRM 0.x 和 VRM 1.0 MToon 材质**，保存后对本机显示的模型和死亡布娃娃生效：
 
 | 开关 | 默认值 | 效果 |
 | --- | --- | --- |
@@ -139,13 +139,15 @@ F8 的 **“站姿高度偏移”** 和 **“坐姿高度偏移”** 可分别�
 
 关闭场景光照时，接收阴影暂不可操作，但会记住选择。重新开启会恢复原始着色器及导入后的亮度基准。选项不改写 VRM 文件或游戏全局图像设置。
 
-VRM 0.x 可导入，但旧 MToon／游戏材质、Standard 和第三方材质不受这三个开关控制。其他物体的泛光及游戏屏幕空间后处理仍可能覆盖模型；半透明衣服也可能有透明排序问题。
+1.8.13 起旧版 MToon 也使用相同开关；不会再额外将材质颜色乘以游戏的太阳光／环境光。Standard、非 MToon 及第三方材质保留其着色器行为。其他物体的泛光及游戏屏幕空间后处理仍可能覆盖模型；半透明衣服也可能有透明排序问题。
 
 **1.8.8 修复开启游戏抗锯齿后，贴身半透明衣服／丝袜出现锯齿状缺口的问题。** TAA 的投影偏移现在同时用于身体、透明衣物和泛光遮罩；画面中有 VRM 时，该相机本帧的透明绘制统一使用相同投影，渲染后恢复相机原状态。游戏抗锯齿仍可开启，不改模型材质或透明度。此修复在观察者客户端生效，好友看到异常时也需要更新客户端，单独升级服务端无效。
 
 **F8 关闭“模型泛光”、游戏开启抗锯齿**时，泛光排除遮罩逐帧丢失造成的闪烁也已修复，并通过连续 HDR 帧验证。该选项排除泛光，不会降低场景光照本身造成的模型亮度。
 
 ## 模型身高调整
+
+VRM 0.x 与 VRM 1.0 使用相同的身高范围、默认值、骨架／脚底标定、坐姿偏移、持物适配和玩家间身高同步规则。按模型自身的人形骨架与网格计算，不按名称、作者或导出工具版本设置例外。
 
 F8 → **模型身高**可设置 **1.4–2.2 米**的目标外观高度，步长 1 厘米，默认 **2 米**。松开滑块后应用；“身高恢复为 2 米”恢复默认值。身高按本机游戏角色保存，切换模型、重启或重生后沿用，配置为 `BepInEx/config/ValheimVRM/avatar_heights.json`。
 
@@ -175,19 +177,19 @@ F8 → **模型身高**可设置 **1.4–2.2 米**的目标外观高度，步长
 
 较高的基础色数值在旧版客户端中可能造成皮肤、头发和衣服过曝发白；新版本会在导入时压低它。
 自发光、反射、边缘高光、动画颜色覆盖、灯光和后处理仍会影响最终画面，因此这不是最终像素亮度封顶。
-目前作用于 **VRM 1.0 MToon 材质**，本地角色与通过服务器同步加载的远端角色均适用；
-VRM 0.x、Standard 和其他着色器保持原有处理方式。
+目前作用于 **VRM 0.x 和 VRM 1.0 MToon 材质**，本地角色与通过服务器同步加载的远端角色均适用；
+Standard 和非 MToon 着色器保持原有处理方式。
 
-基准对应 VRM 文件中的线性颜色系数，程序会处理与 Unity 材质 sRGB 颜色的转换。
+基准使用线性颜色空间。VRM 1.0 文件中的颜色系数是线性值，VRM 0.x 的 MToon 颜色向量是 sRGB 值；程序按各自导入格式转换后执行相同上限，不能把 0.45／0.2025 直接写入旧版 sRGB 向量作为等价值。
 原始 `.vrm` 文件、贴图及服务器同步使用的文件指纹均不改动。
 这与 `settings_模型名.txt` 中的旧版 `ModelBrightness` 配置是独立的；
-MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 即可。
+VRM 0.x／1.0 MToon 均不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 即可。
 
 ## 服务器同步
 
 ### 服务端怎么安装
 
-在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.12.zip` 解压到服务器根目录，再按原启动方式启动：
+在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.13.zip` 解压到服务器根目录，再按原启动方式启动：
 
 ```text
 专用服务器目录/
@@ -198,7 +200,7 @@ MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 
 
 **这两个 `ValheimVRM.Server` 目录都不需要放客户端模型文件。** 服务器不导入模型，不需要客户端 UniVRM DLL 或着色器；服务器自己的 `ValheimVRM` 目录可以不存在。
 
-参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.12**。
+参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.13**。
 
 ### 不同安装组合的行为
 
@@ -238,7 +240,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 | 进服提示“版本不兼容” | 核对客户端与服务器的游戏版本，并查看双方连接日志。VRM 服务端不会因客户端缺少本插件而拒绝入服。 |
 | 摆动过大／衣服与身体穿模 | 降低 F8 物理权重；仍穿模时检查导出资产的蒙皮、形态键和碰撞设置。 |
 | 身体有树叶状暗斑／关闭接收阴影仍存在 | 阴影贴图与屏幕空间后处理不同。本版为不透明／裁剪 MToon 表面补充深度与法线；检查是否装全新依赖，反馈时附材质类型及渲染选项。 |
-| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.12** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
+| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.13** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
 | 模型退出视野后内存没有立刻下降 | 镜头外的活动角色仍需模型；只有最后一个实例销毁后才进入释放等待，详见下一节。 |
 
 反馈问题请提供游戏版本、Mod 版本、触发步骤和相关日志片段：
@@ -253,7 +255,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 
 Unity 和显卡驱动可能保留内存池，因此资源已释放不代表任务管理器占用立刻下降。1.8.7 已通过持续 4K 泛光分配／释放、三次实际主菜单重载、异步挂接取消、模型缩放、坐姿、持物、物理权重及资源生命周期测试。
 
-联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。1.8.12 的贴地与姿态回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
+联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。1.8.13 的 VRM 0.x／1.0 一致性验证见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.13-validation.md)。1.8.12 的贴地与姿态回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
 
 ## 开发与来源
 
@@ -271,7 +273,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-输出为 `release/ValheimVRM-1.8.12.zip` 和 `release/ValheimVRM-Server-1.8.12.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
+输出为 `release/ValheimVRM-1.8.13.zip` 和 `release/ValheimVRM-Server-1.8.13.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
 
 [着色器重建](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [依赖来源与许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [项目许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [问题反馈](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 

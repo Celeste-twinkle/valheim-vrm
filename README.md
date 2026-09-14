@@ -4,7 +4,7 @@
 
 Replace Valheim characters with your own humanoid VRM avatars and switch them with **F8**. Use it locally or install the separate server addon so players can see one another's selected avatars.
 
-**Current release: 1.8.12** · Tested with Valheim **1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.3**, D3D11.
+**Current release: 1.8.13** · Tested with Valheim **1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.3**, D3D11.
 
 [Download Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [Release source](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [Changelog](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -15,7 +15,7 @@ Replace Valheim characters with your own humanoid VRM avatars and switch them wi
 - Import humanoid VRM 0.x and VRM 1.0 models. The scrolling picker supports spaces and Chinese filenames.
 - Save selections per game character, preserve equipped items and stats, and adapt item mounts to each avatar's hand bones.
 - Adjust physics sway weight, scene lighting, received shadows and avatar bloom.
-- Set model height from **1.4 to 2.2 m**, default **2 m**, and synchronize it independently per player. Apply MToon10 brightness limits at import.
+- Set model height from **1.4 to 2.2 m**, default **2 m**, and synchronize it independently per player. Apply VRM 0.x/1.0 MToon brightness limits at import.
 - Optionally synchronize selections independently per player, with increasing request sequences to handle out-of-order messages.
 - Release unused avatar resources. **1.8.7 fixes the GPU memory leak from duplicate patches when returning to the main menu, and cancels avatar attachment safely during scene unload.**
 
@@ -27,10 +27,10 @@ The public release includes **no avatars**. Unity packages, FBX files and VRChat
 
 | Use case | Install |
 | --- | --- |
-| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-1.8.12.zip` + your own `.vrm` files. |
-| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-1.8.12.zip`; no avatars or client dependencies needed. |
+| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-1.8.13.zip` + your own `.vrm` files. |
+| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-1.8.13.zip`; no avatars or client dependencies needed. |
 | Player hosting through **Start server**, with avatar synchronization | Both client and server packages on the host; other players use the client package. |
-| Source development | `ValheimVRM-1.8.12-source.zip` contains source, not an installable plugin. |
+| Source development | `ValheimVRM-1.8.13-source.zip` contains source, not an installable plugin. |
 
 Neither public runtime ZIP includes BepInEx. See the [installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) for the loader and dependency provenance.
 
@@ -43,7 +43,7 @@ Neither public runtime ZIP includes BepInEx. See the [installation guide](https:
 
 Install the loader once per game/server directory. The complete client ZIP already provides the matching UniVRM runtime libraries and shaders; the server addon does not need those client dependencies.
 
-The separately shared **local Windows x64 bundles** `09_ValheimVRM_1.8.12_完整插件.zip` and `10_ValheimVRM_Server_1.8.12.zip` both include BepInEx **5.4.23.3**, so a fresh installation needs no separate loader download. Stop the game/server before installing. On a server that already has compatible BepInEx, copy only `BepInEx/plugins/ValheimVRM.Server` from the local server ZIP and preserve the existing loader and configuration.
+The separately shared **local Windows x64 bundles** `09_ValheimVRM_1.8.13_完整插件.zip` and `10_ValheimVRM_Server_1.8.13.zip` both include BepInEx **5.4.23.3**, so a fresh installation needs no separate loader download. Stop the game/server before installing. On a server that already has compatible BepInEx, copy only `BepInEx/plugins/ValheimVRM.Server` from the local server ZIP and preserve the existing loader and configuration.
 
 ### Player setup
 
@@ -51,7 +51,7 @@ The separately shared **local Windows x64 bundles** `09_ValheimVRM_1.8.12_完整
 2. Extract the **complete client ZIP** beside `valheim.exe`, merging `BepInEx` and `valheim_Data`. Copying only `ValheimVRM.dll` is insufficient.
 3. Create `ValheimVRM` in the game root and add `.vrm` files directly inside. One model is enough.
 4. Start the game, enter a world, close chat/inventory and other menus, then press **F8** and select a model.
-5. Confirm **ValheimVRM 1.8.12** loads in `BepInEx/LogOutput.log`.
+5. Confirm **ValheimVRM 1.8.13** loads in `BepInEx/LogOutput.log`.
 
 ```text
 Valheim/
@@ -129,7 +129,7 @@ This controls exported hair, clothing and body spring motion in VRM 0.x and VRM 
 
 ### Rendering controls
 
-These three controls apply to **VRM 1.0 MToon materials**, including avatars and death ragdolls rendered on this client:
+These three controls apply to **VRM 0.x and VRM 1.0 MToon materials**, including avatars and death ragdolls rendered on this client:
 
 | Control | Default | Effect |
 | --- | --- | --- |
@@ -139,13 +139,17 @@ These three controls apply to **VRM 1.0 MToon materials**, including avatars and
 
 Disabling scene lighting temporarily disables the shadow control while remembering its state. Restoring them restores the original shader and imported brightness baseline. Controls do not rewrite VRMs or change global graphics settings.
 
-VRM 0.x remains importable, but its legacy MToon/game materials, Standard and third-party shaders are outside these controls' scope. Bloom from other objects and screen-space effects may still overlap avatars. Semitransparent clothing can also have transparency-sorting issues.
+Since 1.8.13, legacy MToon uses the same controls and no longer multiplies material colors by global sun/ambient light a second time. Standard, non-MToon and third-party shaders retain their own rendering behavior. Bloom from other objects and screen-space effects may still overlap avatars. Semitransparent clothing can also have transparency-sorting issues.
 
 **1.8.8 fixes jagged gaps in close-fitting transparent clothing/stockings with game antialiasing enabled.** TAA uses matching projection jitter for opaque depth, transparent clothing and bloom coverage when an avatar is visible; the camera state is restored afterward. The viewing client needs the update. Materials, opacity and game antialiasing preferences are preserved.
 
 The same release fixes alternating bloom-mask dropouts when **F8 avatar bloom is off and game antialiasing is on**, verified with consecutive HDR frames. Scene lighting can still make the model bright; this option excludes bloom rather than reducing its lit color.
 
 ## Adjustable model height
+
+VRM 0.x and VRM 1.0 share the same height range/default, skeleton/sole calibration,
+sitting offsets, equipment alignment and per-player height synchronization. These
+use each avatar’s humanoid skeleton and geometry, without model-name or exporter-specific exceptions.
 
 F8 → **Model height** sets an absolute visual height from **1.4 to 2.2 m**, in 1 cm steps, default **2 m**. Release the slider to apply; **Reset height to 2 m** restores the default. The setting follows the local game character across model changes and restarts, stored in `BepInEx/config/ValheimVRM/avatar_heights.json`.
 
@@ -180,20 +184,21 @@ Higher base-color values can cause washed-out skin, hair or clothing in older
 clients. The new import limit reduces that risk. Emission, matcap/rim effects,
 lights, animated color overrides and game post-processing still affect the final
 image; this does not clamp final pixel brightness. The limiter applies to
-**VRM 1.0 MToon** materials, including remote avatars loaded from matching local
-files; VRM 0.x, Standard and other shaders keep their existing behavior.
+**VRM 0.x and VRM 1.0 MToon** materials, including remote avatars loaded from matching local
+files; Standard and non-MToon shaders retain their own behavior.
 
-The reference uses linear color factors stored in the VRM. The importer handles
-the conversion to Unity's sRGB material properties. Original `.vrm` files,
+The reference is in linear space. VRM 1.0 stores linear factors, whereas VRM 0.x
+MToon stores sRGB color vectors. The importer applies the same linear limits after
+accounting for that difference; 0.45/0.2025 are not equivalent raw sRGB values. Original `.vrm` files,
 textures and synchronization hashes are unchanged. This is separate from the
 legacy `ModelBrightness` setting in `settings_ModelName.txt`, which is not applied
-to MToon10; existing model settings can keep `ModelBrightness=1`.
+to either MToon generation; existing model settings can keep `ModelBrightness=1`.
 
 ## Server synchronization
 
 ### Server setup
 
-Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-1.8.12.zip` into its root and start it normally:
+Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-1.8.13.zip` into its root and start it normally:
 
 ```text
 Dedicated server/
@@ -204,7 +209,7 @@ Dedicated server/
 
 **Neither `ValheimVRM.Server` directory needs client avatar files.** The server does not import models and needs no client UniVRM DLLs or shaders. Its own `ValheimVRM` folder can be absent.
 
-Participating players install the complete client and the matching `.vrm` files they want to display. Join a world, enable sync in F8 and confirm **Server sync connected**. Use **1.8.12** on the server and participating clients for consistent current behavior.
+Participating players install the complete client and the matching `.vrm` files they want to display. Join a world, enable sync in F8 and confirm **Server sync connected**. Use **1.8.13** on the server and participating clients for consistent current behavior.
 
 ### Installation combinations
 
@@ -244,7 +249,7 @@ Keep the old whole-file sharing option `EnableLegacyVrmSharing=false` in `global
 | Version-incompatible login dialog | Compare client/server game versions and inspect both connection logs. VRM does not reject clients missing its addon. |
 | Excessive motion / clothes clip through the body | Reduce physics weight, then inspect exported skinning, blend shapes and colliders if necessary. |
 | Leaf-like dark patches remain after disabling shadows | Shadow maps and screen-space post-processing differ. This build supplies depth/normals for opaque/cutout MToon surfaces. Check complete dependencies and include material types/rendering options in reports. |
-| Increasing lag or GPU allocation failures after leaving a world | Install complete **1.8.12**, remove duplicate plugin copies and restart. This version fixes the duplicate-patch leak on menu reentry. |
+| Increasing lag or GPU allocation failures after leaving a world | Install complete **1.8.13**, remove duplicate plugin copies and restart. This version fixes the duplicate-patch leak on menu reentry. |
 | Memory does not drop when an avatar leaves the camera view | Off-camera active players still need their assets. Eviction begins after the last instance is destroyed; see below. |
 
 For reports, include game/mod versions, reproduction steps and relevant log excerpts:
@@ -259,7 +264,7 @@ Imported templates and their meshes, textures, materials and rig resources are r
 
 Unity and graphics drivers can retain memory pools, so Task Manager need not drop immediately after resource release. 1.8.7 passed sustained 4K bloom allocation/release, three actual menu reloads, attachment cancellation, minimum sizing, sitting, grips, physics weight and resource-lifetime probes.
 
-Networking probes cover real ZRpc serialization, production server handlers and independent binding to two player fixtures. A public-network Steam/PlayFab dedicated-server session has not been verified. Linux, macOS, Vulkan and all other mod combinations have not been comprehensively tested. See the [1.8.12 height/sync validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md) and the earlier [1.8.7 validation record](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md).
+Networking probes cover real ZRpc serialization, production server handlers and independent binding to two player fixtures. A public-network Steam/PlayFab dedicated-server session has not been verified. Linux, macOS, Vulkan and all other mod combinations have not been comprehensively tested. See the [1.8.13 VRM 0.x/1.0 validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.13-validation.md), [1.8.12 height/sync validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md) and the earlier [1.8.7 validation record](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md).
 
 ## Development and provenance
 
@@ -277,7 +282,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Outputs are `release/ValheimVRM-1.8.12.zip` and `release/ValheimVRM-Server-1.8.12.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
+Outputs are `release/ValheimVRM-1.8.13.zip` and `release/ValheimVRM-Server-1.8.13.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
 
 [Shader rebuilding](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [Dependency sources/licenses](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [Project license](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [Issues](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 
