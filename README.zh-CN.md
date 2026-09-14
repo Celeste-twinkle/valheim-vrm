@@ -4,18 +4,18 @@
 
 将英灵神殿角色替换为自己的 VRM 人形模型，游戏内按 **F8** 切换。可以只在本机生效，也可以安装独立服务器插件，让其他玩家看到各自选择的模型。
 
-**当前发布版：1.8.11** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
+**当前发布版：1.8.12** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
 
 [下载 Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [发布版源码](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [更新记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
-[安装与升级](#安装与升级) · [模型与配置](#模型与配置文件) · [F8 菜单](#f8-人物外观菜单) · [身高](#最低模型高度) · [亮度](#模型亮度基准) · [服务器同步](#服务器同步) · [常见问题](#常见问题)
+[安装与升级](#安装与升级) · [模型与配置](#模型与配置文件) · [F8 菜单](#f8-人物外观菜单) · [身高](#模型身高调整) · [亮度](#模型亮度基准) · [服务器同步](#服务器同步) · [常见问题](#常见问题)
 
 ## 当前功能
 
 - 支持导入 VRM 0.x／VRM 1.0 人形模型；模型列表可滚动，支持中文、空格文件名。
 - 选择按游戏角色保存，切换后保留已装备物品及属性；持物挂点按模型手部骨骼适配。
 - 提供物理摆动权重、场景光照、接收阴影和模型泛光控制。
-- 加载时执行最低 **2 米**模型高度，以及 MToon10 亮度基准上限。
+- 模型身高 **1.4–2.2 米**可调，默认 **2 米**，可按玩家独立同步；加载时执行 MToon10 亮度基准上限。
 - 可选服务器同步按玩家独立记录选择，并用递增请求序号处理乱序消息。
 - 释放不再使用的模型资源；**1.8.7 修复退回主菜单时重复安装补丁造成的显存泄漏，以及场景卸载期间的模型挂接异常。**
 
@@ -27,10 +27,10 @@
 
 | 使用场景 | 安装内容 |
 | --- | --- |
-| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.11.zip` + 自备 `.vrm`。 |
-| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.11.zip`；无需模型或客户端依赖。 |
+| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.12.zip` + 自备 `.vrm`。 |
+| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.12.zip`；无需模型或客户端依赖。 |
 | 通过游戏“启动服务器”的房主，需要外观同步 | 在房主游戏目录安装客户端包和服务器包；其他玩家按客户端方式安装。 |
-| 仅下载源码 | `ValheimVRM-1.8.11-source.zip` 用于开发，不能代替编译好的插件包。 |
+| 仅下载源码 | `ValheimVRM-1.8.12-source.zip` 用于开发，不能代替编译好的插件包。 |
 
 公开客户端、服务器 ZIP 均不附带 BepInEx。前置加载器与依赖来源见[详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)。
 
@@ -43,7 +43,7 @@
 
 同一个游戏／服务器目录只需安装一份加载器。完整客户端 ZIP 已提供配套 UniVRM 运行库和着色器，无需另行下载；服务端不需要这些客户端依赖。
 
-另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_1.8.11_完整插件.zip` 和 `10_ValheimVRM_Server_1.8.11.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
+另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_1.8.12_完整插件.zip` 和 `10_ValheimVRM_Server_1.8.12.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
 
 ### 玩家安装步骤
 
@@ -51,7 +51,7 @@
 2. 将**完整客户端 ZIP**解压到 `valheim.exe` 所在目录，合并 `BepInEx` 和 `valheim_Data`。不能只复制 `ValheimVRM.dll`。
 3. 在游戏根目录创建 `ValheimVRM`，把自己的 `.vrm` 直接放进去。一个模型就能使用。
 4. 启动游戏，进入世界后关闭聊天、物品栏等菜单，按 **F8** 选择模型。
-5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.11**。
+5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.12**。
 
 ```text
 Valheim/
@@ -84,6 +84,7 @@ Valheim/
 | --- | --- | --- |
 | `ValheimVRM/*.vrm` | 模型文件；至少准备一个供选择。 | 用户放入。 |
 | `BepInEx/config/ValheimVRM/avatar_selections.json` | 各游戏角色的模型选择。 | Mod 保存选择时生成。 |
+| `BepInEx/config/ValheimVRM/avatar_heights.json` | 各本机游戏角色的外观身高，默认 2 米。 | 应用身高滑块时由 Mod 保存。 |
 | `BepInEx/config/ValheimVRM/physics_options.json` | 本机统一的物理摆动权重。 | Mod 保存滑块设置时生成。 |
 | `BepInEx/config/ValheimVRM/rendering_options.json` | 本机渲染开关。 | Mod 修改选项时生成。 |
 | `BepInEx/config/ValheimVRM/settings_模型名.txt` | 可选模型缩放、偏移、装备等参数。 | 保存 F8 高度微调时自动创建；其他参数可手动填写。 |
@@ -112,7 +113,7 @@ ModelOffsetY=0
 
 ### 站姿和坐姿高度微调
 
-两个滑块默认均为 **0 厘米**。1.8.11 在加载时读取模型人形骨架的参考姿态、髋骨／脚骨位置、蒙皮绑定数据及鞋底厚度，计算一次站姿高度基准，并包含当前缩放。站着、走动或坐下时加载，都使用同一参考骨架标定。
+两个滑块默认均为 **0 厘米**。1.8.12 在加载时读取模型人形骨架的参考姿态、髋骨／脚骨位置、蒙皮绑定数据及鞋底厚度，计算一次站姿高度基准，并包含当前缩放。站着、走动或坐下时加载，都使用同一参考骨架标定。
 
 站立、行走、奔跑使用固定的垂直偏移，保留原版动画自带的髋部起伏；不再跟踪每帧最低脚底顶点来抬升或降低整个人物。原版骨架保持只读。坐地、椅子及相关过渡仍有独立的接触处理。固定基准优先保证动画稳定，部分姿势可能有少量脚底穿入或离地，不提供逐脚 IK，也不按模型名称硬编码高度。
 
@@ -144,24 +145,17 @@ VRM 0.x 可导入，但旧 MToon／游戏材质、Standard 和第三方材质不
 
 **F8 关闭“模型泛光”、游戏开启抗锯齿**时，泛光排除遮罩逐帧丢失造成的闪烁也已修复，并通过连续 HDR 帧验证。该选项排除泛光，不会降低场景光照本身造成的模型亮度。
 
-## 最低模型高度
+## 模型身高调整
 
-**1.8.8 起自动保证可测量模型的站立可见网格高度至少为 2 米。** 测量发生在导入后、游戏动画之前，从可见网格的最低顶点到最高顶点计算，包含头发、耳朵和头饰；这是外观高度，不是人体解剖身高。
+F8 → **模型身高**可设置 **1.4–2.2 米**的目标外观高度，步长 1 厘米，默认 **2 米**。松开滑块后应用；“身高恢复为 2 米”恢复默认值。身高按本机游戏角色保存，切换模型、重启或重生后沿用，配置为 `BepInEx/config/ValheimVRM/avatar_heights.json`。
 
-```text
-实际缩放倍率 = max(ModelScale, 2.0 / 原始网格高度)
-```
+导入时在动画播放前测量一次站立可见网格高度，包含头发、耳朵和头饰。每位玩家的模型实例使用 `实际缩放 = 所选身高 / 原始网格高度`；可测量模型会放大或缩小到目标值，旧 `ModelScale` 不再覆盖该目标。无法测量几何时使用安全缩放回退。
 
-| 原始高度 | ModelScale | 实际倍率 | 最终高度 |
-| --- | --- | --- | --- |
-| 1.2 米 | 1 | 约 1.667 | 2 米 |
-| 1.6 米 | 1 | 1.25 | 2 米 |
-| 2.2 米 | 1 | 1 | 2.2 米 |
-| 1.2 米 | 2 | 2 | 2.4 米 |
+调整身高时，从缓存模型创建该玩家的新显示实例，按初始化流程重新标定髋部到脚底的高度、坐姿接触几何、镜头高度、持物挂点和物理引用。无需重新读取模型文件，不会修改共享模板或其他玩家实例。站立、走路和跑步使用固定标定偏移，保留原版髋部动画，不累加补偿，也不把抬脚当成误差；坐地、坐椅继续单独处理动画接触位置。特殊姿势可能保留少量脚底穿入或离地，并非逐脚地形 IK。
 
-身体、衣服和骨骼一起等比缩放，镜头与持物挂点使用缩放后的骨骼。测量只做一次，坐下、复制和反复切换不会累积放大。当前没有关闭最低高度的开关，`ModelScale` 也不能把最终高度降到此下限以下。
+**身高同步要求服务端、发送方及观察方客户端均为 1.8.12 或更新版本。** A 设置 1.4 米、B 设置 2 米时，各自显示对应身高，即使两人使用同一个模型。身高与模型选择一起绑定已认证的玩家连接和角色网络 ID，并共用递增请求序号；迟到的旧请求不能覆盖新身高。重生、后来加入和切换模型后仍按发送方身高显示。
 
-本地和远程模型使用同一导入规则。所有观看方更新到本版并使用相同模型、模型配置，才能保持一致比例。VRM 文件、同步指纹不变；游戏碰撞体和交互距离仍由各自参数独立控制。
+无服务端插件或关闭同步时，身高调整只在本机生效。旧版服务器／客户端仍可同步模型，但不支持自定义远程身高；新版观察者将旧版发送方按默认 2 米显示。F8 会提示是否支持身高同步。原有站姿、坐姿偏移滑块仍是本机按模型保存的微调，与同步身高分别处理。
 
 ## 模型亮度基准
 
@@ -193,7 +187,7 @@ MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 
 
 ### 服务端怎么安装
 
-在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.11.zip` 解压到服务器根目录，再按原启动方式启动：
+在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.12.zip` 解压到服务器根目录，再按原启动方式启动：
 
 ```text
 专用服务器目录/
@@ -204,7 +198,7 @@ MToon10 不应用该配置，现有模型配置继续保持 `ModelBrightness=1` 
 
 **这两个 `ValheimVRM.Server` 目录都不需要放客户端模型文件。** 服务器不导入模型，不需要客户端 UniVRM DLL 或着色器；服务器自己的 `ValheimVRM` 目录可以不存在。
 
-参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.11**。
+参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.12**。
 
 ### 不同安装组合的行为
 
@@ -244,7 +238,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 | 进服提示“版本不兼容” | 核对客户端与服务器的游戏版本，并查看双方连接日志。VRM 服务端不会因客户端缺少本插件而拒绝入服。 |
 | 摆动过大／衣服与身体穿模 | 降低 F8 物理权重；仍穿模时检查导出资产的蒙皮、形态键和碰撞设置。 |
 | 身体有树叶状暗斑／关闭接收阴影仍存在 | 阴影贴图与屏幕空间后处理不同。本版为不透明／裁剪 MToon 表面补充深度与法线；检查是否装全新依赖，反馈时附材质类型及渲染选项。 |
-| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.11** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
+| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.12** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
 | 模型退出视野后内存没有立刻下降 | 镜头外的活动角色仍需模型；只有最后一个实例销毁后才进入释放等待，详见下一节。 |
 
 反馈问题请提供游戏版本、Mod 版本、触发步骤和相关日志片段：
@@ -259,7 +253,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 
 Unity 和显卡驱动可能保留内存池，因此资源已释放不代表任务管理器占用立刻下降。1.8.7 已通过持续 4K 泛光分配／释放、三次实际主菜单重载、异步挂接取消、模型缩放、坐姿、持物、物理权重及资源生命周期测试。
 
-联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。1.8.11 的贴地与姿态回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.11-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
+联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。1.8.12 的贴地与姿态回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
 
 ## 开发与来源
 
@@ -277,7 +271,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-输出为 `release/ValheimVRM-1.8.11.zip` 和 `release/ValheimVRM-Server-1.8.11.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
+输出为 `release/ValheimVRM-1.8.12.zip` 和 `release/ValheimVRM-Server-1.8.12.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
 
 [着色器重建](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [依赖来源与许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [项目许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [问题反馈](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 
