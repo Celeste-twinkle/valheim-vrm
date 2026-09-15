@@ -7,6 +7,7 @@ namespace ValheimVRM
     {
         internal static readonly HashSet<AvatarRenderingTarget> Active = new HashSet<AvatarRenderingTarget>();
         internal Renderer[] Renderers { get; private set; }
+        readonly List<Material> queueMaterials = new List<Material>();
         void Awake() { Renderers = GetComponentsInChildren<Renderer>(true); }
         void Start() { Apply(); }
         void OnEnable() { Active.Add(this); Apply(); }
@@ -22,6 +23,7 @@ namespace ValheimVRM
                 foreach (var material in renderer.sharedMaterials)
                 {
                     if (!Supports(material)) continue;
+                    NormalizeTransparencyQueue(material);
                     bool legacy = IsLegacy(material);
                     string originalName = legacy ? "VRM/MToon" : "VRM10/MToon10";
                     var optionsShader = legacy ? AvatarRendering.LegacyOptionsShader : AvatarRendering.OptionsShader;
@@ -60,6 +62,30 @@ namespace ValheimVRM
 
         internal static bool IsLegacy(Material material) => material != null && material.shader != null &&
             (material.shader.name == "VRM/MToon" || material.shader.name == "ValheimVRM/MToonOptions");
+
+        internal void PrepareRenderQueues()
+        {
+            if (Renderers == null) return;
+            foreach (var renderer in Renderers)
+            {
+                if (renderer == null || !renderer.enabled || renderer.forceRenderingOff || !renderer.gameObject.activeInHierarchy) continue;
+                renderer.GetSharedMaterials(queueMaterials);
+                foreach (var material in queueMaterials)
+                    if (Supports(material)) NormalizeTransparencyQueue(material);
+            }
+        }
+
+        static void NormalizeTransparencyQueue(Material material)
+        {
+            // Valheim applies post-effect AO before transparent draws. A blended
+            // surface in an opaque queue is shaded with background AO as though
+            // it were opaque. Restore its transparent stage without changing its
+            // alpha, blend/depth-write settings or any already-valid queue.
+            if (AlphaMode(material) <= 1.5f || material.renderQueue > 2500) return;
+            int previous = material.renderQueue;
+            material.renderQueue = ZWrite(material) > .5f ? 2501 : 3000;
+            Debug.Log($"[ValheimVRM] Corrected transparent render queue for {material.name}: {previous} -> {material.renderQueue}");
+        }
 
         internal static float AlphaMode(Material material) => material.GetFloat(IsLegacy(material) ? "_BlendMode" : "_AlphaMode");
         internal static float CullMode(Material material) => material.GetFloat(IsLegacy(material) ? "_CullMode" : "_M_CullMode");

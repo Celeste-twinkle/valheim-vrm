@@ -1,3 +1,12 @@
+## 1.8.16 — Transparent material SSAO and compositing
+
+- Repair alpha-blended MToon materials incorrectly placed in opaque render queues, so Valheim applies background SSAO before drawing genuine transparency. Preserve valid queues, alpha, textures, blend/depth-write settings and source files; both VRM 0.x and 1.0 use the same rules.
+- Include fully opaque pixels of blended materials in the avatar depth/normal surface pass. Use live sampled alpha and UV animation; leave partial coverage and holes transparent. Opaque mode ignores alpha, while Cutout keeps its authored cutoff.
+- Verify partial-transparent composition against a correctly queued reference, including later queue changes, and regress TAA/bloom with real models using original, all-blended and wholly semitransparent materials.
+- Apply the fix on the observing client. Server synchronization is unchanged; updating only a server cannot fix a viewer's rendering.
+
+Validation: `docs/release-1.8.16-validation.md`.
+
 ## 1.8.15 — Native character selection and back equipment calibration
 
 - Add **Original character model** at the top of F8, including empty model libraries. Restore the native body/current gear, item sockets, camera and physical baseline; persist per character without default-VRM fallback. Withdraw the shared model through the existing sequenced protocol while continuing to view other players.

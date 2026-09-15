@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.8.15 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.16 (Celeste-twinkle fork)
 
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
@@ -16,7 +16,7 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.15.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.16.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -150,7 +150,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.15.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.16.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -160,7 +160,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.15**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.16**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models
@@ -174,3 +174,5 @@ including the game version, release tag and relevant log excerpt.
 1.8.10 fixes continuously rising avatars in 1.8.9 by removing VRM-to-native bone position writes. Model dimensions and contact geometry are cached at import/attachment; each frame applies an independent contact delta to the native animation pose. The minimum stays at 2 m and both F8 posture offsets default to zero.
 
 1.8.12 calibrates a fixed standing/locomotion offset at load from the humanoid reference skeleton and sole geometry. Walking and running keep native hip animation without live lowest-foot correction. Sitting retains independent contact handling; small pose-dependent foot intersections are possible.
+
+**1.8.16 fixes SSAO depth and composition for transparent materials.** Some exported blended materials use an opaque render queue, causing background AO to darken the body or transparent clothing. The mod repairs such invalid queues so background SSAO finishes before transparent composition. Valid queues, alpha, textures, blending, original depth-write settings and model files are preserved. Surface depth/normals also follow the mode: Opaque ignores alpha, Cutout uses its cutoff, and Blend writes solid surface data only where final sampled alpha is nearly one. Genuine partial transparency and holes still reveal the normally AO-shaded background. Both VRM generations share this handling. The observing player must update the complete client package; a server-only update cannot fix their rendering. Intersecting multilayer transparent meshes still depend on the game's native sorting; this does not implement order-independent transparency.

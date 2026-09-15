@@ -91,6 +91,20 @@ public class AvatarAntialiasingTests : BaseUnityPlugin
             foreach (var m in renderer.sharedMaterials)
             {
                 bool legacy = m.shader.name == "VRM/MToon" || m.shader.name == "ValheimVRM/MToonOptions";
+                if (Environment.GetEnvironmentVariable("VRM_AA_BLEND_ALL") == "1" &&
+                    (legacy || m.shader.name == "VRM10/MToon10" || m.shader.name == "ValheimVRM/MToon10Options"))
+                {
+                    m.SetFloat(legacy ? "_BlendMode" : "_AlphaMode", 2);
+                    m.SetFloat(legacy ? "_ZWrite" : "_M_ZWrite", 0);
+                    m.SetFloat(legacy ? "_SrcBlend" : "_M_SrcBlend", (float)BlendMode.SrcAlpha);
+                    m.SetFloat(legacy ? "_DstBlend" : "_M_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+                    m.DisableKeyword("_ALPHATEST_ON"); m.EnableKeyword("_ALPHABLEND_ON");
+                    m.renderQueue = 2450;
+                    // A fixture-only override, never written to the VRM. Include
+                    // both actually solid and wholly semitransparent avatars.
+                    if (Environment.GetEnvironmentVariable("VRM_AA_BLEND_PARTIAL") == "1")
+                    { var color=m.GetColor("_Color"); color.a=.65f; m.SetColor("_Color",color); }
+                }
                 report.Add("MAT " + m.name + " queue=" + m.renderQueue + " alpha=" + m.GetFloat(legacy ? "_BlendMode" : "_AlphaMode") + " zwrite=" + m.GetFloat(legacy ? "_ZWrite" : "_M_ZWrite"));
             }
         }
@@ -114,6 +128,16 @@ public class AvatarAntialiasingTests : BaseUnityPlugin
         var post = camera.gameObject.AddComponent<PostProcessingBehaviour>(); post.profile = ScriptableObject.CreateInstance<PostProcessingProfile>();
         var aa = post.profile.antialiasing.settings; aa.method = AntialiasingModel.Method.Taa; post.profile.antialiasing.settings = aa;
         var surface = model.AddComponent<AvatarRenderingTarget>(); model.AddComponent<AvatarBloomTarget>();
+        if (Environment.GetEnvironmentVariable("VRM_AA_BLEND_ALL") == "1")
+        {
+            foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                foreach (var material in renderer.sharedMaterials)
+                    Check(material.renderQueue > 2500, "Blended avatar still uses an opaque queue");
+            Log("Fixture: every material uses Blend, authored queue 2450; normalized before draw; " +
+                (Environment.GetEnvironmentVariable("VRM_AA_BLEND_PARTIAL") == "1" ? "all color alpha=0.65" : "authored alpha preserved"));
+        }
+        CheckOpaqueAlpha(camera, post, texture, model);
+        if (Environment.GetEnvironmentVariable("VRM_AA_OPAQUE_ONLY") == "1") yield break;
         if (Environment.GetEnvironmentVariable("VRM_AA_TEMPORAL_ONLY") == "1")
         {
             yield return TemporalBloom(camera, post, texture, raw, model, holder, light);
@@ -186,6 +210,41 @@ public class AvatarAntialiasingTests : BaseUnityPlugin
         Log("Disabled avatar target, excluded layers and avatar outside frustum retain native transparent projection");
         capture.Release(); camera.RemoveAllCommandBuffers(); Object.Destroy(model); Object.Destroy(holder); texture.Release(); raw.Release(); Object.Destroy(texture); Object.Destroy(raw); Object.Destroy(camera.gameObject); Object.Destroy(light.gameObject);
         yield return null;
+    }
+    void CheckOpaqueAlpha(Camera camera, PostProcessingBehaviour post, RenderTexture target, GameObject model)
+    {
+        var materials=model.GetComponentsInChildren<Renderer>(true).SelectMany(r=>r.sharedMaterials).Distinct().Where(m=>
+            (m.shader.name=="VRM/MToon" && m.GetFloat("_BlendMode")==0) ||
+            (m.shader.name=="VRM10/MToon10" && m.GetFloat("_AlphaMode")==0)).ToArray();
+        if(materials.Length==0)return;
+        var colors=materials.Select(m=>m.GetColor("_Color")).ToArray();
+        bool oldAa=post.profile.antialiasing.enabled,oldBloom=post.profile.bloom.enabled,oldExclude=AvatarBloomController.Enabled;
+        camera.transform.position=new Vector3(0,AvatarScale.MinimumHeight*.6f,AvatarScale.MinimumHeight*2.2f);
+        camera.transform.LookAt(new Vector3(0,AvatarScale.MinimumHeight*.6f,0));
+        try
+        {
+            post.profile.antialiasing.enabled=false; post.profile.bloom.enabled=true;
+            foreach(bool exclude in new[]{false,true})
+            {
+                AvatarBloomController.Enabled=exclude;
+                Color[] reference=null;
+                foreach(float alpha in new[]{1f,.5f})
+                {
+                    for(int i=0;i<materials.Length;i++){var color=colors[i];color.a=alpha;materials[i].SetColor("_Color",color);}
+                    camera.Render(); var actual=Read(target);
+                    if(reference==null){reference=actual;continue;}
+                    float maximum=0;for(int i=0;i<actual.Length;i++)maximum=Mathf.Max(maximum,Delta(actual[i],reference[i]));
+                    Check(maximum<.001f,"Opaque material alpha changed scene/bloom coverage: "+maximum);
+                    Log("Opaque alpha 1/0.5: "+materials.Length+" materials; excludeBloom="+exclude+" finalRgbDelta="+maximum);
+                }
+            }
+        }
+        finally
+        {
+            for(int i=0;i<materials.Length;i++)materials[i].SetColor("_Color",colors[i]);
+            post.profile.antialiasing.enabled=oldAa;post.profile.bloom.enabled=oldBloom;AvatarBloomController.Enabled=oldExclude;
+            post.ResetTemporalEffects();
+        }
     }
     static float Delta(Color a, Color b) => Mathf.Max(Mathf.Abs(a.r - b.r), Mathf.Abs(a.g - b.g), Mathf.Abs(a.b - b.b));
     IEnumerator TemporalBloom(Camera camera, PostProcessingBehaviour post, RenderTexture final, RenderTexture raw, GameObject model, GameObject holder, Light light)

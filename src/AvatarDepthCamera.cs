@@ -16,6 +16,8 @@ namespace ValheimVRM
         static void Prepare(Camera camera)
         {
             if (camera.cameraType != CameraType.Game && camera.cameraType != CameraType.SceneView) return;
+            foreach (var target in AvatarRenderingTarget.Active)
+                if (target != null && target.isActiveAndEnabled) target.PrepareRenderQueues();
             var depth = camera.GetComponent<AvatarDepthCamera>();
             if (depth == null && camera.actualRenderingPath == RenderingPath.DeferredShading && AvatarRenderingTarget.Active.Count != 0)
                 depth = camera.gameObject.AddComponent<AvatarDepthCamera>();
@@ -58,10 +60,13 @@ namespace ValheimVRM
                     for (int i = 0; i < sharedMaterials.Count; i++)
                     {
                         var source = sharedMaterials[i];
-                        // Blended overlays must remain transparent. Only opaque
-                        // and cutout MToon surfaces own a deferred surface pixel.
-                        if (!AvatarRenderingTarget.Supports(source) || source.renderQueue > 2500 ||
-                            AvatarRenderingTarget.AlphaMode(source) > 1.5f || AvatarRenderingTarget.ZWrite(source) < .5f) continue;
+                        if (!AvatarRenderingTarget.Supports(source)) continue;
+                        // Transparent-mode materials can contain fully opaque
+                        // pixels, including exporters using an early queue. Write
+                        // their actual surface only where sampled alpha is one;
+                        // partial coverage must keep the depth behind it.
+                        bool blended = AvatarRenderingTarget.AlphaMode(source) > 1.5f;
+                        if (!blended && (source.renderQueue > 2500 || AvatarRenderingTarget.ZWrite(source) < .5f)) continue;
                         if (!drawing)
                         {
                             // Leave the lighting/emission target untouched. It can
@@ -90,7 +95,11 @@ namespace ValheimVRM
             material.SetTextureScale("_MainTex", source.GetTextureScale("_MainTex"));
             material.SetTextureOffset("_MainTex", source.GetTextureOffset("_MainTex"));
             material.SetColor("_Color", source.GetColor("_Color"));
-            material.SetFloat("_Cutoff", AvatarRenderingTarget.AlphaMode(source) > .5f ? source.GetFloat("_Cutoff") : -1f);
+            float alphaMode = AvatarRenderingTarget.AlphaMode(source);
+            // Use the live texture * color alpha, including UV/expression changes.
+            // A small float tolerance admits alpha=1 after sampling, not fabric
+            // alpha such as 0.35/0.7 or transparent holes. No source edits/copies.
+            material.SetFloat("_Cutoff", alphaMode > 1.5f ? .99999f : alphaMode > .5f ? source.GetFloat("_Cutoff") : -1f);
             material.SetFloat("_Cull", AvatarRenderingTarget.CullMode(source));
             material.SetTexture("_BumpMap", source.GetTexture("_BumpMap"));
             material.SetFloat("_BumpScale", source.GetFloat("_BumpScale"));

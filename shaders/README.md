@@ -20,8 +20,21 @@ opaque/cutout MToon surfaces at `CameraEvent.AfterGBuffer`. Without this step,
 Amplify Occlusion's post-effect can shade a forward-only avatar using the geometry
 behind it. The pass also clears background albedo/specular values in those pixels,
 leaves the lighting target untouched and preserves cutout UV animation. Visible
-color still comes from the original MToon forward passes. Blended materials and
-non-MToon shaders keep their native depth behavior.
+color still comes from the original MToon forward passes. Blended materials also
+provide surface data where sampled texture alpha times color alpha is at least
+0.99999. Partial coverage and holes do not write this solid surface; Opaque mode
+ignores alpha and Cutout uses its authored cutoff.
+
+Alpha-blended materials in queues 2500 or below are repaired before drawing:
+ordinary transparency uses queue 3000, depth-writing transparency uses 2501.
+Valid transparent queues, opacity, textures, blending and depth-write settings
+are retained. Valheim's Amplify Occlusion post effect runs before transparent
+draws, so genuine transparency then composites over the AO-shaded background
+instead of being multiplied by background AO. Preparation runs on each camera
+cull as well as initial/options setup; it also handles later queue changes.
+This follows Unity's [Built-in render queue boundaries](https://docs.unity3d.com/6000.0/Documentation/Manual/built-in-rendering-order.html).
+Non-MToon shaders retain their own rendering behavior. This is not multilayer
+order-independent transparency or a replacement for arbitrary third-party AO.
 
 Both depth and bloom coverage use `AvatarRendering/AvatarUv.cginc` to follow
 the material's UV animation. VRM 0.x MToon uses the mask's red channel and its
