@@ -57,7 +57,7 @@ namespace ValheimVRM
                                 draws.Add(new Draw { Renderer = renderer, Mask = source, Submesh = index, Pass = pass });
                             continue;
                         }
-                        if (!AvatarRenderingTarget.Supports(source)) continue;
+                        if (!AvatarRenderingTarget.SupportsSurface(source)) continue;
                         draws.Add(new Draw { Renderer = renderer, Mask = GetMask(source), Submesh = index });
                     }
                 }
@@ -92,12 +92,13 @@ namespace ValheimVRM
                 mask = new Material(AvatarBloomController.BloomShader) { hideFlags = HideFlags.HideAndDontSave };
                 masks.Add(source, mask);
             }
-            mask.SetTexture("_MainTex", source.GetTexture("_MainTex"));
-            mask.SetTextureScale("_MainTex", source.GetTextureScale("_MainTex"));
-            mask.SetTextureOffset("_MainTex", source.GetTextureOffset("_MainTex"));
-            mask.SetFloat("_Opacity", source.GetColor("_Color").a);
+            string texture = AvatarRenderingTarget.MainTextureProperty(source);
+            mask.SetTexture("_MainTex", source.GetTexture(texture));
+            mask.SetTextureScale("_MainTex", source.GetTextureScale(texture));
+            mask.SetTextureOffset("_MainTex", source.GetTextureOffset(texture));
+            mask.SetFloat("_Opacity", AvatarRenderingTarget.MainColor(source).a);
             float alphaMode = AvatarRenderingTarget.AlphaMode(source);
-            mask.SetFloat("_BloomCutoff", alphaMode > 1.5f ? .001f : alphaMode > .5f ? source.GetFloat("_Cutoff") : -1f);
+            mask.SetFloat("_BloomCutoff", alphaMode > 1.5f ? .001f : alphaMode > .5f ? AvatarRenderingTarget.Cutoff(source) : -1f);
             mask.SetFloat("_Transparent", alphaMode > 1.5f ? 1f : 0f);
             mask.SetFloat("_Cull", AvatarRenderingTarget.CullMode(source));
             mask.SetFloat("_ZTest", (float)(AvatarRenderingTarget.ZWrite(source) > .5f ? CompareFunction.Equal : CompareFunction.LessEqual));

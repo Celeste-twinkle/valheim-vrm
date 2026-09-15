@@ -23,3 +23,12 @@ the real color and named coverage passes. For pose/height regressions use
 
 `results.txt` ends with `AVATAR_FUR_TESTS_PASSED`; `error.txt` indicates failure.
 Private fixture files and generated images are not committed or distributed.
+
+The lighting probe compares linear HDR pixels on a uniform cloth fixture with
+fur on/off for native VRM 0.x and 1.0 materials: directional light, normal map,
+two lights, emission, shading maps, a point light, MatCap and rim (including
+legacy HDR color conversion). Average error must be below
+1.5% (allowing displaced fins to sample a slightly different point-light field).
+`VRM_FUR_LIGHTING_ONLY=1` runs this probe without importing an avatar.
+`VRM_FUR_LIGHTING_BASELINE=1` records a pre-fix diagnostic without the parity gate;
+never use that flag for release validation.

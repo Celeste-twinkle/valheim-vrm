@@ -21,6 +21,8 @@ namespace ValheimVRM
         Rect window;
         Vector2 scroll;
         Font font;
+        GUIStyle windowStyle;
+        Texture2D windowBackground;
         string loadingName;
         bool physicsDirty;
         float? pendingModelHeight;
@@ -276,12 +278,29 @@ namespace ValheimVRM
             if (!MenuOpen) return;
             if (font == null) font = Font.CreateDynamicFontFromOSFont(new[] { "Microsoft YaHei", "Arial", "DejaVu Sans" }, 18);
             var previousFont = GUI.skin.font;
+            var previousColor = GUI.color;
+            var previousBackground = GUI.backgroundColor;
             try
             {
                 GUI.skin.font = font;
-                window = GUI.Window(0x56524d38, window, DrawWindow, Text("VRM avatars · F8", "VRM 人物外观 · F8"));
+                GUI.color = Color.white;
+                GUI.backgroundColor = Color.white;
+                if (windowStyle == null)
+                {
+                    windowBackground = new Texture2D(1, 1, TextureFormat.RGBA32, false) { name = "ValheimVRM opaque menu", hideFlags = HideFlags.HideAndDontSave };
+                    windowBackground.SetPixel(0, 0, new Color(.07f, .08f, .10f, 1));
+                    windowBackground.Apply(false, true);
+                    windowStyle = new GUIStyle(GUI.skin.window) { border = new RectOffset(), font = font };
+                    foreach (var state in new[] { windowStyle.normal, windowStyle.hover, windowStyle.active, windowStyle.focused,
+                        windowStyle.onNormal, windowStyle.onHover, windowStyle.onActive, windowStyle.onFocused })
+                    {
+                        state.background = windowBackground;
+                        state.textColor = Color.white;
+                    }
+                }
+                window = GUI.Window(0x56524d38, window, DrawWindow, Text("VRM avatars · F8", "VRM 人物外观 · F8"), windowStyle);
             }
-            finally { GUI.skin.font = previousFont; }
+            finally { GUI.skin.font = previousFont; GUI.color = previousColor; GUI.backgroundColor = previousBackground; }
         }
 
         void DrawWindow(int id)
@@ -463,6 +482,7 @@ namespace ValheimVRM
             SaveHeightOptions();
             SaveCalibrationOptions();
             if (font != null) Destroy(font);
+            if (windowBackground != null) Destroy(windowBackground);
             if (Instance == this) Instance = null;
         }
     }

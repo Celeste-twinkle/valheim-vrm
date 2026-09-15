@@ -37,15 +37,22 @@ static class ItemCalibrationProbe
             AccessTools.Field(typeof(VisEquipment), left ? "m_leftItemInstance" : "m_rightItemInstance").SetValue(equipment, item.gameObject);
             sync.Setup(source, target, equipment, settings);
             float factor = target.GetComponent<AvatarScale>().TargetHeight / 2f * selected.Multiplier;
+            var heading = source.transform.parent;
+            var headingRotation = heading.rotation;
+            var wrist = target.GetBoneTransform(left ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
+            var wristRotation = wrist.localRotation;
             for (int frame = 0; frame < 90; frame++)
             {
+                heading.rotation = headingRotation * Quaternion.Euler(0, frame * 4, 0);
+                wrist.localRotation = wristRotation * Quaternion.Euler(frame * 2, frame * 3, frame);
                 AccessTools.Method(typeof(VRMEquipmentSync), "LateUpdate").Invoke(sync, null);
-                var expected = mount.TransformPoint(originalPosition * factor) + mount.rotation * selected.Position.Value;
+                var expected = mount.TransformPoint(originalPosition * factor) + source.transform.rotation * selected.Position.Value;
                 if (Vector3.Distance(item.position, expected) > .00001f ||
                     Vector3.Distance(item.localScale, originalScale * factor) > .00001f ||
                     Quaternion.Angle(item.localRotation, originalRotation) > .02f)
                     throw new Exception("Item height/category/absolute transform failure: " + name);
             }
+            heading.rotation = headingRotation; wrist.localRotation = wristRotation;
             // Changes apply immediately and only once, then return to authored data.
             selected.Scale = .5f;
             AccessTools.Method(typeof(VRMEquipmentSync), "LateUpdate").Invoke(sync, null);

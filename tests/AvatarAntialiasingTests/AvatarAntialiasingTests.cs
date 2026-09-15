@@ -84,20 +84,43 @@ public class AvatarAntialiasingTests : BaseUnityPlugin
         AccessTools.Method(typeof(VRMAnimationSync), "LateUpdate").Invoke(sync, null);
         model.GetComponent<Animator>().enabled = false;
         foreach (var t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = 30;
+        string shaderOverride=Environment.GetEnvironmentVariable("VRM_AA_SHADER");
+        var converted=new HashSet<Material>();
         foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
         {
             renderer.updateWhenOffscreen = true;
             report.Add("MESH " + renderer.name + " quality=" + renderer.quality);
             foreach (var m in renderer.sharedMaterials)
             {
-                bool legacy = m.shader.name == "VRM/MToon" || m.shader.name == "ValheimVRM/MToonOptions";
-                if (Environment.GetEnvironmentVariable("VRM_AA_BLEND_ALL") == "1" &&
-                    (legacy || m.shader.name == "VRM10/MToon10" || m.shader.name == "ValheimVRM/MToon10Options"))
+                if(!string.IsNullOrEmpty(shaderOverride) && converted.Add(m))
                 {
-                    m.SetFloat(legacy ? "_BlendMode" : "_AlphaMode", 2);
-                    m.SetFloat(legacy ? "_ZWrite" : "_M_ZWrite", 0);
-                    m.SetFloat(legacy ? "_SrcBlend" : "_M_SrcBlend", (float)BlendMode.SrcAlpha);
-                    m.SetFloat(legacy ? "_DstBlend" : "_M_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+                    int mode=(int)m.GetFloat(m.HasProperty("_BlendMode")?"_BlendMode":"_AlphaMode");
+                    // Legacy MToon mode 3 is TransparentWithZWrite. The common
+                    // fixture uses regular Blend; never leave a transparent tag
+                    // on a keyword-opaque Standard/UniUnlit material.
+                    mode=Math.Min(mode,2);
+                    var replacement=Shader.Find(shaderOverride);
+                    if(replacement==null)throw new Exception("Fixture shader unavailable: "+shaderOverride);
+                    m.shader=replacement;
+                    m.shaderKeywords=new string[0];
+                    m.SetFloat(shaderOverride=="Standard"?"_Mode":"_BlendMode",mode);
+                    m.SetFloat("_SrcBlend",mode==2?(float)BlendMode.SrcAlpha:1);m.SetFloat("_DstBlend",mode==2?(float)BlendMode.OneMinusSrcAlpha:0);m.SetFloat("_ZWrite",mode==2?0:1);
+                    m.SetOverrideTag("RenderType",mode==0?"Opaque":mode==1?"TransparentCutout":"Transparent");
+                    m.DisableKeyword("_ALPHATEST_ON");m.DisableKeyword("_ALPHABLEND_ON");
+                    if(mode==1)m.EnableKeyword("_ALPHATEST_ON");if(mode==2)m.EnableKeyword("_ALPHABLEND_ON");
+                    if(shaderOverride=="UniGLTF/UniUnlit")m.EnableKeyword("_VERTEXCOL_MUL");
+                    var color=m.GetColor("_Color");color.r*=3;color.g*=3;color.b*=3;m.SetColor("_Color",color);
+                    m.renderQueue=mode==0?2000:mode==1?2450:3000;
+                }
+                bool legacy = m.shader.name == "VRM/MToon" || m.shader.name == "ValheimVRM/MToonOptions";
+                bool common = m.shader.name == "UniGLTF/UniUnlit" || m.shader.name == "Standard";
+                if (Environment.GetEnvironmentVariable("VRM_AA_BLEND_ALL") == "1" &&
+                    (legacy || common || m.shader.name == "VRM10/MToon10" || m.shader.name == "ValheimVRM/MToon10Options"))
+                {
+                    m.SetFloat(m.shader.name=="Standard"?"_Mode":legacy || common ? "_BlendMode" : "_AlphaMode", 2);
+                    m.SetFloat(legacy || common ? "_ZWrite" : "_M_ZWrite", 0);
+                    m.SetFloat(legacy || common ? "_SrcBlend" : "_M_SrcBlend", (float)BlendMode.SrcAlpha);
+                    m.SetFloat(legacy || common ? "_DstBlend" : "_M_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
                     m.DisableKeyword("_ALPHATEST_ON"); m.EnableKeyword("_ALPHABLEND_ON");
                     m.renderQueue = 2450;
                     // A fixture-only override, never written to the VRM. Include
@@ -105,7 +128,7 @@ public class AvatarAntialiasingTests : BaseUnityPlugin
                     if (Environment.GetEnvironmentVariable("VRM_AA_BLEND_PARTIAL") == "1")
                     { var color=m.GetColor("_Color"); color.a=.65f; m.SetColor("_Color",color); }
                 }
-                report.Add("MAT " + m.name + " queue=" + m.renderQueue + " alpha=" + m.GetFloat(legacy ? "_BlendMode" : "_AlphaMode") + " zwrite=" + m.GetFloat(legacy ? "_ZWrite" : "_M_ZWrite"));
+                report.Add("MAT " + m.name + " shader="+m.shader.name+" queue=" + m.renderQueue+" keywords="+string.Join(",",m.shaderKeywords));
             }
         }
         File.WriteAllLines(Path.Combine(output, "materials.txt"), report);
@@ -215,7 +238,8 @@ public class AvatarAntialiasingTests : BaseUnityPlugin
     {
         var materials=model.GetComponentsInChildren<Renderer>(true).SelectMany(r=>r.sharedMaterials).Distinct().Where(m=>
             (m.shader.name=="VRM/MToon" && m.GetFloat("_BlendMode")==0) ||
-            (m.shader.name=="VRM10/MToon10" && m.GetFloat("_AlphaMode")==0)).ToArray();
+            (m.shader.name=="VRM10/MToon10" && m.GetFloat("_AlphaMode")==0) ||
+            ((m.shader.name=="UniGLTF/UniUnlit" || m.shader.name=="Standard") && !m.IsKeywordEnabled("_ALPHABLEND_ON") && !m.IsKeywordEnabled("_ALPHATEST_ON") && !m.IsKeywordEnabled("_ALPHAPREMULTIPLY_ON"))).ToArray();
         if(materials.Length==0)return;
         var colors=materials.Select(m=>m.GetColor("_Color")).ToArray();
         bool oldAa=post.profile.antialiasing.enabled,oldBloom=post.profile.bloom.enabled,oldExclude=AvatarBloomController.Enabled;

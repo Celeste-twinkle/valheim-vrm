@@ -36,6 +36,7 @@ static class BackEquipmentProbe
         VrmManager.PlayerToName[player]=settings.Name; VrmManager.PlayerToVrmInstance[player]=target.gameObject;
         if(!ValheimVRM.Settings.ContainsSettings(settings.Name)) ValheimVRM.Settings.AddSettingsFromFile(settings.Name,false);
         int checks=0;
+        var heading=source.transform.parent; var headingRotation=heading.rotation;
         try
         {
             foreach(string itemName in new[]{"Hammer","Hoe","SwordIron","KnifeFlint","BowHuntsman","ShieldWood","AtgeirBronze","SledgeIron","StaffFireball"})
@@ -46,6 +47,7 @@ static class BackEquipmentProbe
                 sync.Setup(source,target,equipment,settings);
                 for(int cycle=0;cycle<3;cycle++)
                 {
+                    heading.rotation=headingRotation*Quaternion.Euler(0,cycle*73,0);
                     var held=(GameObject)handAttach.Invoke(equipment,new object[]{itemName.GetStableHashCode(),0,left?equipment.m_leftHand:equipment.m_rightHand,false,false,1});
                     var handField=AccessTools.Field(typeof(VisEquipment),left?"m_leftItemInstance":"m_rightItemInstance");
                     handField.SetValue(equipment,held);
@@ -68,7 +70,7 @@ static class BackEquipmentProbe
                             // Repeated equipment refresh used to overwrite authored
                             // back offsets/scale and increment knife/staff rotations.
                             postfix.Invoke(null,new object[]{equipment}); tick.Invoke(sync,null);
-                            var expected=mount.TransformPoint(position*factor)+mount.rotation*profile.Back.Position.Value;
+                            var expected=mount.TransformPoint(position*factor)+source.transform.rotation*profile.Back.Position.Value;
                             Check(Vector3.Distance(item.transform.position,expected)<.00002f &&
                                 Vector3.Distance(item.transform.localScale,scale*factor)<.00002f &&
                                 Quaternion.Angle(item.transform.localRotation,rotation)<.025f,
@@ -91,6 +93,7 @@ static class BackEquipmentProbe
         }
         finally
         {
+            heading.rotation=headingRotation;
             sync.ResetAttachments(); profile.Back.Scale=beforeScale; profile.Back.Position.Value=beforeOffset;
             VrmManager.PlayerToName.Remove(player); VrmManager.PlayerToVrmInstance.Remove(player); Object.Destroy(fixture);
         }

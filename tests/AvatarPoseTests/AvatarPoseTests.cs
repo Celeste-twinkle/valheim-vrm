@@ -78,6 +78,12 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
             yield return ValheimVRM.VRM.ImportVisualAsync(File.ReadAllBytes(path), path, 1, root => imported = root);
             if (imported == null) throw new Exception("Import failed: " + path);
             imported.SetActive(false);
+            if (Environment.GetEnvironmentVariable("VRM_EQUIPMENT_AXES") == "1")
+            {
+                report.Add("MODEL " + Path.GetFileName(path));
+                yield return ActionCalibrationProbe.RunEquipmentAxes(imported, source, report, output);
+                Object.Destroy(holder); Object.Destroy(imported); yield return null; continue;
+            }
             if (Environment.GetEnvironmentVariable("VRM_ACTION_CALIBRATION") == "1")
             {
                 report.Add("MODEL " + Path.GetFileName(path));

@@ -10,6 +10,27 @@ using Object = UnityEngine.Object;
 
 static class ActionCalibrationProbe
 {
+    public static IEnumerator RunEquipmentAxes(GameObject imported, Animator source, List<string> report, string output)
+    {
+        CheckPreferences(output);
+        foreach(float height in new[]{1.4f,2f,2.2f})
+        {
+            source.Rebind();source.Play("Base Layer.Movement",0,.5f);source.Update(0);
+            var model=Object.Instantiate(imported,source.transform.parent);
+            AvatarScale.ApplyHeight(model,height);
+            AccessTools.Method(typeof(ValheimVRM.VRM),"PrepareVrm10Clone").Invoke(null,new object[]{imported,model});
+            model.SetActive(true);foreach(var b in model.GetComponents<MonoBehaviour>())b.enabled=false;
+            var settings=new ValheimVRM.Settings.VrmSettingsContainer{Name="EquipmentAxesProbe"};
+            var sync=model.AddComponent<VRMAnimationSync>();sync.Setup(source,settings);sync.enabled=false;
+            var target=model.GetComponent<Animator>();
+            ItemCalibrationProbe.Run(source,target,settings);
+            BackEquipmentProbe.Run(source,target,settings,sync);
+            report.Add("equipment axes height="+height+": 4 held item types x 90 changing headings/wrist rotations; 9 back items x 3 draw/sheath cycles x 6 animations x 30 frames; scale/reset/no accumulation PASS");
+            File.WriteAllLines(Path.Combine(output,"results.txt"),report);
+            Object.Destroy(model);yield return null;
+        }
+        report.Add("AVATAR_EQUIPMENT_AXES_PASSED");
+    }
     static readonly System.Reflection.MethodInfo Tick = AccessTools.Method(typeof(VRMAnimationSync), "LateUpdate");
     public static IEnumerator Run(GameObject imported, Animator source, List<string> report, string output)
     {

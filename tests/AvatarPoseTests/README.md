@@ -1,5 +1,12 @@
 # Avatar pose engine regression
 
+`VRM_EQUIPMENT_AXES=1` selects the focused held/back-item regression. At 1.4,
+2.0 and 2.2 m it exercises four hand item types over 90 rotating-character/wrist
+samples, then nine actual back items over three headings/draw-sheath cycles and
+six stepped animations. It checks character-relative XYZ, automatic/user scale,
+non-accumulation and original-transform restoration. Run on VRM 0.x and 1.0
+fixtures. Completion includes `AVATAR_EQUIPMENT_AXES_PASSED` in `results.txt`.
+
 Build against the local game and the Release client DLL:
 
 ```powershell
@@ -22,3 +29,8 @@ Ground-sit support covers the legs and pelvis, not loose hair or hand contacts.
 
 The test reports `AVATAR_POSE_TESTS_PASSED` in the game log and exits. An
 `error.txt` means failure. Remove or disable the test DLL after the run.
+
+Set `VRM_EQUIPMENT_AXES=1` for focused character-axis regression at 1.4, 2 and
+2.2 m. Four held item types rotate the character and wrist over 90 updates each;
+nine back items cover three draw/sheath cycles, six animations and 30 frames.
+Checks include absolute offsets, height scaling, repeated application and reset.

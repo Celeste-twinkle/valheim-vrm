@@ -42,6 +42,7 @@ namespace ValheimVRM
 
         readonly List<Grip> grips = new List<Grip>(10);
         Animator target;
+        Transform characterFrame;
         VisEquipment equipment;
         Settings.VrmSettingsContainer settings;
         AvatarCalibrationOptions.Profile profile;
@@ -59,6 +60,9 @@ namespace ValheimVRM
             ResetAttachments();
             if (original == null || avatar == null || equipment == null) return;
             target = avatar;
+            // Match VRMAnimationSync's pose offsets, including VRM 0.x imports
+            // with an axis-correction rotation on their visual root.
+            characterFrame = original.transform;
             this.equipment = equipment;
             this.settings = settings ?? new Settings.VrmSettingsContainer();
             profile = avatar.GetComponent<AvatarCalibrationBinding>()?.Profile ?? AvatarCalibrationOptions.Current.Get(this.settings.Name);
@@ -188,7 +192,7 @@ namespace ValheimVRM
 
         void LateUpdate()
         {
-            if (target == null || !target.gameObject.activeInHierarchy) { ResetAttachments(); return; }
+            if (target == null || characterFrame == null || equipment == null || !target.gameObject.activeInHierarchy) { ResetAttachments(); return; }
             foreach (var grip in grips) grip.Apply();
             UpdateItem(ref leftItem, true);
             UpdateItem(ref rightItem, false);
@@ -205,7 +209,7 @@ namespace ValheimVRM
                 mount == equipment.m_backTwohandedMelee || mount == equipment.m_backBow ||
                 mount == equipment.m_backTool || mount == equipment.m_backAtgeir)) return;
             if (held == null) held = new HeldItem(instance.transform, mount, profile.Back);
-            held.Apply(heightScale, settings.EquipmentScale, Vector3.zero);
+            held.Apply(heightScale, settings.EquipmentScale, Vector3.zero, characterFrame.rotation);
         }
 
         void UpdateItem(ref HeldItem held, bool left)
@@ -223,7 +227,7 @@ namespace ValheimVRM
                 held = new HeldItem(instance.transform, mount,
                     data != null && IsTwoHanded(data.m_itemType) ? profile.TwoHanded : left ? profile.Left : profile.Right);
             }
-            held.Apply(heightScale, settings.EquipmentScale, left ? settings.LeftHandItemPos : settings.RightHandItemPos);
+            held.Apply(heightScale, settings.EquipmentScale, left ? settings.LeftHandItemPos : settings.RightHandItemPos, characterFrame.rotation);
         }
 
         public static bool IsTwoHanded(ItemDrop.ItemData.ItemType type) =>
@@ -241,14 +245,14 @@ namespace ValheimVRM
                 Item = item; Mount = mount; this.options = options;
                 position = item.localPosition; rotation = item.localRotation; scale = item.localScale;
             }
-            internal void Apply(float height, float legacyScale, Vector3 legacyPosition)
+            internal void Apply(float height, float legacyScale, Vector3 legacyPosition, Quaternion characterRotation)
             {
                 if (float.IsNaN(legacyScale) || float.IsInfinity(legacyScale) || legacyScale <= 0) legacyScale = 1;
                 float factor = height * options.Multiplier * legacyScale;
                 Item.localScale = scale * factor;
                 Item.localRotation = rotation;
-                Item.localPosition = position * factor + legacyPosition;
-                Item.position += Mount.rotation * options.Position.Value;
+                Item.localPosition = position * factor;
+                Item.position += characterRotation * (legacyPosition + options.Position.Value);
             }
             internal void Restore()
             {
@@ -265,7 +269,7 @@ namespace ValheimVRM
             leftBackItem = rightBackItem = null;
             foreach (var grip in grips) grip.Restore();
             grips.Clear();
-            target = null; equipment = null;
+            target = null; characterFrame = null; equipment = null;
         }
 
         void OnDisable() { ResetAttachments(); }

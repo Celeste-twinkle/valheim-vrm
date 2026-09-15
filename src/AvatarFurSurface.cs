@@ -47,6 +47,36 @@ namespace ValheimVRM
                 f.SetFloat("_GiEqualization", legacy ? 1 - s.GetFloat("_IndirectLightIntensity") : s.GetFloat("_GiEqualization"));
                 f.SetFloat("_FurBaseAlphaMode", AvatarRenderingTarget.AlphaMode(s));
                 f.SetFloat("_Cutoff", s.GetFloat("_Cutoff"));
+                f.SetTexture("_BumpMap", s.GetTexture("_BumpMap"));
+                f.SetFloat("_BumpScale", s.GetFloat("_BumpScale"));
+                Keyword(f, "_NORMALMAP", s.IsKeywordEnabled("_NORMALMAP"));
+                Copy(s, f, "_EmissionColor");
+                f.SetTexture("_EmissionMap", s.GetTexture("_EmissionMap"));
+                Keyword(f, "_MTOON_EMISSIVEMAP", legacy || s.IsKeywordEnabled("_MTOON_EMISSIVEMAP"));
+                // Legacy MToon declares rim color as HDR (linear); MToon10's
+                // color property is sRGB. Match the value sent to the GPU.
+                var rim = s.GetColor("_RimColor");
+                f.SetColor("_RimColor", legacy && QualitySettings.activeColorSpace == ColorSpace.Linear ? rim.gamma : rim);
+                f.SetFloat("_RimFresnelPower", s.GetFloat("_RimFresnelPower"));
+                f.SetFloat("_RimLift", s.GetFloat("_RimLift"));
+                f.SetFloat("_RimLightingMix", s.GetFloat("_RimLightingMix"));
+                f.SetTexture("_RimTex", s.GetTexture(legacy ? "_RimTexture" : "_RimTex"));
+                f.SetTexture("_MatcapTex", s.GetTexture(legacy ? "_SphereAdd" : "_MatcapTex"));
+                Keyword(f, "_MTOON_RIMMAP", legacy || s.IsKeywordEnabled("_MTOON_RIMMAP"));
+                if (legacy)
+                {
+                    f.SetFloat("_ReceiveShadowRate", s.GetFloat("_ReceiveShadowRate"));
+                    f.SetTexture("_ReceiveShadowTexture", s.GetTexture("_ReceiveShadowTexture"));
+                    f.SetFloat("_ShadingGradeRate", s.GetFloat("_ShadingGradeRate"));
+                    f.SetTexture("_ShadingGradeTexture", s.GetTexture("_ShadingGradeTexture"));
+                    f.SetFloat("_LightColorAttenuation", s.GetFloat("_LightColorAttenuation"));
+                }
+                else
+                {
+                    Copy(s, f, "_MatcapColor");
+                    f.SetTexture("_ShadingShiftTex", s.GetTexture("_ShadingShiftTex"));
+                    f.SetFloat("_ShadingShiftTexScale", s.GetFloat("_ShadingShiftTexScale"));
+                }
                 AvatarRenderingTarget.CopyUvAnimation(s, f);
                 f.SetFloat("_AvatarSceneLighting", AvatarRendering.Current.SceneLighting ? 1 : 0);
                 f.SetFloat("_AvatarReceiveShadows", AvatarRendering.Current.ReceiveShadows ? 1 : 0);
@@ -55,6 +85,8 @@ namespace ValheimVRM
             }
         }
         static void Copy(Material source, Material target, string key) { if (source.HasProperty(key)) target.SetColor(key, source.GetColor(key)); }
+        static void Keyword(Material material, string key, bool enabled)
+        { if (enabled) material.EnableKeyword(key); else material.DisableKeyword(key); }
         internal static bool IsFur(Material material) => material != null && material.shader != null && material.shader.name == "ValheimVRM/Fur";
     }
 }

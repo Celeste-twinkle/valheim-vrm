@@ -5,11 +5,13 @@
 #define _ALPHABLEND_ON 1
 #include "MToon10/vrmc_materials_mtoon_forward_vertex.hlsl"
 #include "MToon10/vrmc_materials_mtoon_lighting_mtoon.hlsl"
+#include "MToon10/vrmc_materials_mtoon_geometry_normal.hlsl"
 
 sampler2D _FurLengthMask, _FurNoise, _FurMask;
 float4 _FurNoise_ST, _FurDirection;
 float _FurLength, _FurDensity, _FurRandomness, _FurRootOffset;
 float _FurBaseAlphaMode, _AvatarReceiveShadows, _LegacyMToon;
+#include "AvatarFurLighting.cginc"
 
 struct FurInput
 {
@@ -73,6 +75,9 @@ void FurGeometry(triangle FurInput input[3], uint triangleId : SV_PrimitiveID, i
                 Attributes vertex = (Attributes)0;
                 vertex.vertex = float4(p + delta * tip, 1);
                 vertex.normalOS = n;
+                #if defined(_NORMALMAP)
+                vertex.tangentOS = float4(t, sign(tangent.w));
+                #endif
                 vertex.texcoord0 = uv;
                 Varyings output = MToonVertex(vertex);
                 output.fur = float3(tip, densityFade, distanceFade);
@@ -102,14 +107,22 @@ half4 FurFragment(Varyings input) : SV_Target
     #if defined(FUR_BLOOM_MASK)
     return alpha;
     #else
-    half3 normal = normalize(input.normalWS); // Both fin faces share the cloth normal.
+    // Fin orientation is unrelated to the cloth's tangent frame. Both fin faces
+    // inherit the underlying cloth normal, including its authored normal map.
+    half3 normal = normalize(input.normalWS);
+    #if defined(_NORMALMAP)
+    half3 normalTS = normalize(MToon_UnpackNormalScale(MTOON_SAMPLE_TEXTURE2D(_BumpMap, uv), _BumpScale));
+    normal = normalize(mul(normalTS, MToon_GetTangentToWorld(normal, input.tangentWS)));
+    #endif
+    if (_LegacyMToon > .5)
+        normal *= step(0, dot(normalize(input.viewDirWS), normal)) * 2 - 1;
     UnityLighting light = GetUnityLighting(input, normal);
     MToonInput surface;
     surface.uv = uv; surface.normalWS = normal;
     surface.viewDirWS = normalize(input.viewDirWS);
     surface.litColor = (MTOON_SAMPLE_TEXTURE2D(_MainTex, uv) * _Color).rgb;
     surface.alpha = alpha;
-    half4 color = GetMToonLighting(light, surface);
+    half4 color = _LegacyMToon > .5 ? GetFurLegacyLighting(light, surface) : GetMToonLighting(light, surface);
     #if defined(UNITY_PASS_FORWARDADD)
     color.rgb *= alpha;
     UNITY_APPLY_FOG_COLOR(input.fogCoord, color, half4(0, 0, 0, 0));

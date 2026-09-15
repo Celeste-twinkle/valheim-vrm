@@ -1,3 +1,12 @@
+## 1.8.18 — Shared material depth fixes, fur lighting and item controls
+
+- Extend the shared depth/normal, alpha-aware bloom and transparent queue repairs to UniGLTF/UniUnlit, Standard/PBR and common Unlit surfaces. Prevent missing avatar depth from exposing background cloud/water effects over solid surfaces, while retaining real transparency, vertex alpha, Opaque alpha semantics and native PBR lighting. Preserve source shaders; custom shader opacity/displacement still needs dedicated support.
+- Make optional fur inherit the source cloth's normal map, tangent frame, shading maps, emission, MatCap and rim parameters. Use native VRM 0.x MToon lighting for legacy materials and MToon 1.0 for newer materials. Existing fur VRMs need no re-export; the extension remains an optional MToon-based effect, not a complete lilToon port.
+- Apply left/right/two-handed and back-item XYZ offsets in character axes: +X right, +Y up, +Z forward. Preserve automatic palm calibration, height/2m scaling, authored attachment transforms and absolute, non-accumulating updates. Synchronization remains per player; viewers need 1.8.18+ to interpret the changed axes consistently. Existing nonzero offsets may need adjustment or reset.
+- Give the F8 menu an opaque dark background and directional labels for XYZ controls.
+
+Validation: `docs/release-1.8.18-validation.md`.
+
 ## 1.8.17 — Optional GPU fur and authoring specification
 
 - Read optional `materials[i].extras.ValheimVRM_fur` in VRM 0.x and VRM 1.0. Keep standard MToon fabric as the fallback; embed only parameters and PNG masks in the model.

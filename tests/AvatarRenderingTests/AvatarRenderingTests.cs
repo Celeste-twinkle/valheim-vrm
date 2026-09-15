@@ -33,9 +33,12 @@ public sealed class AvatarRenderingTests : BaseUnityPlugin
             yield return null;
         }
         yield return null;
-        string shaderName=Environment.GetEnvironmentVariable("VRM_RENDER_TEST_LEGACY")=="1" ? "VRM/MToon" : "VRM10/MToon10";
-        var material = new Material(VRMShaders.Shaders[shaderName]);
-        var stack = new Stack<IEnumerator>(); stack.Push(ShadowProbe.Run(material, output));
+        var stack = new Stack<IEnumerator>();
+        if(Environment.GetEnvironmentVariable("VRM_RENDER_TEST_UNLIT")=="1") stack.Push(UnlitProbe.Run(output));
+        else {
+            string shaderName=Environment.GetEnvironmentVariable("VRM_RENDER_TEST_LEGACY")=="1" ? "VRM/MToon" : "VRM10/MToon10";
+            stack.Push(ShadowProbe.Run(new Material(VRMShaders.Shaders[shaderName]), output));
+        }
         while (stack.Count > 0)
         {
             bool more; object value = null;
@@ -44,6 +47,7 @@ public sealed class AvatarRenderingTests : BaseUnityPlugin
             if (!more) { stack.Pop(); continue; }
             if (value is IEnumerator nested) stack.Push(nested); else yield return value;
         }
+        File.WriteAllText(Path.Combine(output, "completed.txt"), "AVATAR_RENDER_TESTS_PASSED");
         Logger.LogInfo("AVATAR_RENDER_TESTS_PASSED"); Application.Quit(0);
     }
 }

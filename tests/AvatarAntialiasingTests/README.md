@@ -39,3 +39,8 @@ generation. The source VRM is never rewritten.
 The original-material fixture also compares alpha 1/0.5 on Opaque surfaces with
 avatar bloom included and excluded; final RGB must remain identical. Set
 `VRM_AA_OPAQUE_ONLY=1` to run only this focused check.
+
+Set `VRM_AA_SHADER=UniGLTF/UniUnlit` or `Standard` to convert only the in-memory
+fixture to a common shader, mapping legacy TransparentWithZWrite to Blend.
+Run original/mixed and `VRM_AA_BLEND_ALL=1 VRM_AA_BLEND_PARTIAL=1` temporal
+cases. RGB is amplified to exercise HDR bloom; no source model is changed.

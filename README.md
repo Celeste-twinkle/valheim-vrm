@@ -4,7 +4,7 @@
 
 Replace Valheim characters with your own humanoid VRM avatars and switch them with **F8**. Use it locally or install the separate server addon so players can see one another's selected avatars.
 
-**Current release: 1.8.17** · Tested with Valheim **1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.3**, D3D11.
+**Current release: 1.8.18** · Tested with Valheim **1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.3**, D3D11.
 
 [Download Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [Release source](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [Changelog](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -30,10 +30,10 @@ Avatar authors can add optional GPU fur using the [fur extension integration spe
 
 | Use case | Install |
 | --- | --- |
-| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-1.8.17.zip` + your own `.vrm` files. |
-| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-1.8.17.zip`; no avatars or client dependencies needed. |
+| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-1.8.18.zip` + your own `.vrm` files. |
+| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-1.8.18.zip`; no avatars or client dependencies needed. |
 | Player hosting through **Start server**, with avatar synchronization | Both client and server packages on the host; other players use the client package. |
-| Source development | `ValheimVRM-1.8.17-source.zip` contains source, not an installable plugin. |
+| Source development | `ValheimVRM-1.8.18-source.zip` contains source, not an installable plugin. |
 
 Neither public runtime ZIP includes BepInEx. See the [installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) for the loader and dependency provenance.
 
@@ -46,7 +46,7 @@ Neither public runtime ZIP includes BepInEx. See the [installation guide](https:
 
 Install the loader once per game/server directory. The complete client ZIP already provides the matching UniVRM runtime libraries and shaders; the server addon does not need those client dependencies.
 
-The separately shared **local Windows x64 bundles** `09_ValheimVRM_1.8.17_完整插件.zip` and `10_ValheimVRM_Server_1.8.17.zip` both include BepInEx **5.4.23.3**, so a fresh installation needs no separate loader download. Stop the game/server before installing. On a server that already has compatible BepInEx, copy only `BepInEx/plugins/ValheimVRM.Server` from the local server ZIP and preserve the existing loader and configuration.
+The separately shared **local Windows x64 bundles** `09_ValheimVRM_1.8.18_完整插件.zip` and `10_ValheimVRM_Server_1.8.18.zip` both include BepInEx **5.4.23.3**, so a fresh installation needs no separate loader download. Stop the game/server before installing. On a server that already has compatible BepInEx, copy only `BepInEx/plugins/ValheimVRM.Server` from the local server ZIP and preserve the existing loader and configuration.
 
 ### Player setup
 
@@ -54,7 +54,7 @@ The separately shared **local Windows x64 bundles** `09_ValheimVRM_1.8.17_完整
 2. Extract the **complete client ZIP** beside `valheim.exe`, merging `BepInEx` and `valheim_Data`. Copying only `ValheimVRM.dll` is insufficient.
 3. Create `ValheimVRM` in the game root and add `.vrm` files directly inside. One model is enough.
 4. Start the game, enter a world, close chat/inventory and other menus, then press **F8** and select a model.
-5. Confirm **ValheimVRM 1.8.17** loads in `BepInEx/LogOutput.log`.
+5. Confirm **ValheimVRM 1.8.18** loads in `BepInEx/LogOutput.log`.
 
 ```text
 Valheim/
@@ -135,7 +135,9 @@ Loading or changing height measures fixed reference poses on an isolated native 
 
 **Back equipment (optional adjustment)** is collapsed by default under **Held item calibration**. It adds an independent **25–200% uniform scale** and **−50 to +50 cm X/Y/Z offsets**, default 100%/0. Normal drawing/sheathing needs no manual adjustment; these controls accommodate different back proportions or thick clothing. Sheathed items retain the game's original attachment transforms and item offsets, scale with height, and apply absolute values without repeated rotation. Back controls share the owning player's sequenced calibration; sender and viewer need 1.8.15+, while a 1.8.14 server can continue relaying them.
 
-F8 → **Held item calibration** has separate **left hand, right hand and two-handed (including bows)** foldouts. Palm bones determine the initial grip. Authored item size is multiplied by **avatar height / 2 m**, then by the selected group's **25–200% uniform scale**. Each group also has **−50 to +50 cm XYZ offsets** in grip axes. Native item types select the two-handed group exclusively; left/right multipliers are not applied again. Authored item transforms are retained and restored on detach.
+F8 → **Held item calibration** has separate **left hand, right hand and two-handed (including bows)** foldouts. Palm bones determine the initial grip. Authored item size is multiplied by **avatar height / 2 m**, then by the selected group's **25–200% uniform scale**. Each group also has **−50 to +50 cm XYZ offsets** in character axes: **+X right, +Y up, +Z forward**, matching animation-position controls. Held and back item offsets turn with the character, independently of wrist, weapon and socket rotations. Each update starts from the retained original transform; offsets never accumulate. Native item types select the two-handed group exclusively; left/right multipliers are not applied again. Authored item transforms are retained and restored on detach.
+
+Since **1.8.18**, the F8 menu uses an opaque dark background. Existing nonzero item offsets now use the character coordinate frame and may need readjustment; the slider's reset button restores zero. Values still synchronize per player. Participating viewers need **1.8.18+** to interpret their axes identically; the server relay protocol is unchanged.
 
 Defaults are zero translation and 100% scale. Changes preview immediately, save on release/menu close and have reset buttons. Preferences are stored per avatar in `BepInEx/config/ValheimVRM/avatar_calibration.json`, alongside the existing standing/sitting adjustments. Server, sender and viewer on 1.8.15+ synchronize these controls, standing/sitting offsets and physics weight together with model and height. Changes are shared after dragging ends; unchanged values are not resent. Remote settings belong only to that player's instance, even when several players use the same model. They never overwrite the viewer's saved preferences. Manual changes update the existing instance; changing model/height reruns initial calibration from the original reference without accumulating corrections. Both VRM generations share the same implementation. Fixed calibration can leave small intersections/gaps for different body proportions; it does not implement continuous hand/foot IK.
 
@@ -147,7 +149,7 @@ This controls exported hair, clothing and body spring motion in VRM 0.x and VRM 
 
 ### Rendering controls
 
-These three controls apply to **VRM 0.x and VRM 1.0 MToon materials**, including avatars and death ragdolls rendered on this client:
+Lighting/shadow controls apply to **VRM 0.x and VRM 1.0 MToon materials**; bloom exclusion also covers the common surfaces below, including avatars and death ragdolls rendered on this client:
 
 | Control | Default | Effect |
 | --- | --- | --- |
@@ -157,7 +159,9 @@ These three controls apply to **VRM 0.x and VRM 1.0 MToon materials**, including
 
 Disabling scene lighting temporarily disables the shadow control while remembering its state. Restoring them restores the original shader and imported brightness baseline. Controls do not rewrite VRMs or change global graphics settings.
 
-Since 1.8.13, legacy MToon uses the same controls and no longer multiplies material colors by global sun/ambient light a second time. Standard, non-MToon and third-party shaders retain their own rendering behavior. Bloom from other objects and screen-space effects may still overlap avatars. Semitransparent clothing can also have transparency-sorting issues.
+Since 1.8.13, legacy MToon uses the same controls and no longer multiplies material colors by global sun/ambient light a second time. Standard, non-MToon and third-party shaders retain their native lighting; shared post-processing support is described below. Bloom from other objects may still spread near avatars, and semitransparent clothing still depends on native transparency sorting.
+
+**1.8.18 extends the shared post-processing fixes beyond MToon.** `UniGLTF/UniUnlit`, Standard/PBR and ordinary Unlit avatar materials exposing `_MainTex` or `_BaseMap` also participate in surface depth, transparent queue correction and antialiasing/bloom coverage. Missing surface depth can let background cloud/water depth effects cover a solid avatar. The bridge follows the actual Opaque, Cutout or Blend mode, includes enabled UniUnlit vertex alpha, and ignores stored alpha in Opaque mode. Existing PBR deferred lighting buffers are preserved. Original shaders and lighting remain intact; scene-lighting/shadow toggles and MToon brightness limits remain MToon-specific, while bloom exclusion covers these common surfaces. Arbitrary custom displacement, nonstandard opacity calculations and other rendering pipelines need dedicated adapters. Genuine partial transparency still composes with the background in the game's native order; this cannot hide clouds or water that should remain visible through it.
 
 **1.8.16 fixes SSAO depth and composition for transparent materials.** Some exported blended materials use an opaque render queue, causing background AO to darken the body or transparent clothing. The mod repairs such invalid queues so background SSAO finishes before transparent composition. Valid queues, alpha, textures, blending, original depth-write settings and model files are preserved. Surface depth/normals also follow the mode: Opaque ignores alpha, Cutout uses its cutoff, and Blend writes solid surface data only where final sampled alpha is nearly one. Genuine partial transparency and holes still reveal the normally AO-shaded background. Both VRM generations share this handling. The observing player must update the complete client package; a server-only update cannot fix their rendering. Intersecting multilayer transparent meshes still depend on the game's native sorting; this does not implement order-independent transparency.
 
@@ -218,7 +222,7 @@ to either MToon generation; existing model settings can keep `ModelBrightness=1`
 
 ### Server setup
 
-Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-1.8.17.zip` into its root and start it normally:
+Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-1.8.18.zip` into its root and start it normally:
 
 ```text
 Dedicated server/
@@ -229,7 +233,7 @@ Dedicated server/
 
 **Neither `ValheimVRM.Server` directory needs client avatar files.** The server does not import models and needs no client UniVRM DLLs or shaders. Its own `ValheimVRM` folder can be absent.
 
-Participating players install the complete client and the matching `.vrm` files they want to display. Join a world, enable sync in F8 and confirm **Server sync connected**. Use **1.8.17** on the server and participating clients for consistent current behavior.
+Participating players install the complete client and the matching `.vrm` files they want to display. Join a world, enable sync in F8 and confirm **Server sync connected**. Use **1.8.18** on the server and participating clients for consistent current behavior.
 
 ### Installation combinations
 
@@ -268,8 +272,8 @@ Keep the old whole-file sharing option `EnableLegacyVrmSharing=false` in `global
 | Friends cannot see my switch | Check the server addon, both clients' F8 sync status and the receiver's matching model name/content. The server does not download models to players. |
 | Version-incompatible login dialog | Compare client/server game versions and inspect both connection logs. VRM does not reject clients missing its addon. |
 | Excessive motion / clothes clip through the body | Reduce physics weight, then inspect exported skinning, blend shapes and colliders if necessary. |
-| Leaf-like dark patches remain after disabling shadows | Shadow maps and screen-space post-processing differ. This build supplies depth/normals for opaque/cutout MToon surfaces. Check complete dependencies and include material types/rendering options in reports. |
-| Increasing lag or GPU allocation failures after leaving a world | Install complete **1.8.17**, remove duplicate plugin copies and restart. This version fixes the duplicate-patch leak on menu reentry. |
+| Leaf-like dark patches remain after disabling shadows | Shadow maps and screen-space post-processing differ. This build supplies missing depth/normals for MToon, UniUnlit and other supported surfaces. Check complete dependencies and include material types/rendering options in reports. |
+| Increasing lag or GPU allocation failures after leaving a world | Install complete **1.8.18**, remove duplicate plugin copies and restart. This version fixes the duplicate-patch leak on menu reentry. |
 | Memory does not drop when an avatar leaves the camera view | Off-camera active players still need their assets. Eviction begins after the last instance is destroyed; see below. |
 
 For reports, include game/mod versions, reproduction steps and relevant log excerpts:
@@ -302,7 +306,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Outputs are `release/ValheimVRM-1.8.17.zip` and `release/ValheimVRM-Server-1.8.17.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
+Outputs are `release/ValheimVRM-1.8.18.zip` and `release/ValheimVRM-Server-1.8.18.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
 
 [Shader rebuilding](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [Dependency sources/licenses](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [Project license](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [Issues](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 

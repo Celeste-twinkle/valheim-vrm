@@ -74,6 +74,11 @@ Shader "ValheimVRM/Fur"
         _FurBaseAlphaMode ("Source alpha mode", Float) = 0
         _AvatarReceiveShadows ("Receive shadows", Float) = 1
         _LegacyMToon ("Legacy UV animation", Float) = 0
+        _ReceiveShadowRate ("Legacy shadow rate", Float) = 1
+        _ReceiveShadowTexture ("Legacy shadow texture", 2D) = "white" {}
+        _ShadingGradeRate ("Legacy shading grade", Float) = 1
+        _ShadingGradeTexture ("Legacy shading texture", 2D) = "white" {}
+        _LightColorAttenuation ("Legacy light desaturation", Float) = 0
     }
     SubShader
     {
@@ -93,6 +98,9 @@ Shader "ValheimVRM/Fur"
             #pragma geometry FurGeometry
             #pragma fragment FurFragment
             #pragma multi_compile __ _MTOON_PARAMETERMAP
+            #pragma multi_compile __ _NORMALMAP
+            #pragma multi_compile __ _MTOON_EMISSIVEMAP
+            #pragma multi_compile __ _MTOON_RIMMAP
             #pragma multi_compile_fwdbase nolightmap nodynlightmap nodirlightmap novertexlight
             #pragma multi_compile_fog
             #pragma multi_compile __ AVATAR_FUR_SHADOWS
@@ -114,6 +122,9 @@ Shader "ValheimVRM/Fur"
             #pragma geometry FurGeometry
             #pragma fragment FurFragment
             #pragma multi_compile __ _MTOON_PARAMETERMAP
+            #pragma multi_compile __ _NORMALMAP
+            #pragma multi_compile __ _MTOON_EMISSIVEMAP
+            #pragma multi_compile __ _MTOON_RIMMAP
             #pragma multi_compile_fwdadd_fullshadows nolightmap nodynlightmap nodirlightmap novertexlight
             #pragma multi_compile_fog
             #pragma multi_compile __ AVATAR_FUR_SHADOWS

@@ -76,8 +76,8 @@ namespace ValheimVRM
                 DrawEquipment("right", Text("Right hand", "右手道具"), profile.Right);
                 DrawEquipment("two", Text("Two-handed items (including bows)", "双手道具（含弓）"), profile.TwoHanded);
                 DrawEquipment("back", Text("Back equipment (optional adjustment)", "背负装备（可选微调）"), profile.Back);
-                GUILayout.Label(Text("Item offsets use grip axes: X right, Y up, Z forward. A two-handed item uses only its two-handed settings.",
-                    "道具偏移使用握点坐标：X 右、Y 上、Z 前。双手道具仅应用双手组设置。"),
+                GUILayout.Label(Text("Held/back offsets use character axes: +X right, +Y up, +Z forward, independent of wrist/weapon rotation. Two-handed items use only their own group.",
+                    "手持与背负偏移均使用角色坐标：+X 向右、+Y 向上、+Z 向前，不随手腕或武器转动。双手道具仅应用双手组设置。"),
                     new GUIStyle(GUI.skin.label) { wordWrap = true });
             }
             GUILayout.Label(Text("Saved per avatar locally. Server calibration sync shares your controls with other players after release.",
@@ -102,8 +102,8 @@ namespace ValheimVRM
         }
         Vector3 PositionSliders(Vector3 value)
         {
-            return new Vector3(HeightSlider(Text("X offset", "X 轴偏移"), value.x),
-                HeightSlider(Text("Y offset", "Y 轴偏移"), value.y), HeightSlider(Text("Z offset", "Z 轴偏移"), value.z));
+            return new Vector3(HeightSlider(Text("X · left / right", "X · 左 / 右"), value.x),
+                HeightSlider(Text("Y · down / up", "Y · 下 / 上"), value.y), HeightSlider(Text("Z · back / forward", "Z · 后 / 前"), value.z));
         }
         void DrawAnimationOffset(AvatarCalibrationOptions.Profile profile, string key)
         {

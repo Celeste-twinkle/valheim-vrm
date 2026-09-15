@@ -13,6 +13,7 @@ Shader "Hidden/ValheimVRM/AvatarBloom"
         _UvAnimScrollYSpeed ("UV scroll Y", Float) = 0
         _UvAnimRotationSpeed ("UV rotation", Float) = 0
         _LegacyMToon ("Legacy UV mask channel", Float) = 0
+        _VertexColorAlpha ("Multiply vertex alpha", Float) = 0
     }
     SubShader
     {
@@ -32,19 +33,20 @@ Shader "Hidden/ValheimVRM/AvatarBloom"
             #include "../AvatarRendering/AvatarUv.cginc"
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            float _Opacity, _BloomCutoff, _Transparent;
-            struct Input { float4 vertex : POSITION; float2 uv : TEXCOORD0; };
-            struct Output { float4 position : SV_POSITION; float2 uv : TEXCOORD0; };
+            float _Opacity, _BloomCutoff, _Transparent, _VertexColorAlpha;
+            struct Input { float4 vertex : POSITION; float2 uv : TEXCOORD0; float4 color : COLOR; };
+            struct Output { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float vertexAlpha : TEXCOORD1; };
             Output vert(Input input)
             {
                 Output output;
                 output.position = UnityObjectToClipPos(input.vertex);
                 output.uv = TRANSFORM_TEX(input.uv, _MainTex);
+                output.vertexAlpha = lerp(1, input.color.a, _VertexColorAlpha);
                 return output;
             }
             float4 frag(Output input) : SV_Target
             {
-                float alpha = tex2D(_MainTex, AvatarUv(input.uv)).a * _Opacity;
+                float alpha = tex2D(_MainTex, AvatarUv(input.uv)).a * _Opacity * input.vertexAlpha;
                 clip(alpha - _BloomCutoff);
                 float coverage = lerp(1, saturate(alpha), _Transparent);
                 return float4(coverage, 0, 0, coverage);

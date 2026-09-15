@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net471</TargetFramework>
-    <Version>1.8.17</Version>
+    <Version>1.8.18</Version>
     <AssemblyName>ValheimVRM.Server</AssemblyName>
   </PropertyGroup>
   <ItemGroup>

@@ -13,6 +13,7 @@ Shader "Hidden/ValheimVRM/AvatarDepth"
         _UvAnimScrollYSpeed ("UV scroll Y", Float) = 0
         _UvAnimRotationSpeed ("UV rotation", Float) = 0
         _LegacyMToon ("Legacy UV mask channel", Float) = 0
+        _VertexColorAlpha ("Multiply vertex alpha", Float) = 0
     }
     SubShader
     {
@@ -34,14 +35,15 @@ Shader "Hidden/ValheimVRM/AvatarDepth"
             #include "./AvatarUv.cginc"
             sampler2D _MainTex, _BumpMap;
             float4 _MainTex_ST, _Color;
-            float _Cutoff, _BumpScale;
-            struct Input { float4 vertex : POSITION; float3 normal : NORMAL; float4 tangent : TANGENT; float2 uv : TEXCOORD0; };
-            struct Varyings { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 normal : TEXCOORD1; float3 tangent : TEXCOORD2; float3 bitangent : TEXCOORD3; };
+            float _Cutoff, _BumpScale, _VertexColorAlpha;
+            struct Input { float4 vertex : POSITION; float3 normal : NORMAL; float4 tangent : TANGENT; float2 uv : TEXCOORD0; float4 color : COLOR; };
+            struct Varyings { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 normal : TEXCOORD1; float3 tangent : TEXCOORD2; float3 bitangent : TEXCOORD3; float vertexAlpha : TEXCOORD4; };
             Varyings vert(Input input)
             {
                 Varyings output;
                 output.position = UnityObjectToClipPos(input.vertex);
                 output.uv = TRANSFORM_TEX(input.uv, _MainTex);
+                output.vertexAlpha = lerp(1, input.color.a, _VertexColorAlpha);
                 output.normal = UnityObjectToWorldNormal(input.normal);
                 output.tangent = UnityObjectToWorldDir(input.tangent.xyz);
                 output.bitangent = cross(output.normal, output.tangent) * input.tangent.w * unity_WorldTransformParams.w;
@@ -52,7 +54,7 @@ Shader "Hidden/ValheimVRM/AvatarDepth"
             {
                 // Match MToon's animated UV coverage, including cutout hair.
                 float2 uv = AvatarUv(input.uv);
-                clip(tex2D(_MainTex, uv).a * _Color.a - _Cutoff);
+                clip(tex2D(_MainTex, uv).a * _Color.a * input.vertexAlpha - _Cutoff);
                 float3 normal = normalize(input.normal);
                 #if defined(_NORMALMAP)
                 float3 mapped = UnpackScaleNormal(tex2D(_BumpMap, uv), _BumpScale);

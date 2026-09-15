@@ -8,6 +8,7 @@
     <Reference Include="assembly_utils" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_utils.dll" />
     <Reference Include="UnityEngine" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.AssetBundleModule.dll" />
     <Reference Include="UnityEngine.PhysicsModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.PhysicsModule.dll" />
     <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.ImageConversionModule.dll" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
