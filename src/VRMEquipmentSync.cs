@@ -45,12 +45,14 @@ namespace ValheimVRM
         VisEquipment equipment;
         Settings.VrmSettingsContainer settings;
         AvatarCalibrationOptions.Profile profile;
-        HeldItem leftItem, rightItem;
+        HeldItem leftItem, rightItem, leftBackItem, rightBackItem;
         float heightScale = 1;
         static readonly FieldInfo LeftInstance = AccessTools.Field(typeof(VisEquipment), "m_leftItemInstance");
         static readonly FieldInfo RightInstance = AccessTools.Field(typeof(VisEquipment), "m_rightItemInstance");
         static readonly FieldInfo LeftHash = AccessTools.Field(typeof(VisEquipment), "m_leftItem");
         static readonly FieldInfo RightHash = AccessTools.Field(typeof(VisEquipment), "m_rightItem");
+        static readonly FieldInfo LeftBackInstance = AccessTools.Field(typeof(VisEquipment), "m_leftBackItemInstance");
+        static readonly FieldInfo RightBackInstance = AccessTools.Field(typeof(VisEquipment), "m_rightBackItemInstance");
 
         public void Setup(Animator original, Animator avatar, VisEquipment equipment, Settings.VrmSettingsContainer settings = null)
         {
@@ -190,6 +192,20 @@ namespace ValheimVRM
             foreach (var grip in grips) grip.Apply();
             UpdateItem(ref leftItem, true);
             UpdateItem(ref rightItem, false);
+            UpdateBackItem(ref leftBackItem, LeftBackInstance.GetValue(equipment) as GameObject);
+            UpdateBackItem(ref rightBackItem, RightBackInstance.GetValue(equipment) as GameObject);
+        }
+
+        void UpdateBackItem(ref HeldItem held, GameObject instance)
+        {
+            var mount = instance != null ? instance.transform.parent : null;
+            if (held != null && (instance == null || held.Item != instance.transform || held.Mount != mount))
+            { held.Restore(); held = null; }
+            if (mount == null || !(mount == equipment.m_backShield || mount == equipment.m_backMelee ||
+                mount == equipment.m_backTwohandedMelee || mount == equipment.m_backBow ||
+                mount == equipment.m_backTool || mount == equipment.m_backAtgeir)) return;
+            if (held == null) held = new HeldItem(instance.transform, mount, profile.Back);
+            held.Apply(heightScale, settings.EquipmentScale, Vector3.zero);
         }
 
         void UpdateItem(ref HeldItem held, bool left)
@@ -244,7 +260,9 @@ namespace ValheimVRM
         public void ResetAttachments()
         {
             leftItem?.Restore(); rightItem?.Restore();
+            leftBackItem?.Restore(); rightBackItem?.Restore();
             leftItem = rightItem = null;
+            leftBackItem = rightBackItem = null;
             foreach (var grip in grips) grip.Restore();
             grips.Clear();
             target = null; equipment = null;

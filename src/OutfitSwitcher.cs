@@ -71,7 +71,7 @@ namespace ValheimVRM
         {
             var player = Player.m_localPlayer;
             if (IsBusy || player == null || player.IsDead() || player.InIntro()) return false;
-            if (!Catalog.TryGetPath(name, out _)) return false;
+            if (name != AvatarCatalog.OriginalModel && !Catalog.TryGetPath(name, out _)) return false;
             if (VrmManager.LoadingPlayers.Contains(player))
             {
                 LastError = Text("Please wait for the current avatar to load.", "请等待当前模型载入完成。");
@@ -79,7 +79,7 @@ namespace ValheimVRM
             }
             IsBusy = true;
             LastError = "";
-            loadingName = name;
+            loadingName = name == AvatarCatalog.OriginalModel ? Text("Original character", "原始角色模型") : name;
             StartCoroutine(RunSwitch(Switch(player, name)));
             return true;
         }
@@ -140,6 +140,14 @@ namespace ValheimVRM
             Func<bool> valid = () => player != null && !player.IsDead() &&
                 (localSelection ? player == Player.m_localPlayer : player != Player.m_localPlayer && stillCurrent != null && stillCurrent());
             if (!valid()) yield break;
+            if (localSelection && name == AvatarCatalog.OriginalModel)
+            {
+                // Save first: an IO failure must leave the current appearance intact.
+                Catalog.Select(player.GetPlayerName(), AvatarCatalog.OriginalModel);
+                pendingModelHeight = null; pendingHeightPlayer = null;
+                RemoteAvatarBaseline.Restore(player);
+                yield break;
+            }
             if (!Catalog.TryGetPath(name, out var path))
             {
                 if (!localSelection) throw new RemoteAvatarUnavailableException("Missing local VRM: " + name + ". Existing appearance retained.");
@@ -286,6 +294,10 @@ namespace ValheimVRM
             if (Player.m_localPlayer != null) VrmManager.PlayerToName.TryGetValue(Player.m_localPlayer, out current);
             scroll = GUILayout.BeginScrollView(scroll, GUILayout.ExpandHeight(true));
             GUI.enabled = !IsBusy;
+            bool original = Player.m_localPlayer != null &&
+                (!VrmManager.PlayerToVrmInstance.TryGetValue(Player.m_localPlayer, out var currentVisual) || currentVisual == null);
+            if (GUILayout.Button((original ? "✓  " : "    ") + Text("Original character model", "原始角色模型"), button, GUILayout.Height(36)))
+                RequestSwitch(AvatarCatalog.OriginalModel);
             foreach (var name in Catalog.Names)
             {
                 var display = name == "___Default" ? Text("Default avatar", "默认模型") : name;

@@ -29,7 +29,7 @@ namespace ValheimVRM
         public sealed class Profile
         {
             public Dictionary<string, Offset> Animations = new Dictionary<string, Offset>(StringComparer.Ordinal);
-            public Equipment Left = new Equipment(), Right = new Equipment(), TwoHanded = new Equipment();
+            public Equipment Left = new Equipment(), Right = new Equipment(), TwoHanded = new Equipment(), Back = new Equipment();
             public Vector3 Get(string key) => key != null && Animations.TryGetValue(key, out var value) && value != null
                 ? value.Value : Vector3.zero;
             public void Set(string key, Vector3 value)
@@ -70,6 +70,7 @@ namespace ValheimVRM
                     var profile = pair.Value ?? new Profile();
                     profile.Animations = profile.Animations ?? new Dictionary<string, Offset>(StringComparer.Ordinal);
                     profile.Left = Clean(profile.Left); profile.Right = Clean(profile.Right); profile.TwoHanded = Clean(profile.TwoHanded);
+                    profile.Back = Clean(profile.Back);
                     clean[pair.Key] = profile;
                 }
             profiles = clean; Dirty = false;

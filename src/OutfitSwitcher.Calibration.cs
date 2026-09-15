@@ -75,6 +75,7 @@ namespace ValheimVRM
                 DrawEquipment("left", Text("Left hand", "左手道具"), profile.Left);
                 DrawEquipment("right", Text("Right hand", "右手道具"), profile.Right);
                 DrawEquipment("two", Text("Two-handed items (including bows)", "双手道具（含弓）"), profile.TwoHanded);
+                DrawEquipment("back", Text("Back equipment (optional adjustment)", "背负装备（可选微调）"), profile.Back);
                 GUILayout.Label(Text("Item offsets use grip axes: X right, Y up, Z forward. A two-handed item uses only its two-handed settings.",
                     "道具偏移使用握点坐标：X 右、Y 上、Z 前。双手道具仅应用双手组设置。"),
                     new GUIStyle(GUI.skin.label) { wordWrap = true });

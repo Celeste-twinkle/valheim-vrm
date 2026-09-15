@@ -96,6 +96,7 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         report.Add("Same-named game Player fixtures: A and B own distinct VRM clones; A switching to B's asset leaves B's object/bones untouched; remote collider unchanged");
         yield return HeightInstanceTests(sync, registry, a, b, names[1], hashes[1]);
         yield return CalibrationInstanceTests(sync, registry, a, b, names[1], hashes[1]);
+        yield return NativeChoiceTests(sync, a, b, names[1]);
         rootB = VrmManager.PlayerToVrmInstance[b];
         yield return FolderMismatchTests(prefab, sync, registry, a, b, names, hashes);
         rootB = VrmManager.PlayerToVrmInstance[b];

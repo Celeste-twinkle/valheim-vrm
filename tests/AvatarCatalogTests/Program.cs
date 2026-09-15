@@ -35,6 +35,15 @@ static class Program
             reload.LoadSelections();
             Require(reload.Resolve("First player") == "中文 空格", "The first selection must survive a restart.");
             Require(reload.Resolve("Second player") == "Avatar 23", "Selections must be independent per character.");
+            reload.Select("First player", AvatarCatalog.OriginalModel);
+            File.WriteAllText(Path.Combine(root, "___Default.vrm"), "fixture");
+            File.WriteAllText(Path.Combine(root, "First player.vrm"), "fixture");
+            reload.Refresh(); reload.LoadSelections();
+            Require(reload.IsOriginalSelected("First player") && reload.Resolve("First player") == "",
+                "Explicit native selection did not suppress model/default fallback after restart.");
+            Require(reload.Resolve("Second player") == "Avatar 23", "Native selection changed another character.");
+            reload.Select("First player", "中文 空格");
+            Require(!reload.IsOriginalSelected("First player"), "Selecting VRM did not leave native mode.");
             File.Delete(path);
             Require(reload.Resolve("First player") == "First player", "Removed models must fall back to character matching.");
             File.WriteAllText(Path.Combine(root, "avatar_selections.json"), "{\"First player\":\"../outside\"}");

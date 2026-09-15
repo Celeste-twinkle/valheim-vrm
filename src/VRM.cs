@@ -191,6 +191,8 @@ namespace ValheimVRM
 
 			var settings = Settings.GetSettings(Name);
 			if (settings == null) yield break;
+			// Capture native state before the first local or remote attachment.
+			(player.GetComponent<RemoteAvatarBaseline>() ?? player.gameObject.AddComponent<RemoteAvatarBaseline>()).Capture();
 			var networkView = player.GetComponent<ZNetView>();
 			bool localPhysics = networkView == null || networkView.GetZDO() == null || networkView.IsOwner();
 			if (localPhysics) player.m_maxInteractDistance *= settings.InteractionDistanceScale;

@@ -23,6 +23,21 @@ namespace ValheimVRM.Sync
         public Position LegacyLeft, LegacyRight;
         public Item Left = new Item(), Right = new Item(), TwoHanded = new Item();
         public readonly Dictionary<string, Position> Animations = new Dictionary<string, Position>(StringComparer.Ordinal);
+        // The reserved positional-settings namespace permits additive controls
+        // without changing format 1. Existing relays preserve these entries.
+        public Item Back
+        {
+            get => new Item {
+                Scale = Animations.TryGetValue("legacy:back.scale", out var scale) ? scale.X : 1,
+                Offset = Animations.TryGetValue("legacy:back.offset", out var offset) ? offset : default(Position)
+            };
+            set {
+                if (value.Scale == 1) Animations.Remove("legacy:back.scale");
+                else Animations["legacy:back.scale"] = new Position(value.Scale, 0, 0);
+                if (value.Offset.X == 0 && value.Offset.Y == 0 && value.Offset.Z == 0) Animations.Remove("legacy:back.offset");
+                else Animations["legacy:back.offset"] = value.Offset;
+            }
+        }
     }
 
     public static class AvatarCalibrationCodec
@@ -41,7 +56,7 @@ namespace ValheimVRM.Sync
             if (data == null || !Range(data.Standing, -.5f, .5f) || !Range(data.Sitting, -.5f, .5f) ||
                 !Range(data.ModelY, -5, 5) || !Range(data.Physics, 0, 1) || !Range(data.EquipmentScale, .01f, 10) ||
                 !Valid(data.LegacyLeft, 5) || !Valid(data.LegacyRight, 5) ||
-                !Valid(data.Left) || !Valid(data.Right) || !Valid(data.TwoHanded) || data.Animations.Count > MaxEntries)
+                !Valid(data.Left) || !Valid(data.Right) || !Valid(data.TwoHanded) || !Valid(data.Back) || data.Animations.Count > MaxEntries)
                 throw new ArgumentException("Invalid avatar calibration.");
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream, Encoding.UTF8))

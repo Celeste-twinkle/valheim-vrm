@@ -136,6 +136,13 @@ namespace ValheimVRM
 			windCoverUpdateTimer = 0;
 		}
 
+		public void ClearAvatarPhysics()
+		{
+			ResetSpringBonesWind();
+			springBones = new SpringBoneState[0];
+			windItems = new WindItem[0];
+		}
+
 		public void ResetSpringBonesWind()
 		{
 			foreach (var bone in springBones)

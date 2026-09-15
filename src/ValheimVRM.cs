@@ -386,66 +386,9 @@ namespace ValheimVRM
 				}
 			}
 
-			// 武器位置合わせ
-			float equipmentScale = settings.EquipmentScale;
-			Vector3 equipmentScaleVector = new Vector3(equipmentScale, equipmentScale, equipmentScale);
+			// Hand and back items retain the game's authored attach/equipoffset
+			// transforms. VRMEquipmentSync applies absolute scale and offsets.
 
-			// Held items are calibrated by VRMEquipmentSync after retargeting.
-			// Keep their authored attach/equipoffset transforms as the baseline.
-
-			// divided  by 100 to keep the settings file positions in the same number range. (position offset appears to be on the world, not local)
-			var rightBackItem = __instance.GetField<VisEquipment, GameObject>("m_rightBackItemInstance");
-			if (rightBackItem != null)
-			{
-				var rightBackName = Utils.GetField<VisEquipment>("m_rightBackItem").GetValue(__instance);
-				var rightBackNameString = rightBackName?.ToString() ?? string.Empty;
-				var isKnife = rightBackNameString.StartsWith("Knife", StringComparison.Ordinal);
-				var isStaff = rightBackNameString.StartsWith("Staff", StringComparison.Ordinal);
-
-				Vector3 offset = Vector3.zero;
-
-				if (isKnife)
-				{
-					offset = settings.KnifeSidePos;
-					rightBackItem.transform.Rotate(settings.KnifeSideRot);
-				}
-				else if (isStaff)
-				{
-					offset = settings.StaffPos;
-					rightBackItem.transform.Rotate(settings.StaffRot);
-				}
-				else
-				{
-					offset = rightBackItem.transform.parent == __instance.m_backTool ? settings.RightHandBackItemToolPos : settings.RightHandBackItemPos;
-				}
-
-				rightBackItem.transform.localPosition = offset / 100.0f;
-				rightBackItem.transform.localScale = equipmentScaleVector / 100.0f;
-			}
-
-			var leftBackItem = __instance.GetField<VisEquipment, GameObject>("m_leftBackItemInstance");
-			if (leftBackItem != null)
-			{
-
-				var leftBackName = Utils.GetField<VisEquipment>("m_leftBackItem").GetValue(__instance);
-				//Debug.Log(leftBackName.ToString());
-				var leftBackNameString = leftBackName?.ToString() ?? string.Empty;
-				var isBow = leftBackNameString.StartsWith("Bow", StringComparison.Ordinal);
-				var isStaffSkeleton = string.Equals(leftBackNameString, "StaffSkeleton", StringComparison.Ordinal);
-				if (isBow)
-				{
-					leftBackItem.transform.localPosition = settings.BowBackPos / 100.0f;
-				}
-				else if (isStaffSkeleton)
-				{
-					leftBackItem.transform.localPosition = settings.StaffSkeletonPos / 100.0f;
-				}
-				else
-				{
-					leftBackItem.transform.localPosition = settings.LeftHandBackItemPos / 100.0f;
-				}
-				leftBackItem.transform.localScale = equipmentScaleVector / 100.0f;
-			}
 		}
 
 		private static void SetVisible(GameObject obj, bool flag)
@@ -754,6 +697,12 @@ namespace ValheimVRM
 			}
 
 			var vrmController = __instance.GetComponent<VrmController>() ?? __instance.gameObject.AddComponent<VrmController>();
+
+			if (playerName == AvatarCatalog.OriginalModel)
+			{
+				VrmManager.PlayerToName.Remove(__instance);
+				return; // An explicit native choice suppresses character/default VRM fallback.
+			}
 
 			if (!string.IsNullOrEmpty(playerName))
 			{

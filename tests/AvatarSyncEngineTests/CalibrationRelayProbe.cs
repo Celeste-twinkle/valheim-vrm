@@ -16,6 +16,8 @@ static class CalibrationRelayProbe
         data.Left.Offset = new AvatarCalibrationData.Position(value, 0, -value);
         data.Right.Offset = new AvatarCalibrationData.Position(0, value, -value);
         data.TwoHanded.Offset = new AvatarCalibrationData.Position(-value, value, 0);
+        if (entries == 1) data.Back = new AvatarCalibrationData.Item { Scale = 1 + value,
+            Offset = new AvatarCalibrationData.Position(-value, value, value) };
         for (int i = 0; i < entries; i++)
             data.Animations["Base Layer.Test " + i.ToString("D4") + (entries > 1 ? new string('x', 100) : "")] =
                 new AvatarCalibrationData.Position(value, -value, value);
@@ -92,9 +94,9 @@ static class CalibrationRelayProbe
             Check(received[303].Single(s => s.Peer == 101).Calibration == large, "Late join missed latest calibration");
             var respawnId = new ZDOID(1101, 99); peers[0].m_characterID = respawnId; addZdo(respawnId, 101); pump();
             Check(received[202].Single(s => s.Peer == 101).CharacterId == 99 && received[202].Single(s => s.Peer == 101).Calibration == large, "Respawn lost calibration");
-            clients[101].Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(false, "", "", 5, 2, a));
+            clients[101].Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(true, "", "", 5, 2, a));
             clients[101].Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(true, model, hash, 4, 2, a)); pump();
-            Check(received[202].All(s => s.Peer != 101), "Old calibration revived opted-out player");
+            Check(received[202].All(s => s.Peer != 101), "Old calibration revived a player who chose the native model");
             var hostId = new ZDOID(900, 1); addZdo(hostId, 900); AccessTools.Field(typeof(ZNet), "m_characterID").SetValue(net, hostId);
             var host = AccessTools.Method(plugin.GetType(), "SetHostSelectionWithCalibration");
             host.Invoke(plugin, new object[] { 2L, true, model, hash, 2f, newer });

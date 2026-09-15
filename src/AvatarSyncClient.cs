@@ -142,7 +142,10 @@ namespace ValheimVRM
             string calibration = AvatarCalibrationCodec.Default;
             float height = AvatarHeightRules.Default;
             var player = Player.m_localPlayer;
-            if (SyncEnabled && player != null && !player.IsDead() && OutfitSwitcher.Instance != null &&
+            bool original = player != null && !player.IsDead() && OutfitSwitcher.Instance != null &&
+                !OutfitSwitcher.Instance.IsBusy && !VrmManager.LoadingPlayers.Contains(player) &&
+                OutfitSwitcher.Instance.Catalog.IsOriginalSelected(player.GetPlayerName());
+            if (SyncEnabled && !original && player != null && !player.IsDead() && OutfitSwitcher.Instance != null &&
                 !OutfitSwitcher.Instance.IsBusy && !VrmManager.LoadingPlayers.Contains(player) &&
                 VrmManager.PlayerToName.TryGetValue(player, out var name) &&
                 VrmManager.PlayerToVrmInstance.TryGetValue(player, out var visual) && visual != null &&
@@ -158,7 +161,7 @@ namespace ValheimVRM
             }
             // During a model load/death keep the previous choice for the server to
             // rebind to the new character ID. Explicit opt-out sends an empty choice.
-            if (SyncEnabled && model == "" && lastSent != null) return;
+            if (SyncEnabled && model == "" && lastSent != null && !original) return;
             string token = SyncEnabled + ":" + model + ":" + hash;
             if (HeightSync) token += ":" + height.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
             if (CalibrationSync) token += ":" + calibration;

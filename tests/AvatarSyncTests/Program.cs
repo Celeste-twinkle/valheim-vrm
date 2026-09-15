@@ -78,6 +78,14 @@ static class Program
             Check(rejected,"Invalid owner calibration encoded");
         }
         Check(server.Snapshot().Single(s=>s.Peer==202).SameAs(b),"Calibration changed another player's state");
+        controls.Back = new AvatarCalibrationData.Item { Scale=1.4f, Offset=new AvatarCalibrationData.Position(.1f,-.2f,.3f) };
+        Check(AvatarCalibrationCodec.TryDecode(AvatarCalibrationCodec.Encode(controls),out var back) &&
+            back.Back.Scale==1.4f && back.Back.Offset.Y==-.2f,"Back controls failed additive roundtrip");
+        Check(AvatarCalibrationCodec.TryDecode(AvatarCalibrationCodec.Default,out var defaults) && defaults.Back.Scale==1 &&
+            defaults.Back.Offset.X==0,"Older payload did not use neutral back controls");
+        controls.Back = new AvatarCalibrationData.Item { Scale=2.1f };
+        bool backRejected=false; try{AvatarCalibrationCodec.Encode(controls);}catch(ArgumentException){backRejected=true;}
+        Check(backRejected,"Out-of-range back scale accepted");
         Console.WriteLine("PASS: canonical calibration roundtrip, malformed/nonfinite/range/entry limits, revision deduplication and per-player isolation.");
         Console.WriteLine("PASS: request ordering, duplicate/downgrade/overflow rejection, independent player identities, rapid switches, respawn, reconnect, late join, opt-out and path/hash rejection.");
     }

@@ -28,6 +28,7 @@ namespace ValheimVRM
             foreach (var pair in data.Animations)
                 if (!pair.Key.StartsWith("legacy:", StringComparison.Ordinal)) Profile.Set(pair.Key, Vector(pair.Value));
             Copy(Profile.Left, data.Left); Copy(Profile.Right, data.Right); Copy(Profile.TwoHanded, data.TwoHanded);
+            Copy(Profile.Back, data.Back);
             Settings.StandingHeightOffset = data.Standing; Settings.SittingHeightOffset = data.Sitting;
             Settings.ModelOffsetY = data.ModelY; Settings.EquipmentScale = data.EquipmentScale;
             Settings.LeftHandItemPos = Vector(data.LegacyLeft); Settings.RightHandItemPos = Vector(data.LegacyRight);
@@ -55,7 +56,7 @@ namespace ValheimVRM
                 Standing = AvatarHeightOffsets.Clamp(settings.StandingHeightOffset), Sitting = AvatarHeightOffsets.Clamp(settings.SittingHeightOffset),
                 ModelY = settings.ModelOffsetY, EquipmentScale = settings.EquipmentScale, Physics = AvatarPhysics.Weight,
                 LegacyLeft = Position(settings.LeftHandItemPos), LegacyRight = Position(settings.RightHandItemPos),
-                Left = Item(profile.Left), Right = Item(profile.Right), TwoHanded = Item(profile.TwoHanded)
+                Left = Item(profile.Left), Right = Item(profile.Right), TwoHanded = Item(profile.TwoHanded), Back = Item(profile.Back)
             };
             foreach (var pair in profile.Animations)
                 if (pair.Value != null && pair.Value.Value != Vector3.zero) data.Animations[pair.Key] = Position(pair.Value.Value);

@@ -45,6 +45,8 @@ public sealed partial class AvatarSyncEngineTests
                 Check(Mathf.Abs(right.Scale - (1 - value)) < .000001f && right.Position.Value == new Vector3(0, value, -value), "Item scale/XYZ was lost");
                 Check(Mathf.Abs(boundA.Profile.Left.Scale - (1 + value)) < .000001f && Mathf.Abs(boundA.Profile.TwoHanded.Scale - (1 + value * 2)) < .000001f, "Left/two-handed scale was lost");
                 Check(boundA.Profile.Get("Base Layer.Test 0000") == new Vector3(value, -value, value), "Animation XYZ was lost");
+                Check(Mathf.Abs(boundA.Profile.Back.Scale - (1 + value)) < .000001f &&
+                    boundA.Profile.Back.Position.Value == new Vector3(-value, value, value), "Back equipment settings were not received");
                 Check(Mathf.Abs(rootA.GetComponent<AvatarPhysicsWeight>().SynchronizedWeight - (.5f + value)) < .000001f, "Physics weight was not applied");
                 Check(VrmManager.PlayerToVrmInstance[b] == rootB && boundB.Encoded == controlB, "A's controls changed B");
                 Check(AvatarCalibrationBinding.Capture(model) == localControls, "Remote controls overwrote observer preferences");
@@ -60,7 +62,7 @@ public sealed partial class AvatarSyncEngineTests
             SetState(sync, registry); yield return PumpRemote(sync); yield return PumpRemote(sync);
             Check(VrmManager.PlayerToVrmInstance[b].GetComponent<AvatarCalibrationBinding>().Encoded == AvatarCalibrationCodec.Default,
                 "Sender without calibration inherited observer controls");
-            report.Add("Actual same-model player instances: independent height, standing/sitting, action XYZ, three item scales/XYZ and spring weight; 12 in-place updates retain objects/references, external refresh retains controls, observer config files unchanged; sender fallback resets defaults");
+            report.Add("Actual same-model player instances: independent height, standing/sitting, action XYZ, left/right/two-handed/back item scales/XYZ and spring weight; 12 in-place updates retain objects/references, external refresh retains controls, observer config files unchanged; sender fallback resets defaults");
         }
         finally { players.Remove(a); players.Remove(b); }
     }
@@ -71,6 +73,7 @@ public sealed partial class AvatarSyncEngineTests
         var oldOffset = profile.Get(key); float oldStanding = settings.StandingHeightOffset, oldSitting = settings.SittingHeightOffset;
         float oldWeight = AvatarPhysics.Weight, leftScale = profile.Left.Scale, rightScale = profile.Right.Scale, bothScale = profile.TwoHanded.Scale;
         var leftOffset = profile.Left.Position.Value; var rightOffset = profile.Right.Position.Value; var bothOffset = profile.TwoHanded.Position.Value;
+        float backScale = profile.Back.Scale; var backOffset = profile.Back.Position.Value;
         var saved = new Dictionary<string,object>();
         foreach (string name in new[]{"server","hostPlugin","lastSent","requestSequence","<CalibrationSync>k__BackingField","<HeightSync>k__BackingField","<SequencedRequests>k__BackingField"})
             saved[name] = AccessTools.Field(typeof(AvatarSyncClient),name).GetValue(sync);
@@ -98,16 +101,18 @@ public sealed partial class AvatarSyncEngineTests
             profile.Left.Scale = 1.23f; profile.Left.Position.Value = new Vector3(.1f,0,0); send();
             profile.Right.Scale = .79f; profile.Right.Position.Value = new Vector3(0,.2f,0); send();
             profile.TwoHanded.Scale = 1.31f; profile.TwoHanded.Position.Value = new Vector3(0,0,.3f); send();
+            profile.Back.Scale = 1.42f; profile.Back.Position.Value = new Vector3(.1f,-.2f,.3f); send();
             AvatarPhysics.Preview(.21f); send(); send();
-            Check(packets.Count == 8 && sequences.SequenceEqual(Enumerable.Range(1,8).Select(i=>(long)i)), "One of the slider groups did not trigger a sequenced request");
+            Check(packets.Count == 9 && sequences.SequenceEqual(Enumerable.Range(1,9).Select(i=>(long)i)), "One of the slider groups did not trigger a sequenced request");
             Check(packets.Last() == AvatarCalibrationBinding.Capture(model),"Owner request omitted current controls");
-            report.Add("Production owner SendSelection: standing, sitting, animation XYZ, left/right/two-hand size/XYZ and physics edits each emit complete calibration with strictly increasing sequence; unchanged state emits nothing");
+            report.Add("Production owner SendSelection: standing, sitting, animation XYZ, left/right/two-hand/back size/XYZ and physics edits emit nine complete calibration requests with strictly increasing sequence; unchanged state emits nothing");
         }
         finally
         {
             Player.m_localPlayer=local; settings.StandingHeightOffset=oldStanding; settings.SittingHeightOffset=oldSitting;
             profile.Set(key,oldOffset); profile.Left.Scale=leftScale; profile.Right.Scale=rightScale; profile.TwoHanded.Scale=bothScale;
             profile.Left.Position.Value=leftOffset; profile.Right.Position.Value=rightOffset; profile.TwoHanded.Position.Value=bothOffset;
+            profile.Back.Scale=backScale; profile.Back.Position.Value=backOffset;
             AvatarPhysics.Preview(oldWeight);
             foreach(var pair in saved) AccessTools.Field(typeof(AvatarSyncClient),pair.Key).SetValue(sync,pair.Value);
             client.Dispose(); relay.Dispose();

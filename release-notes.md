@@ -1,3 +1,12 @@
+## 1.8.15 — Native character selection and back equipment calibration
+
+- Add **Original character model** at the top of F8, including empty model libraries. Restore the native body/current gear, item sockets, camera and physical baseline; persist per character without default-VRM fallback. Withdraw the shared model through the existing sequenced protocol while continuing to view other players.
+- Fix sheathed equipment being overwritten during equipment refresh: retain game-authored attachment position/rotation/scale instead of replacing back-item transforms with legacy offsets and a fixed 1/100 scale or accumulating knife/staff rotations.
+- Add independent back-equipment 25–200% scale and XYZ ±50 cm controls, including automatic height scaling, reset/persistence and per-player synchronization. Sender/viewer need 1.8.15+; existing 1.8.14 relays preserve the additional values.
+- Release the removed avatar's spring references and retain native-state restoration across repeated VRM/native switches. Keep VRM 0.x/1.0 and model/height/calibration player isolation.
+
+Validation: `docs/release-1.8.15-validation.md`.
+
 ## 1.8.14 — Synchronized animation and held-item calibration
 
 - Add F8 animation foldouts with XYZ offsets, search and active-state filtering. Validate 172 native character states and 434 clip names from Valheim 1.0.12; blend clips have individual weighted adjustments.

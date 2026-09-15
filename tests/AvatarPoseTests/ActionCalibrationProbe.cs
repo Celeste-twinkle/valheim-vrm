@@ -102,6 +102,8 @@ static class ActionCalibrationProbe
             CheckBlending(source, target, sync, profile);
             EquipmentProbe.Run(source, target, sync, output);
             ItemCalibrationProbe.Run(source, target, settings);
+            BackEquipmentProbe.Run(source, target, settings, sync);
+            report.Add("height=" + height + " native back equipment: 9 item types, 3 draw/sheath cycles, 6 animations including equip_hip/equip_head, 4860 stepped refresh checks; hammer geometry/XYZ/scale/reset PASS");
             report.Add("height=" + height + " states=" + count + " repeatFrames=" + frames + " drift=" + drift +
                 " contactError=" + contactError + " calibrationMs=" + timer.ElapsedMilliseconds + " XYZ/reset/equipment PASS");
             // Actual locomotion over successive frames must retain one baseline.
@@ -169,10 +171,12 @@ static class ActionCalibrationProbe
         a.Set("Base Layer.In Water", new Vector3(.11f, -.19f, .23f));
         a.Left.Scale = .4f; a.Right.Scale = 1.6f; a.TwoHanded.Scale = 1.2f;
         a.Left.Position.Value = new Vector3(.1f, .2f, .3f);
+        a.Back.Scale = 1.43f; a.Back.Position.Value = new Vector3(-.2f,.15f,.3f);
         options.Changed(); options.Save(); options.Load();
         if (options.Get("A").Get("Base Layer.In Water") != new Vector3(.11f, -.19f, .23f) ||
             options.Get("B").Get("Base Layer.In Water") != Vector3.zero ||
-            options.Get("A").Right.Multiplier != 1.6f) throw new Exception("Calibration persistence/isolation failed");
+            options.Get("A").Right.Multiplier != 1.6f || options.Get("A").Back.Multiplier != 1.43f ||
+            options.Get("A").Back.Position.Value != new Vector3(-.2f,.15f,.3f)) throw new Exception("Calibration persistence/isolation failed");
         if (AvatarCalibrationOptions.ClampScale(float.NaN) != 1 || AvatarCalibrationOptions.ClampScale(99) != 2) throw new Exception("Unsafe scale bounds");
     }
 }

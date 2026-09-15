@@ -11,6 +11,7 @@ namespace ValheimVRM
     // and paths from a selection file must never expand this directory boundary.
     public sealed class AvatarCatalog
     {
+        public const string OriginalModel = "";
         readonly string directory;
         readonly string configurationDirectory;
         readonly Dictionary<string, string> paths = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -57,15 +58,19 @@ namespace ValheimVRM
 
         public string Resolve(string characterName)
         {
+            if (IsOriginalSelected(characterName)) return OriginalModel;
             if (characterName != null && selections.TryGetValue(characterName, out var name) && TryGetPath(name, out _))
                 return name;
             return characterName;
         }
 
+        public bool IsOriginalSelected(string characterName) => characterName != null &&
+            selections.TryGetValue(characterName, out var name) && name == OriginalModel;
+
         public void Select(string characterName, string name)
         {
             if (string.IsNullOrEmpty(characterName)) throw new ArgumentException("Character name is missing.");
-            if (!TryGetPath(name, out _)) throw new FileNotFoundException("The selected VRM is no longer available.");
+            if (name != OriginalModel && !TryGetPath(name, out _)) throw new FileNotFoundException("The selected VRM is no longer available.");
             var updated = new Dictionary<string, string>(selections, StringComparer.Ordinal) { [characterName] = name };
             Directory.CreateDirectory(configurationDirectory);
             var temporary = SelectionPath + ".tmp";
