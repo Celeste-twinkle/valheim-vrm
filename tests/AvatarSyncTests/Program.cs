@@ -50,6 +50,35 @@ static class Program
         Check(server.Revision==heightRevision, "Invalid height changed revision");
         Check(server.Set(101,1001,2,b.Model,b.Sha256,2.2f), "Maximum height rejected");
         Check(!server.Set(101,1001,2,b.Model,b.Sha256,2.2f), "Unchanged height advanced revision");
+        var controls = new AvatarCalibrationData { Standing=.1f, Sitting=-.2f, Physics=.75f };
+        controls.Animations["Base Layer.站姿"] = new AvatarCalibrationData.Position(.1f,.2f,-.3f);
+        string encoded = AvatarCalibrationCodec.Encode(controls);
+        Check(AvatarCalibrationCodec.TryDecode(encoded,out var decoded) && AvatarCalibrationCodec.Encode(decoded)==encoded,"Calibration roundtrip failed");
+        Check(server.Set(101,1001,2,b.Model,b.Sha256,2.2f,encoded),"Calibration-only change ignored");
+        long calibrationRevision=server.Revision;
+        Check(!server.Set(101,1001,2,b.Model,b.Sha256,2.2f,encoded) && server.Revision==calibrationRevision,"Identical calibration advanced revision");
+        Check(!server.Set(101,1001,2,b.Model,b.Sha256,2.2f,"broken") && server.Revision==calibrationRevision,"Invalid calibration replaced valid state");
+        foreach(var invalid in new[]{null,"",encoded+" ",encoded.Substring(0,encoded.Length-4),new string('a',AvatarCalibrationCodec.MaxEncodedLength+1)})
+            Check(!AvatarCalibrationCodec.TryDecode(invalid,out _),"Malformed calibration accepted");
+        var bytes=Convert.FromBase64String(encoded);
+        foreach(float invalid in new[]{float.NaN,float.PositiveInfinity,float.NegativeInfinity,.51f,-.51f})
+        {
+            Array.Copy(BitConverter.GetBytes(invalid),0,bytes,1,4);
+            Check(!AvatarCalibrationCodec.TryDecode(Convert.ToBase64String(bytes),out _),"Nonfinite/out-of-range offset accepted");
+        }
+        foreach(Action<AvatarCalibrationData> corrupt in new Action<AvatarCalibrationData>[]{
+            d=>d.Physics=1.1f, d=>d.Left.Scale=.2f, d=>d.Right.Offset=new AvatarCalibrationData.Position(0,.51f,0),
+            d=>d.Animations["\n"]=default(AvatarCalibrationData.Position),
+            d=>d.Animations["Base Layer.Movement"]=new AvatarCalibrationData.Position(0, .51f, 0),
+            d=>{for(int i=0;i<=AvatarCalibrationCodec.MaxEntries;i++)d.Animations["state"+i]=default(AvatarCalibrationData.Position);}
+        })
+        {
+            bool rejected=false; var data=new AvatarCalibrationData(); corrupt(data);
+            try { AvatarCalibrationCodec.Encode(data); } catch(ArgumentException) { rejected=true; }
+            Check(rejected,"Invalid owner calibration encoded");
+        }
+        Check(server.Snapshot().Single(s=>s.Peer==202).SameAs(b),"Calibration changed another player's state");
+        Console.WriteLine("PASS: canonical calibration roundtrip, malformed/nonfinite/range/entry limits, revision deduplication and per-player isolation.");
         Console.WriteLine("PASS: request ordering, duplicate/downgrade/overflow rejection, independent player identities, rapid switches, respawn, reconnect, late join, opt-out and path/hash rejection.");
     }
 }

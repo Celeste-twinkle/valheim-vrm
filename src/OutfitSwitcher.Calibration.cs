@@ -79,7 +79,9 @@ namespace ValheimVRM
                     "道具偏移使用握点坐标：X 右、Y 上、Z 前。双手道具仅应用双手组设置。"),
                     new GUIStyle(GUI.skin.label) { wordWrap = true });
             }
-            GUILayout.Label(Text("Calibration tweaks are saved per avatar on this computer.", "校准微调按模型保存在本机。"));
+            GUILayout.Label(Text("Saved per avatar locally. Server calibration sync shares your controls with other players after release.",
+                "微调按模型保存在本机；支持校准同步时，松开滑块后会分享给其他玩家。"),
+                new GUIStyle(GUI.skin.label) { wordWrap = true });
             GUI.enabled = true;
         }
 

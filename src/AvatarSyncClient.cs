@@ -16,6 +16,7 @@ namespace ValheimVRM
         public bool Connected { get; private set; }
         public bool SequencedRequests { get; private set; }
         public bool HeightSync { get; private set; }
+        public bool CalibrationSync { get; private set; }
         public bool SyncEnabled => syncEnabled.Value;
         public string LastError { get; private set; } = "";
         ConfigEntry<bool> syncEnabled;
@@ -31,6 +32,7 @@ namespace ValheimVRM
         readonly Dictionary<Player, AvatarSelection> applied = new Dictionary<Player, AvatarSelection>();
         readonly Dictionary<Player, AvatarSelection> failed = new Dictionary<Player, AvatarSelection>();
         readonly HashSet<ZRpc> registered = new HashSet<ZRpc>();
+        readonly AvatarSnapshotAssembly snapshotParts = new AvatarSnapshotAssembly();
 
         public void Initialize(ConfigEntry<bool> setting) { syncEnabled = setting; Instance = this; }
         public void SetEnabled(bool value)
@@ -46,7 +48,9 @@ namespace ValheimVRM
             peer.m_rpc.Register<int>(AvatarSyncWire.Hello, ReceiveHello);
             peer.m_rpc.Register<int>(AvatarSyncWire.SequencedHello, ReceiveSequencedHello);
             peer.m_rpc.Register<int>(AvatarSyncWire.HeightHello, ReceiveHeightHello);
+            peer.m_rpc.Register<int>(AvatarSyncWire.CalibrationHello, ReceiveCalibrationHello);
             peer.m_rpc.Register<ZPackage>(AvatarSyncWire.State, ReceiveState);
+            peer.m_rpc.Register<ZPackage>(AvatarSyncWire.StateChunk, ReceiveStateChunk);
         }
         void ReceiveHello(ZRpc rpc, int version)
         {
@@ -57,7 +61,8 @@ namespace ValheimVRM
             ProcessHello(rpc, version, true);
         }
         void ReceiveHeightHello(ZRpc rpc, int version) { ProcessHello(rpc, version, true, true); }
-        void ProcessHello(ZRpc rpc, int version, bool sequenced, bool withHeight = false)
+        void ReceiveCalibrationHello(ZRpc rpc, int version) { ProcessHello(rpc, version, true, true, true); }
+        void ProcessHello(ZRpc rpc, int version, bool sequenced, bool withHeight = false, bool withCalibration = false)
         {
             if (ZNet.instance == null || ZNet.instance.IsServer() || ZNet.instance.GetServerPeer()?.m_rpc != rpc) return;
             ResetConnectionIfNeeded();
@@ -65,9 +70,11 @@ namespace ValheimVRM
             // hello cannot downgrade an already upgraded connection.
             if (SequencedRequests && !sequenced && version == AvatarSyncRules.Version) return;
             if (HeightSync && !withHeight && version == AvatarSyncRules.Version) return;
+            if (CalibrationSync && !withCalibration && version == AvatarSyncRules.Version) return;
             Connected = version == AvatarSyncRules.Version; server = rpc; lastSent = null;
             if (Connected && sequenced) SequencedRequests = true;
             if (Connected && withHeight && !HeightSync) { HeightSync = true; revision = -1; }
+            if (Connected && withCalibration && !CalibrationSync) { CalibrationSync = true; revision = -1; snapshotParts.Clear(); }
             if (!Connected) LastError = "Server sync protocol is unavailable or incompatible.";
             SendSelection();
         }
@@ -76,11 +83,17 @@ namespace ValheimVRM
             if (!Connected || server != rpc || ZNet.instance?.GetServerPeer()?.m_rpc != rpc) return;
             AcceptSnapshot(package);
         }
+        void ReceiveStateChunk(ZRpc rpc, ZPackage package)
+        {
+            if (!Connected || !CalibrationSync || server != rpc || ZNet.instance?.GetServerPeer()?.m_rpc != rpc) return;
+            if (snapshotParts.Add(package, revision, out var snapshot)) AcceptSnapshot(snapshot);
+        }
         void AcceptSnapshot(ZPackage package)
         {
-            if (!AvatarSyncWire.ReadSnapshot(package, out var next, out var selections, out var withHeight) ||
-                (HeightSync && !withHeight) || next <= revision) return;
+            if (!AvatarSyncWire.ReadSnapshot(package, out var next, out var selections, out var withHeight, out var withCalibration) ||
+                (HeightSync && !withHeight) || (CalibrationSync && !withCalibration) || next <= revision) return;
             revision = next; states = selections;
+            snapshotParts.Clear();
         }
         void ResetConnectionIfNeeded()
         {
@@ -88,19 +101,21 @@ namespace ValheimVRM
             var rpc = net != null && !net.IsServer() ? net.GetServerPeer()?.m_rpc : null;
             if (network == net && (net == null || net.IsServer() || server == rpc)) return;
             network = net; server = rpc; Connected = false; revision = -1;
-            requestSequence = 0; SequencedRequests = false; HeightSync = false;
+            requestSequence = 0; SequencedRequests = false; HeightSync = CalibrationSync = false; snapshotParts.Clear();
             states = new AvatarSelection[0]; lastSent = null; hostPlugin = null; failed.Clear(); LastError = "";
             // Keep only live registrations so reconnects cannot retain stale sockets.
             registered.RemoveWhere(r => net == null || !net.GetPeers().Any(p => p.m_rpc == r));
             if (net != null && net.IsServer() && Chainloader.PluginInfos.TryGetValue(AvatarSyncWire.ServerGuid, out var plugin))
             {
                 hostPlugin = plugin.Instance;
-                hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionWithHeight");
+                hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionWithCalibration");
+                CalibrationSync = hostSubmit != null;
+                if (hostSubmit == null) hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionWithHeight");
                 HeightSync = hostSubmit != null;
                 if (hostSubmit == null) hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionSequenced");
                 SequencedRequests = hostSubmit != null;
                 if (hostSubmit == null) hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelection");
-                hostRead = hostPlugin.GetType().GetMethod(HeightSync ? "ReadHostSnapshotWithHeight" : "ReadHostSnapshot");
+                hostRead = hostPlugin.GetType().GetMethod(CalibrationSync ? "ReadHostSnapshotWithCalibration" : HeightSync ? "ReadHostSnapshotWithHeight" : "ReadHostSnapshot");
                 Connected = hostSubmit != null && hostRead != null &&
                     hostPlugin.GetType().GetProperty("SyncAvailable")?.GetValue(hostPlugin, null) is bool available && available;
             }
@@ -122,7 +137,9 @@ namespace ValheimVRM
         void SendSelection()
         {
             if (!Connected || syncEnabled == null) return;
+            if (OutfitSwitcher.Instance?.MenuOpen == true && GUIUtility.hotControl != 0) return;
             string model = "", hash = "";
+            string calibration = AvatarCalibrationCodec.Default;
             float height = AvatarHeightRules.Default;
             var player = Player.m_localPlayer;
             if (SyncEnabled && player != null && !player.IsDead() && OutfitSwitcher.Instance != null &&
@@ -133,19 +150,30 @@ namespace ValheimVRM
             {
                 model = name; hash = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
                 height = visual.GetComponent<AvatarScale>()?.TargetHeight ?? AvatarHeightRules.Default;
+                if (CalibrationSync)
+                {
+                    try { calibration = AvatarCalibrationBinding.Capture(name); }
+                    catch (Exception ex) { LastError = "Cannot synchronize calibration: " + ex.Message; return; }
+                }
             }
             // During a model load/death keep the previous choice for the server to
             // rebind to the new character ID. Explicit opt-out sends an empty choice.
             if (SyncEnabled && model == "" && lastSent != null) return;
             string token = SyncEnabled + ":" + model + ":" + hash;
             if (HeightSync) token += ":" + height.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+            if (CalibrationSync) token += ":" + calibration;
             if (token == lastSent) return;
             if (SequencedRequests)
             {
                 if (requestSequence == long.MaxValue)
                 { LastError = "Avatar request sequence exhausted. Reconnect to start a new session."; return; }
                 long sequence = ++requestSequence;
-                if (HeightSync)
+                if (CalibrationSync)
+                {
+                    if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { sequence, SyncEnabled, model, hash, height, calibration });
+                    else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash, sequence, height, calibration));
+                }
+                else if (HeightSync)
                 {
                     if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { sequence, SyncEnabled, model, hash, height });
                     else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash, sequence, height));
@@ -166,6 +194,11 @@ namespace ValheimVRM
             return states.FirstOrDefault(s => s.CharacterUser == id.UserID && s.CharacterId == id.ID && s.Peer == zdo.GetOwner());
         }
         internal float? RemoteHeight(Player player) => Desired(player)?.Height;
+        internal string RemoteCalibration(Player player)
+        {
+            var desired = Desired(player);
+            return desired == null ? null : desired.Calibration ?? AvatarCalibrationCodec.Default;
+        }
         void ApplyRemotePlayers()
         {
             foreach (var stale in applied.Keys.Where(p => p == null).ToArray()) applied.Remove(stale);
@@ -185,6 +218,15 @@ namespace ValheimVRM
                     existing.GetComponent<AvatarScale>()?.TargetHeight == desired.Height &&
                     VrmManager.PlayerToName.TryGetValue(player, out var existingName) && existingName == desired.Model) continue;
                 if (failed.TryGetValue(player, out var bad) && bad.SameAs(desired)) continue;
+                if (current != null && current.Model == desired.Model && current.Sha256 == desired.Sha256 && current.Height == desired.Height &&
+                    VrmManager.PlayerToVrmInstance.TryGetValue(player, out var currentVisual) && currentVisual != null &&
+                    currentVisual.GetComponent<AvatarScale>()?.TargetHeight == desired.Height &&
+                    VrmManager.PlayerToName.TryGetValue(player, out var currentName) && currentName == desired.Model &&
+                    currentVisual.GetComponent<AvatarCalibrationBinding>() is AvatarCalibrationBinding binding &&
+                    binding.Apply(desired.Calibration ?? AvatarCalibrationCodec.Default))
+                {
+                    applied[player] = desired; failed.Remove(player); continue;
+                }
                 var picker = OutfitSwitcher.Instance;
                 if (picker == null || picker.IsBusy || VrmManager.LoadingPlayers.Contains(player)) continue;
                 if (!picker.Catalog.TryGetPath(desired.Model, out _))
@@ -203,7 +245,7 @@ namespace ValheimVRM
                         VrmManager.PlayerToVrmInstance.TryGetValue(target, out var visual) && visual != null) applied[target] = selection;
                     if (!success && stillCurrent())
                     { failed[target] = selection; LastError = picker.LastError; }
-                }, selection.Height);
+                }, selection.Height, selection.Calibration ?? AvatarCalibrationCodec.Default);
                 break; // Serialize imports so shared model caches cannot race.
             }
         }

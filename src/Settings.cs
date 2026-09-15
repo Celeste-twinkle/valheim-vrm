@@ -191,6 +191,7 @@ namespace ValheimVRM
 
         public class VrmSettingsContainer : Container
         {
+            internal VrmSettingsContainer CloneForInstance() => (VrmSettingsContainer)MemberwiseClone();
             [NonSerializedAttribute]
             public string Name;
 

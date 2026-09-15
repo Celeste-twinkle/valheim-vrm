@@ -46,7 +46,7 @@ namespace ValheimVRM
 			else
 			{
 				AnimationCatalog = new AvatarAnimationCatalog(orgAnim);
-				profile = AvatarCalibrationOptions.Current.Get(settings.Name);
+				profile = GetComponent<AvatarCalibrationBinding>()?.Profile ?? AvatarCalibrationOptions.Current.Get(settings.Name);
 				calibration = new AvatarPoseCalibration(orgAnim, vrmAnim, AnimationCatalog, vrmPose);
 			}
 		}

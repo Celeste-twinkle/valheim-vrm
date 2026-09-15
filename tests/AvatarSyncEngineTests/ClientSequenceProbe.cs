@@ -25,8 +25,9 @@ static class ClientSequenceProbe
             var peer = new ZNetPeer(left, true) { m_uid = 900 }; var server = new ZRpc(right);
             rpcs.Add(peer.m_rpc); rpcs.Add(server); peers.Clear(); peers.Add(peer); sync.Register(peer);
             server.Register<ZPackage>(AvatarSyncWire.Select, (rpc, p) => {
-                Check(AvatarSyncWire.ReadSelection(p, out _, out _, out _, out var seq, out _, out var withHeight), "Production client emitted malformed request");
+                Check(AvatarSyncWire.ReadSelection(p, out _, out _, out _, out var seq, out _, out var withHeight, out var calibration), "Production client emitted malformed request");
                 Check(withHeight == sync.HeightSync, "Client sent height without capability negotiation"); sequences.Add(seq);
+                Check((calibration != null) == sync.CalibrationSync, "Calibration was sent without capability negotiation");
             });
             return server;
         };
@@ -64,6 +65,23 @@ static class ClientSequenceProbe
             var latest = AvatarSyncWire.Snapshot(10, new AvatarSelection[0], true); latest.SetPos(0); accept.Invoke(sync,new object[]{latest});
             var legacy = AvatarSyncWire.Snapshot(11, new AvatarSelection[0]); legacy.SetPos(0); accept.Invoke(sync,new object[]{legacy});
             Check((long)AccessTools.Field(typeof(AvatarSyncClient), "revision").GetValue(sync)==10, "Late legacy snapshot replaced height state");
+            hello(server, AvatarSyncWire.CalibrationHello);
+            Check(sync.CalibrationSync && sequences.Last() == 6, "Calibration capability did not upgrade monotonically");
+            count = sequences.Count; hello(server, AvatarSyncWire.HeightHello);
+            Check(sync.CalibrationSync && sequences.Count == count, "Late height hello downgraded calibration support");
+            var calibrated = AvatarSyncWire.Snapshot(20, new AvatarSelection[0], true, true); calibrated.SetPos(0); accept.Invoke(sync,new object[]{calibrated});
+            var heightOnly = AvatarSyncWire.Snapshot(21, new AvatarSelection[0], true); heightOnly.SetPos(0); accept.Invoke(sync,new object[]{heightOnly});
+            Check((long)AccessTools.Field(typeof(AvatarSyncClient), "revision").GetValue(sync)==20, "Older snapshot format erased calibration");
+            var entry = new AvatarSelection { Peer=101, CharacterUser=1001, CharacterId=1,
+                Model="ChunkProbe", Sha256=new string('a',64), Calibration=CalibrationRelayProbe.Data(.1f,768) };
+            var chunks=AvatarSnapshotChunks.Split(22,AvatarSyncWire.Snapshot(22,new[]{entry},true,true)).Reverse().ToArray();
+            foreach(var chunk in chunks.Take(chunks.Length-1)) server.Invoke(AvatarSyncWire.StateChunk,chunk);
+            peers[0].m_rpc.Update(.01f);
+            Check((long)AccessTools.Field(typeof(AvatarSyncClient),"revision").GetValue(sync)==20,"Partial production-client snapshot applied");
+            server.Invoke(AvatarSyncWire.StateChunk,chunks.Last()); peers[0].m_rpc.Update(.01f);
+            Check((long)AccessTools.Field(typeof(AvatarSyncClient),"revision").GetValue(sync)==22 &&
+                ((AvatarSelection[])AccessTools.Field(typeof(AvatarSyncClient),"states").GetValue(sync)).Single().Calibration==entry.Calibration,
+                "Production client did not atomically accept reversed calibration chunks");
 
             // Replacement RPC on the same ZNet is a fresh connection; old RPCs
             // cannot negotiate or reset its order, even before a polling tick.
@@ -71,6 +89,7 @@ static class ClientSequenceProbe
             server = connect(); hello(server, AvatarSyncWire.SequencedHello);
             Check(sequences.Last() == 1 && sync.Connected, "Reconnect did not reset sequence for the new RPC");
             Check(!sync.HeightSync, "Height capability leaked into legacy reconnect");
+            Check(!sync.CalibrationSync, "Calibration capability leaked into legacy reconnect");
             count = sequences.Count;
             oldRpcServer.Invoke(AvatarSyncWire.SequencedHello, AvatarSyncRules.Version); oldPeer.m_rpc.Update(.01f); oldRpcServer.Update(.01f);
             Check(sequences.Count == count, "Old connection hello was accepted");

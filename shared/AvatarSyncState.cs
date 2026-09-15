@@ -12,9 +12,10 @@ namespace ValheimVRM.Sync
         public string Model;
         public string Sha256;
         public float Height = AvatarHeightRules.Default;
+        public string Calibration;
         public bool SameAs(AvatarSelection other) => other != null && Peer == other.Peer &&
             CharacterUser == other.CharacterUser && CharacterId == other.CharacterId &&
-            Model == other.Model && Sha256 == other.Sha256 && Height == other.Height;
+            Model == other.Model && Sha256 == other.Sha256 && Height == other.Height && Calibration == other.Calibration;
     }
 
     public static class AvatarHeightRules
@@ -63,15 +64,16 @@ namespace ValheimVRM.Sync
             if (!selections.Remove(peer)) return false;
             Revision++; return true;
         }
-        public bool Set(long authenticatedPeer, long characterUser, uint characterId, string model, string hash, float height = AvatarHeightRules.Default)
+        public bool Set(long authenticatedPeer, long characterUser, uint characterId, string model, string hash, float height = AvatarHeightRules.Default, string calibration = null)
         {
             if (authenticatedPeer == 0 || characterUser == 0 || characterId == 0 ||
                 !AvatarSyncRules.ValidModel(model) || !AvatarSyncRules.ValidHash(hash) || !AvatarHeightRules.Valid(height)) return false;
             if (!selections.ContainsKey(authenticatedPeer) && selections.Count >= AvatarSyncRules.MaxPlayers) return false;
             if (selections.Values.Any(s => s.Peer != authenticatedPeer && s.CharacterUser == characterUser && s.CharacterId == characterId)) return false;
             var next = new AvatarSelection { Peer = authenticatedPeer, CharacterUser = characterUser,
-                CharacterId = characterId, Model = model, Sha256 = hash, Height = height };
+                CharacterId = characterId, Model = model, Sha256 = hash, Height = height, Calibration = calibration };
             if (selections.TryGetValue(authenticatedPeer, out var current) && current.SameAs(next)) return false;
+            if (calibration != null && !AvatarCalibrationCodec.TryDecode(calibration, out _)) return false;
             selections[authenticatedPeer] = next; Revision++; return true;
         }
     }

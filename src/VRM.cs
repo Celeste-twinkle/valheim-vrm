@@ -163,19 +163,19 @@ namespace ValheimVRM
 			}
 		}
 
-		public IEnumerator SetToPlayer(Player player, float? height = null)
+		public IEnumerator SetToPlayer(Player player, float? height = null, string calibration = null)
 		{
 			using (AvatarResidency.Acquire(this))
 			{
 				// Drive the child here so cancellation/errors unwind the attachment
 				// lease in this iterator instead of escaping a nested Unity coroutine.
-				var attachment = AttachToPlayer(player, height);
+				var attachment = AttachToPlayer(player, height, calibration);
 				try { while (attachment.MoveNext()) yield return attachment.Current; }
 				finally { (attachment as IDisposable)?.Dispose(); }
 			}
 		}
 
-		private IEnumerator AttachToPlayer(Player player, float? height)
+		private IEnumerator AttachToPlayer(Player player, float? height, string calibration)
 		{
 			if (player == null) yield break;
 			var animator = player.GetField<Player, Animator>("m_animator") ?? player.GetComponentInChildren<Animator>();
@@ -214,6 +214,14 @@ namespace ValheimVRM
 
 			vrmModel.transform.SetParent(parent, false);
 			vrmModel.transform.localPosition = animator.transform.localPosition;
+			calibration = calibration ?? AvatarSyncClient.Instance?.RemoteCalibration(player);
+			AvatarCalibrationBinding calibrationBinding = null;
+			if (calibration != null)
+			{
+				calibrationBinding = vrmModel.AddComponent<AvatarCalibrationBinding>();
+				if (!calibrationBinding.Initialize(settings, calibration)) throw new InvalidOperationException("Invalid synchronized calibration.");
+				settings = calibrationBinding.Settings;
+			}
 			// Scale the clone before springs, camera, and both posture calibrations.
 			// The imported template and any other player's clone remain unchanged.
 			AvatarScale.ApplyHeight(vrmModel, height ?? (player == Player.m_localPlayer
@@ -223,6 +231,7 @@ namespace ValheimVRM
 			PrepareVrm10Clone(VisualModel, vrmModel);
 			var physicsWeight = vrmModel.GetComponent<AvatarPhysicsWeight>() ?? vrmModel.AddComponent<AvatarPhysicsWeight>();
 			physicsWeight.Setup();
+			if (calibrationBinding != null) physicsWeight.SynchronizedWeight = calibrationBinding.PhysicsWeight;
 			vrmModel.SetActive(true);
 			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
 			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>(), settings);

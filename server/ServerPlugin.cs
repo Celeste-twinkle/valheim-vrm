@@ -15,6 +15,8 @@ namespace ValheimVRM.Server
             public ZNetPeer Peer;
             public bool Handshake, Enabled;
             public bool HeightSupport;
+            public bool CalibrationSupport;
+            public string Calibration;
             public float Height = AvatarHeightRules.Default;
             public string Model = "", Hash = "";
             public float NextHello;
@@ -29,6 +31,8 @@ namespace ValheimVRM.Server
         float nextPoll;
         bool hostEnabled;
         bool hostHeightSupport;
+        bool hostCalibrationSupport;
+        string hostCalibration;
         float hostHeight = AvatarHeightRules.Default;
         string hostModel = "", hostHash = "";
         AvatarRequestOrder hostOrder = new AvatarRequestOrder();
@@ -64,17 +68,21 @@ namespace ValheimVRM.Server
                     s.HelloAttempts++;
                     s.NextHello = Time.realtimeSinceStartup + 3;
                     int version = syncEnabled.Value ? AvatarSyncRules.Version : 0;
+                    peer.m_rpc.Invoke(AvatarSyncWire.CalibrationHello, version);
                     peer.m_rpc.Invoke(AvatarSyncWire.HeightHello, version);
                     peer.m_rpc.Invoke(AvatarSyncWire.SequencedHello, version);
                     peer.m_rpc.Invoke(AvatarSyncWire.Hello, version);
                 }
-                UpdateCharacter(peer.m_uid, peer.m_characterID, syncEnabled.Value && s.Enabled, s.Model, s.Hash, s.Height);
+                UpdateCharacter(peer.m_uid, peer.m_characterID, syncEnabled.Value && s.Enabled, s.Model, s.Hash, s.Height, s.Calibration);
             }
-            UpdateCharacter(ZNet.GetUID(), net.LocalPlayerCharacterID, syncEnabled.Value && hostEnabled, hostModel, hostHash, hostHeight);
+            UpdateCharacter(ZNet.GetUID(), net.LocalPlayerCharacterID, syncEnabled.Value && hostEnabled, hostModel, hostHash, hostHeight, hostCalibration);
             foreach (var s in sessions.Values)
                 if (s.Handshake && s.SentRevision != registry.Revision)
                 {
-                    s.Peer.m_rpc.Invoke(AvatarSyncWire.State, AvatarSyncWire.Snapshot(registry.Revision, registry.Snapshot(), s.HeightSupport));
+                    var snapshot = AvatarSyncWire.Snapshot(registry.Revision, registry.Snapshot(), s.HeightSupport, s.CalibrationSupport);
+                    if (s.CalibrationSupport && snapshot.Size() > AvatarSnapshotChunks.PayloadSize)
+                        foreach (var part in AvatarSnapshotChunks.Split(registry.Revision, snapshot)) s.Peer.m_rpc.Invoke(AvatarSyncWire.StateChunk, part);
+                    else s.Peer.m_rpc.Invoke(AvatarSyncWire.State, snapshot);
                     s.SentRevision = registry.Revision;
                 }
         }
@@ -87,6 +95,7 @@ namespace ValheimVRM.Server
                 sessions.Clear(); registry = new AvatarSyncRegistry(); network = net;
                 hostModel = hostHash = ""; hostEnabled = false;
                 hostHeight = AvatarHeightRules.Default; hostHeightSupport = false;
+                hostCalibration = null; hostCalibrationSupport = false;
                 hostOrder = new AvatarRequestOrder();
             }
             return net;
@@ -97,23 +106,24 @@ namespace ValheimVRM.Server
             var net = ResetNetworkIfNeeded();
             if (net == null || !net.IsServer() || !sessions.TryGetValue(rpc, out var s) ||
                 !s.Peer.IsReady() || !net.GetPeers().Contains(s.Peer)) return;
-            if (!AvatarSyncWire.ReadSelection(package, out var accept, out var model, out var hash, out var sequence, out var height, out var withHeight) ||
-                (s.HeightSupport && !withHeight) ||
+            if (!AvatarSyncWire.ReadSelection(package, out var accept, out var model, out var hash, out var sequence, out var height, out var withHeight, out var calibration) ||
+                (s.HeightSupport && !withHeight) || (s.CalibrationSupport && calibration == null) ||
                 !s.Order.TryAccept(sequence)) return;
             // Validate the entire packet before advancing the connection's order.
             // Keep its watermark across respawn and opt-out; reset only on a new
             // connection. Rejected requests never change state or its revision.
             s.Handshake = true; s.Enabled = accept; s.Model = model; s.Hash = hash;
             s.Height = height; s.HeightSupport = withHeight;
+            s.Calibration = calibration; s.CalibrationSupport = calibration != null;
             s.SentRevision = -1;
         }
 
-        void UpdateCharacter(long peer, ZDOID character, bool accept, string model, string hash, float height)
+        void UpdateCharacter(long peer, ZDOID character, bool accept, string model, string hash, float height, string calibration)
         {
             var zdo = character == ZDOID.None ? null : ZDOMan.instance?.GetZDO(character);
             if (!accept || model == "" || zdo == null || zdo.GetOwner() != peer)
             { registry.Remove(peer); return; }
-            registry.Set(peer, character.UserID, character.ID, model, hash, height);
+            registry.Set(peer, character.UserID, character.ID, model, hash, height, calibration);
         }
 
         // Optional listen-server bridge. These public methods use only game/BCL
@@ -130,7 +140,11 @@ namespace ValheimVRM.Server
         {
             if (sequence > 0) ApplyHostSelection(sequence, accept, model, hash, height, true);
         }
-        void ApplyHostSelection(long sequence, bool accept, string model, string hash, float height = AvatarHeightRules.Default, bool withHeight = false)
+        public void SetHostSelectionWithCalibration(long sequence, bool accept, string model, string hash, float height, string calibration)
+        {
+            if (sequence > 0 && calibration != null) ApplyHostSelection(sequence, accept, model, hash, height, true, calibration);
+        }
+        void ApplyHostSelection(long sequence, bool accept, string model, string hash, float height = AvatarHeightRules.Default, bool withHeight = false, string calibration = null)
         {
             // The client bridge may run before our first Update after joining.
             // Reset first, so the next server tick cannot erase that initial choice.
@@ -138,9 +152,11 @@ namespace ValheimVRM.Server
             if (net == null || !net.IsServer()) return;
             if (!(model == "" && hash == "" || AvatarSyncRules.ValidModel(model) && AvatarSyncRules.ValidHash(hash)) ||
                 !AvatarHeightRules.Valid(height) || (hostHeightSupport && !withHeight) ||
+                (hostCalibrationSupport && calibration == null) || (calibration != null && !AvatarCalibrationCodec.TryDecode(calibration, out _)) ||
                 !hostOrder.TryAccept(sequence)) return;
             hostEnabled = accept; hostModel = model; hostHash = hash;
             hostHeight = height; hostHeightSupport = withHeight;
+            hostCalibration = calibration; hostCalibrationSupport = calibration != null;
         }
         public ZPackage ReadHostSnapshot()
         {
@@ -152,6 +168,12 @@ namespace ValheimVRM.Server
         {
             ResetNetworkIfNeeded();
             var package = AvatarSyncWire.Snapshot(registry.Revision, registry.Snapshot(), true);
+            package.SetPos(0); return package;
+        }
+        public ZPackage ReadHostSnapshotWithCalibration()
+        {
+            ResetNetworkIfNeeded();
+            var package = AvatarSyncWire.Snapshot(registry.Revision, registry.Snapshot(), true, true);
             package.SetPos(0); return package;
         }
     }

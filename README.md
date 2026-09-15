@@ -16,7 +16,8 @@ Replace Valheim characters with your own humanoid VRM avatars and switch them wi
 - Save selections per game character, preserve equipped items and stats, and adapt item mounts to each avatar's hand bones.
 - Adjust physics sway weight, scene lighting, received shadows and avatar bloom.
 - Set model height from **1.4 to 2.2 m**, default **2 m**, and synchronize it independently per player. Apply VRM 0.x/1.0 MToon brightness limits at import.
-- Optionally synchronize selections independently per player, with increasing request sequences to handle out-of-order messages.
+- Calibrate animation postures once and adjust state/clip XYZ offsets and left/right/two-handed item size/position in F8.
+- Optionally synchronize models, heights, all calibration sliders and physics weights independently per player; increasing request sequences handle out-of-order messages.
 - Release unused avatar resources. **1.8.7 fixes the GPU memory leak from duplicate patches when returning to the main menu, and cancels avatar attachment safely during scene unload.**
 
 The public release includes **no avatars**. Unity packages, FBX files and VRChat projects must first be exported to VRM. Exported bones, materials and spring settings determine which effects can be reproduced.
@@ -86,7 +87,7 @@ Paths below are relative to the game root. Missing optional files or an absent c
 | `BepInEx/config/ValheimVRM/avatar_selections.json` | Model choices per game character. | The mod when saving a selection. |
 | `BepInEx/config/ValheimVRM/avatar_heights.json` | Visual height per local game character (default 2 m). | The mod when applying the height slider. |
 | `BepInEx/config/ValheimVRM/avatar_calibration.json` | Per-avatar animation XYZ and held-item scale/position adjustments. | Generated when F8 calibration sliders are saved. |
-| `BepInEx/config/ValheimVRM/physics_options.json` | Client-wide physics sway weight. | The mod when saving a slider change. |
+| `BepInEx/config/ValheimVRM/physics_options.json` | Your avatar's physics sway weight; shared with participating viewers. | The mod when saving a slider change. |
 | `BepInEx/config/ValheimVRM/rendering_options.json` | Local rendering controls. | The mod when changing an option. |
 | `BepInEx/config/ValheimVRM/settings_ModelName.txt` | Optional model scale, offsets and equipment settings. | Created when F8 height offsets are saved; other settings may be added manually. |
 | `BepInEx/config/ValheimVRM/global_settings.txt` | Optional global settings, including the F8 picker switch. | The user; not auto-generated. |
@@ -120,7 +121,7 @@ Standing, walking and running use a fixed vertical offset. The original animatio
 
 F8 provides **Standing height offset** and **Sitting height offset**, independently adjustable from **−50 to +50 cm** in 1 cm steps. Positive values raise the avatar; negative values lower it. Changes apply live and save when dragging ends; **Reset both to 0** restores automatic placement. Standing covers ordinary movement; sitting covers ground/chair/ship sitting and getting into/out of ground sitting. Sleeping uses a separate reclining reference; ragdolls retain their existing placement.
 
-These optional adjustments are saved per model in `BepInEx/config/ValheimVRM/settings_ModelName.txt` as `StandingHeightOffset` and `SittingHeightOffset` (meters). Saving creates the file when needed and preserves other parameters/comments. They affect this computer's rendering and are not sent by server sync. Existing `ModelOffsetY` still adds a global offset. Use the sliders for unusual footwear or authored shapes; they do not replace automatic grounding or add leg IK to fit every chair.
+These optional adjustments are saved per model in `BepInEx/config/ValheimVRM/settings_ModelName.txt` as `StandingHeightOffset` and `SittingHeightOffset` (meters). Saving creates the file when needed and preserves other parameters/comments. With server, sender and viewer on 1.8.14+, these values are synchronized for the owning player. Existing `ModelOffsetY` still adds a global offset. Use the sliders for unusual footwear or authored shapes; they do not replace automatic grounding or add leg IK to fit every chair.
 
 ### Animation and held-item calibration
 
@@ -130,11 +131,11 @@ Loading or changing height measures fixed reference poses on an isolated native 
 
 F8 → **Held item calibration** has separate **left hand, right hand and two-handed (including bows)** foldouts. Palm bones determine the initial grip. Authored item size is multiplied by **avatar height / 2 m**, then by the selected group's **25–200% uniform scale**. Each group also has **−50 to +50 cm XYZ offsets** in grip axes. Native item types select the two-handed group exclusively; left/right multipliers are not applied again. Authored item transforms are retained and restored on detach.
 
-Defaults are zero translation and 100% scale. Changes preview immediately, save on release/menu close and have reset buttons. Preferences are stored per avatar in `BepInEx/config/ValheimVRM/avatar_calibration.json`, alongside the existing standing/sitting adjustments. They affect this computer only; synchronized player heights still independently drive each remote clone's automatic calibration and item size. Both VRM generations share the same implementation. Fixed calibration can leave small intersections/gaps for different body proportions; it does not implement continuous hand/foot IK.
+Defaults are zero translation and 100% scale. Changes preview immediately, save on release/menu close and have reset buttons. Preferences are stored per avatar in `BepInEx/config/ValheimVRM/avatar_calibration.json`, alongside the existing standing/sitting adjustments. Server, sender and viewer on 1.8.14+ synchronize these controls, standing/sitting offsets and physics weight together with model and height. Changes are shared after dragging ends; unchanged values are not resent. Remote settings belong only to that player's instance, even when several players use the same model. They never overwrite the viewer's saved preferences. Manual changes update the existing instance; changing model/height reruns initial calibration from the original reference without accumulating corrections. Both VRM generations share the same implementation. Fixed calibration can leave small intersections/gaps for different body proportions; it does not implement continuous hand/foot IK.
 
 ### Physics weight
 
-The slider ranges from **0% to 100%**, default **50%**. Zero shows no spring rotation; 100% retains the exported motion. Changes apply immediately, save when dragging ends, and persist across switches and restarts.
+The slider ranges from **0% to 100%**, default **50%**. Zero shows no spring rotation; 100% retains the exported motion. Changes apply immediately, save when dragging ends, and persist across switches and restarts. With calibration sync active, viewers use the owning player's weight for that avatar; spring simulation still runs locally.
 
 This controls exported hair, clothing and body spring motion in VRM 0.x and VRM 1.0 while preserving authored stiffness, gravity, damping and collisions. It cannot create missing physics or directly run VRChat PhysBone components. Clothing/body clipping also depends on skinning, blend shapes and collider setup; lowering weight does not repair the source asset.
 
@@ -170,7 +171,7 @@ Changing height reattaches a fresh clone of the cached model. The same initializ
 
 **Height synchronization requires server and viewing/sending clients 1.8.12 or newer.** A = 1.4 m and B = 2 m appear at those respective heights, even with the same VRM file. Height travels with the model choice under the authenticated player/character identity and the same increasing request sequence. Late packets cannot undo newer height choices. Respawns, late joins and model changes retain the sender's height.
 
-Without the server addon, or with synchronization disabled, height works locally. Older server/client versions retain model synchronization but cannot display custom remote heights; old senders default to 2 m on updated viewers. F8 reports whether height synchronization is available. Personal standing/sitting offset sliders remain local per-model adjustments and are separate from the synchronized height.
+Without the server addon, or with synchronization disabled, height works locally. Older server/client versions retain model synchronization but cannot display custom remote heights; old senders default to 2 m on updated viewers. F8 reports whether height synchronization is available. Standing/sitting adjustments are saved per model and are included in the complete per-player calibration state with 1.8.14+.
 
 ## Model brightness reference
 
@@ -232,11 +233,11 @@ Participating players install the complete client and the matching `.vrm` files 
 | Server addon installed | Missing files, different folders or different same-name contents | Admission is unaffected. Skip that unavailable update and retain the player's last usable appearance, or vanilla on first load. |
 | Server addon installed | Client opts out | Keep the client's own avatar locally, withdraw its public selection and restore remote players to vanilla on that client. |
 
-Whole folders need not match. Each model being displayed needs the **same case-sensitive filename and SHA-256 content hash**. The server relays names/hashes, never VRM bytes. Add missing unimported files and refresh to retry; restart after replacing a cached model. Personal rendering, physics weight and model TXT settings are not synchronized.
+Whole folders need not match. Each model being displayed needs the **same case-sensitive filename and SHA-256 content hash**. The server relays names/hashes, heights and calibration values, never VRM bytes. Add missing unimported files and refresh to retry; restart after replacing a cached model. Calibration controls and physics weight are synchronized per player with 1.8.14+; the receiving client keeps its own saved preferences. Rendering switches remain viewing preferences.
 
 ### Player isolation and request ordering
 
-If A selects model 1 and B selects model 2, participating viewers see A = model 1 and B = model 2. Choices are bound to connections and character network IDs, not nicknames. Identical nicknames/model choices, respawns, reconnects and late joins retain their own associations.
+If A selects model 1 and B selects model 2, participating viewers see A = model 1 and B = model 2. Models, heights, all calibration sliders and physics weights are bound to authenticated connections and character network IDs, not nicknames. Full calibration sync requires server, sender and viewer 1.8.14+; F8 reports whether it is active. Older peers retain their supported model/height behavior, without the new calibration controls. Identical nicknames/model choices, respawns, reconnects and late joins retain their own associations.
 
 With **1.8.3 or newer on both sender and server**, F8 shows **Request order protection active**. Each actual request carries an increasing sequence: if request 2 arrives before request 1, late request 1 and duplicate request 2 cannot overwrite the final choice. Opt-out is ordered too; downstream snapshots compare server revisions. This uses connection-scoped counters, not computer clocks or game frames.
 

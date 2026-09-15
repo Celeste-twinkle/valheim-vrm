@@ -58,8 +58,11 @@ and XYZ adjustments. Palm bones determine grips; original item size follows
 height / 2 m before the selected group's multiplier. Two-handed items use only
 their own group. Authored attachments are preserved; missing fingers use a wrist
 fallback. Preferences preview live and save on release in
-BepInEx/config/ValheimVRM/avatar_calibration.json. They are local per-avatar values;
-remote synchronized heights still independently drive automatic calibration.
+BepInEx/config/ValheimVRM/avatar_calibration.json. Server, sender and viewer 1.8.14+ share all these
+controls, standing/sitting offsets, physics weight and height per player. Remote
+instances use the sender's values without writing the viewer's preferences. Manual
+changes update in place after release; model/height changes rerun fixed calibration
+from the original reference. F8 reports whether full calibration sync is active.
 Fixed references may retain small intersections/gaps; no additional hand/foot IK.
 
 VRM 1.0 spring chains and their collision groups are retained on player clones,

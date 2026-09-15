@@ -1,9 +1,11 @@
-## 1.8.14 — Animation and held-item calibration
+## 1.8.14 — Synchronized animation and held-item calibration
 
 - Add F8 animation foldouts with XYZ offsets, search and active-state filtering. Validate 172 native character states and 434 clip names from Valheim 1.0.12; blend clips have individual weighted adjustments.
 - Calibrate standing, ground/seat support, swimming, hand contacts, riding, kneeling and reclining from fixed reference poses during loading or height changes. Playback blends cached absolute offsets without resampling animated feet or modifying native bones.
 - Add separate left/right/two-handed item uniform scale and XYZ controls. Palm-derived grips retain authored transforms; item size follows player height relative to 2 m. Two-handed item types use their own group exclusively.
-- Save local per-avatar calibration preferences atomically; missing configuration uses defaults. Retain independent standing/sitting sliders, VRM 0.x/1.0 behavior and per-player synchronized height. Server protocol is unchanged.
+- Synchronize every calibration slider: standing/sitting offsets, state/clip XYZ, all three item scales/XYZ, plus physics sway weight and height. Each authenticated player owns independent instance settings; received controls never write the viewer's preferences, even for the same model. Manual changes update in place after release; height changes recalibrate from the reference without accumulating offsets.
+- Negotiate calibration-capable requests/snapshot format 3. Complete visual state shares one increasing sequence; reject malformed/stale/downgraded messages before advancing it. Bounded snapshot chunks are assembled atomically. Preserve old-peer model/height behavior, local mode, missing-file fallback and unmodded admission.
+- Save personal per-model calibration preferences atomically; missing configuration uses defaults. VRM 0.x and 1.0 share the same calibration and synchronization implementation.
 
 Validation: `docs/release-1.8.14-validation.md`.
 

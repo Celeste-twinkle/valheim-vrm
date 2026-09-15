@@ -86,11 +86,11 @@ namespace ValheimVRM
 
         // Unity runs nested enumerators separately. Drive them here so an import
         // exception clears the busy state and is shown in the same menu.
-        internal void RequestRemoteSwitch(Player player, string name, string hash, Func<bool> stillCurrent, Action<bool> completed, float height = AvatarScale.DefaultHeight)
+        internal void RequestRemoteSwitch(Player player, string name, string hash, Func<bool> stillCurrent, Action<bool> completed, float height = AvatarScale.DefaultHeight, string calibration = null)
         {
             if (IsBusy || player == null || player == Player.m_localPlayer) { completed(false); return; }
             IsBusy = true; LastError = ""; loadingName = name;
-            StartCoroutine(RunSwitch(Switch(player, name, false, hash, stillCurrent, height), completed));
+            StartCoroutine(RunSwitch(Switch(player, name, false, hash, stillCurrent, height, calibration), completed));
         }
 
         IEnumerator RunSwitch(IEnumerator routine, Action<bool> onCompleted = null)
@@ -135,7 +135,7 @@ namespace ValheimVRM
             }
         }
 
-        IEnumerator Switch(Player player, string name, bool localSelection = true, string expectedHash = null, Func<bool> stillCurrent = null, float? height = null)
+        IEnumerator Switch(Player player, string name, bool localSelection = true, string expectedHash = null, Func<bool> stillCurrent = null, float? height = null, string calibration = null)
         {
             Func<bool> valid = () => player != null && !player.IsDead() &&
                 (localSelection ? player == Player.m_localPlayer : player != Player.m_localPlayer && stillCurrent != null && stillCurrent());
@@ -212,7 +212,7 @@ namespace ValheimVRM
             float priorScale = hadAvatar && priorName != null ? Settings.GetSettings(priorName).InteractionDistanceScale : 1f;
             float priorDistance = player.m_maxInteractDistance;
             VrmManager.PlayerToName[player] = name;
-            yield return candidate.SetToPlayer(player, height);
+            yield return candidate.SetToPlayer(player, height, calibration);
             if (player == null || player.IsDead()) yield break;
             var visual = player.GetComponent<VrmController>()?.visual;
             if (visual == null || visual == priorVisual) throw new InvalidOperationException("Could not attach the selected avatar.");
@@ -353,6 +353,10 @@ namespace ValheimVRM
                     ? Text("Player height synchronization active", "玩家身高同步已启用")
                     : Text("Height is local only · Update the server to sync height", "身高仅本机生效 · 更新服务端可同步身高"));
             if (sync.Connected && sync.SyncEnabled)
+                GUILayout.Label(sync.CalibrationSync
+                    ? Text("Pose, item and physics settings synchronized per player", "姿态、道具与物理设置已按玩家同步")
+                    : Text("Calibration stays local · Update the server and viewers to 1.8.14+", "校准仅本机生效；服务端与观察方需更新至 1.8.14 或更新版本"));
+            if (sync.Connected && sync.SyncEnabled)
                 GUILayout.Label(sync.SequencedRequests
                     ? Text("Request order protection active", "请求顺序保护已启用")
                     : Text("Legacy server compatibility · Update the server for request order protection", "旧版服务器兼容模式 · 更新服务端可启用请求顺序保护"));
@@ -377,7 +381,7 @@ namespace ValheimVRM
                 settings.StandingHeightOffset = standing; settings.SittingHeightOffset = sitting;
                 heightDirty.Add(modelName);
             }
-            GUILayout.Label(Text("+ raises · − lowers · saved per avatar on this computer", "正值抬高，负值降低；按模型保存在本机"));
+            GUILayout.Label(Text("+ raises · − lowers · saved locally and shared when calibration sync is available", "正值抬高，负值降低；本机保存，支持校准同步时随玩家分享"));
         }
 
         float HeightSlider(string label, float value)

@@ -59,7 +59,7 @@ namespace ValheimVRM
             target = avatar;
             this.equipment = equipment;
             this.settings = settings ?? new Settings.VrmSettingsContainer();
-            profile = AvatarCalibrationOptions.Current.Get(this.settings.Name);
+            profile = avatar.GetComponent<AvatarCalibrationBinding>()?.Profile ?? AvatarCalibrationOptions.Current.Get(this.settings.Name);
             heightScale = (avatar.GetComponent<AvatarScale>()?.TargetHeight ?? AvatarScale.DefaultHeight) / AvatarScale.DefaultHeight;
             var sourcePose = GetBindPose(original);
             var targetPose = GetBindPose(avatar);

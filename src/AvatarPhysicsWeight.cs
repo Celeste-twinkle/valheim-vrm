@@ -21,6 +21,7 @@ namespace ValheimVRM
         }
         Joint[] joints = new Joint[0];
         bool blended;
+        public float SynchronizedWeight = -1;
         Vrm10Runtime runtime;
         delegate void ConstraintProcessor(in TransformState target, in TransformState source);
         IVrm10Constraint[] followers = new IVrm10Constraint[0];
@@ -84,7 +85,7 @@ namespace ValheimVRM
             blended = false;
         }
 
-        void LateUpdate() { ApplyWeight(AvatarPhysics.Weight); }
+        void LateUpdate() { ApplyWeight(SynchronizedWeight >= 0 ? SynchronizedWeight : AvatarPhysics.Weight); }
         internal void ApplyWeight(float weight)
         {
             weight = AvatarPhysics.ClampWeight(weight);
