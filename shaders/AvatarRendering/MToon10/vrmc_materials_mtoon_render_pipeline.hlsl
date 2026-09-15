@@ -11,8 +11,10 @@
 #include <AutoLight.cginc>
 // This variant is used only when shadow reception or scene lighting is off.
 // Keep distance attenuation and light cookies, but bypass shadow-map samples.
+#if !defined(AVATAR_FUR) || !defined(AVATAR_FUR_SHADOWS)
 #undef UNITY_SHADOW_ATTENUATION
 #define UNITY_SHADOW_ATTENUATION(input, worldPos) 1.0
+#endif
 #include <Lighting.cginc>
 #include <UnityShaderVariables.cginc>
 #endif

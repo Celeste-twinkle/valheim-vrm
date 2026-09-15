@@ -17,6 +17,9 @@ struct Attributes
 
 struct Varyings
 {
+#if defined(AVATAR_FUR)
+    float3 fur : TEXCOORD8; // fin length coordinate, density fade, distance fade
+#endif
     float2 uv : TEXCOORD0;
     float3 positionWS : TEXCOORD1;
     half3 normalWS : TEXCOORD2;

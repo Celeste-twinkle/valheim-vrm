@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ValheimVRM optional material fur extras, version 1",
+  "description": "Place this object at materials[i].extras.ValheimVRM_fur. Numeric authoring limits are clamped by the runtime; invalid types are rejected.",
+  "type": "object",
+  "required": ["version"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"type": "integer", "const": 1},
+    "enabled": {"type": "boolean", "default": true},
+    "length": {"type": "number", "minimum": 0, "maximum": 0.03, "default": 0.005},
+    "density": {"type": "integer", "minimum": 1, "maximum": 3, "default": 2},
+    "directionX": {"type": "number", "minimum": -1, "maximum": 1, "default": 0},
+    "directionY": {"type": "number", "minimum": -1, "maximum": 1, "default": 0},
+    "directionZ": {"type": "number", "minimum": 0, "maximum": 1, "default": 1},
+    "randomness": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.5},
+    "rootOffset": {"type": "number", "minimum": -1, "maximum": 0, "default": -1},
+    "noiseScaleX": {"type": "number", "minimum": 0.01, "maximum": 100, "default": 1},
+    "noiseScaleY": {"type": "number", "minimum": 0.01, "maximum": 100, "default": 1},
+    "lengthImage": {"$ref": "#/$defs/image"},
+    "noiseImage": {"$ref": "#/$defs/image"},
+    "maskImage": {"$ref": "#/$defs/image"}
+  },
+  "$defs": {
+    "image": {"type": "integer", "minimum": 0, "maximum": 65535, "description": "Index in this GLB's images array; embedded buffer 0 PNG only."}
+  }
+}

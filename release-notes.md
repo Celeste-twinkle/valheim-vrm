@@ -1,3 +1,13 @@
+## 1.8.17 — Optional GPU fur and authoring specification
+
+- Read optional `materials[i].extras.ValheimVRM_fur` in VRM 0.x and VRM 1.0. Keep standard MToon fabric as the fallback; embed only parameters and PNG masks in the model.
+- Generate bounded fur fins on the GPU while sharing the source mesh, per-player bones and blend shape weights. Follow model height, material color/alpha/UV animation and rendering options.
+- Use the local `AVATAR_FUR_ON` macro and a separate lazily loaded `avatar_fur` bundle. Inactive models create no fur rendering resources or per-frame components; release the bundle with its last imported owner.
+- Include matching fur geometry in bloom exclusion and preserve the existing TAA projection and transparent AO handling. Fade density with distance.
+- Add the complete [fur integration specification](docs/FUR-EXTENSION.md), JSON Schema, embedding tool and engine regression suite. No avatars are included in public packages. Server protocol and admission behavior are unchanged.
+
+Validation: `docs/release-1.8.17-validation.md`.
+
 ## 1.8.16 — Transparent material SSAO and compositing
 
 - Repair alpha-blended MToon materials incorrectly placed in opaque render queues, so Valheim applies background SSAO before drawing genuine transparency. Preserve valid queues, alpha, textures, blend/depth-write settings and source files; both VRM 0.x and 1.0 use the same rules.

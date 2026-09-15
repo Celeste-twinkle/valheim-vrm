@@ -133,13 +133,18 @@ namespace ValheimVRM
 				: new GlbBinaryParser(buf, path).Parse())
 			{
 				ImporterContext context;
+				AvatarFurImporter fur;
 				try
 				{
 					var legacy = new VRMData(data);
-					context = new VRMImporterContext(legacy, null, new TextureDeserializer(),
-						new AvatarBrightness(new BuiltInVrmMaterialDescriptorGenerator(legacy.VrmExtension)));
+					var materials = AvatarFurImporter.Wrap(new AvatarBrightness(new BuiltInVrmMaterialDescriptorGenerator(legacy.VrmExtension)), data.Json, out fur);
+					context = new VRMImporterContext(legacy, null, new TextureDeserializer(), materials);
 				}
-				catch (NotVrm0Exception) { context = new Vrm10Importer(Vrm10Data.Parse(data), null, null, new AvatarBrightness()); }
+				catch (NotVrm0Exception)
+				{
+					var materials = AvatarFurImporter.Wrap(new AvatarBrightness(), data.Json, out fur);
+					context = new Vrm10Importer(Vrm10Data.Parse(data), null, null, materials);
+				}
 				using (context)
 				{
 					try
@@ -148,6 +153,7 @@ namespace ValheimVRM
 						loaded.ShowMeshes();
 						float effectiveScale = AvatarScale.Apply(loaded.Root, scale);
 						var sizing = loaded.Root.GetComponent<AvatarScale>();
+						fur?.Attach(loaded, buf);
 						Debug.Log($"[ValheimVRM] Avatar standing height {sizing.UnscaledHeight:F3} m, scale {effectiveScale:F3}, final {sizing.UnscaledHeight * effectiveScale:F3} m");
 						Debug.Log("[ValheimVRM] VRM read successful");
 						// LoadAsync transfers resource ownership to RuntimeGltfInstance.

@@ -4,7 +4,7 @@
 
 将英灵神殿角色替换为自己的 VRM 人形模型，游戏内按 **F8** 切换。可以只在本机生效，也可以安装独立服务器插件，让其他玩家看到各自选择的模型。
 
-**当前发布版：1.8.16** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
+**当前发布版：1.8.17** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
 
 [下载 Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [发布版源码](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [更新记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -22,16 +22,18 @@
 
 公开 Release **不包含角色模型**。`.unitypackage`、FBX 和 VRChat 工程不能直接放进模型目录，需要先导出为 VRM；导出的物理、材质和骨骼决定可还原的效果。
 
+模型作者的可选 GPU 毛绒功能参见 [毛绒扩展接入规范](docs/FUR-EXTENSION.md)：包括 VRM 0.x／1.0 自定义 extras、字段定义、内嵌遮罩、导出脚本、宏开关、资源释放及兼容回退。它需要支持此扩展的客户端，普通 VRM 读取器显示标准衣料。
+
 ## 安装与升级
 
 ### 选择安装包
 
 | 使用场景 | 安装内容 |
 | --- | --- |
-| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.16.zip` + 自备 `.vrm`。 |
-| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.16.zip`；无需模型或客户端依赖。 |
+| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-1.8.17.zip` + 自备 `.vrm`。 |
+| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-1.8.17.zip`；无需模型或客户端依赖。 |
 | 通过游戏“启动服务器”的房主，需要外观同步 | 在房主游戏目录安装客户端包和服务器包；其他玩家按客户端方式安装。 |
-| 仅下载源码 | `ValheimVRM-1.8.16-source.zip` 用于开发，不能代替编译好的插件包。 |
+| 仅下载源码 | `ValheimVRM-1.8.17-source.zip` 用于开发，不能代替编译好的插件包。 |
 
 公开客户端、服务器 ZIP 均不附带 BepInEx。前置加载器与依赖来源见[详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)。
 
@@ -44,7 +46,7 @@
 
 同一个游戏／服务器目录只需安装一份加载器。完整客户端 ZIP 已提供配套 UniVRM 运行库和着色器，无需另行下载；服务端不需要这些客户端依赖。
 
-另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_1.8.16_完整插件.zip` 和 `10_ValheimVRM_Server_1.8.16.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
+另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_1.8.17_完整插件.zip` 和 `10_ValheimVRM_Server_1.8.17.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
 
 ### 玩家安装步骤
 
@@ -52,7 +54,7 @@
 2. 将**完整客户端 ZIP**解压到 `valheim.exe` 所在目录，合并 `BepInEx` 和 `valheim_Data`。不能只复制 `ValheimVRM.dll`。
 3. 在游戏根目录创建 `ValheimVRM`，把自己的 `.vrm` 直接放进去。一个模型就能使用。
 4. 启动游戏，进入世界后关闭聊天、物品栏等菜单，按 **F8** 选择模型。
-5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.16**。
+5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 1.8.17**。
 
 ```text
 Valheim/
@@ -207,7 +209,7 @@ VRM 0.x／1.0 MToon 均不应用该配置，现有模型配置继续保持 `Mode
 
 ### 服务端怎么安装
 
-在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.16.zip` 解压到服务器根目录，再按原启动方式启动：
+在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-1.8.17.zip` 解压到服务器根目录，再按原启动方式启动：
 
 ```text
 专用服务器目录/
@@ -218,7 +220,7 @@ VRM 0.x／1.0 MToon 均不应用该配置，现有模型配置继续保持 `Mode
 
 **这两个 `ValheimVRM.Server` 目录都不需要放客户端模型文件。** 服务器不导入模型，不需要客户端 UniVRM DLL 或着色器；服务器自己的 `ValheimVRM` 目录可以不存在。
 
-参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.16**。含背负装备的完整校准同步要求服务端 1.8.14+、发送端和观察端 1.8.15+，F8 显示是否启用；旧版继续保留其支持的模型／身高同步。
+参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **1.8.17**。含背负装备的完整校准同步要求服务端 1.8.14+、发送端和观察端 1.8.15+，F8 显示是否启用；旧版继续保留其支持的模型／身高同步。
 
 ### 不同安装组合的行为
 
@@ -258,7 +260,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 | 进服提示“版本不兼容” | 核对客户端与服务器的游戏版本，并查看双方连接日志。VRM 服务端不会因客户端缺少本插件而拒绝入服。 |
 | 摆动过大／衣服与身体穿模 | 降低 F8 物理权重；仍穿模时检查导出资产的蒙皮、形态键和碰撞设置。 |
 | 身体有树叶状暗斑／关闭接收阴影仍存在 | 阴影贴图与屏幕空间后处理不同。本版为不透明／裁剪 MToon 表面补充深度与法线；检查是否装全新依赖，反馈时附材质类型及渲染选项。 |
-| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.16** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
+| 退出世界后越来越卡、报显存分配错误 | 更新完整 **1.8.17** 并排除重复 DLL。该版已修复主菜单重入时重复补丁造成的显存泄漏。 |
 | 模型退出视野后内存没有立刻下降 | 镜头外的活动角色仍需模型；只有最后一个实例销毁后才进入释放等待，详见下一节。 |
 
 反馈问题请提供游戏版本、Mod 版本、触发步骤和相关日志片段：
@@ -291,7 +293,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-输出为 `release/ValheimVRM-1.8.16.zip` 和 `release/ValheimVRM-Server-1.8.16.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
+输出为 `release/ValheimVRM-1.8.17.zip` 和 `release/ValheimVRM-Server-1.8.17.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
 
 [着色器重建](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [依赖来源与许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [项目许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [问题反馈](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 

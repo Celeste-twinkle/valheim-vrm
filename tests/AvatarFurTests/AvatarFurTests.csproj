@@ -1,16 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net471</TargetFramework>
-    <Version>1.8.17</Version>
-    <AssemblyName>ValheimVRM.Server</AssemblyName>
+    <AssemblyName>ValheimVRM.AvatarFurTests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../shared/*.cs" Link="Shared/%(Filename)%(Extension)" />
+    <Reference Include="ValheimVRM" HintPath="../../bin/Release/net471/ValheimVRM.dll" />
+    <Reference Include="VRM10" HintPath="../../Libs/Managed/VRM10.dll" />
+    <Reference Include="VRM" HintPath="../../Libs/Managed/VRM.dll" />
     <Reference Include="BepInEx" HintPath="$(VALHEIM_INSTALL_PATH)/BepInEx/core/BepInEx.dll" />
+    <Reference Include="0Harmony" HintPath="$(VALHEIM_INSTALL_PATH)/BepInEx/core/0Harmony.dll" />
     <Reference Include="assembly_valheim" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_valheim.dll" />
     <Reference Include="assembly_utils" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_utils.dll" />
     <Reference Include="UnityEngine" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.AnimationModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.AnimationModule.dll" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-  </ItemGroup>
+  <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.AssetBundleModule.dll" /><Reference Include="Newtonsoft.Json" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/Newtonsoft.Json.dll" /></ItemGroup>
 </Project>

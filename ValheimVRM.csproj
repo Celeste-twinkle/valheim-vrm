@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>1.8.16</Version>
+		<Version>1.8.17</Version>
 		<InstallToGame Condition="'$(InstallToGame)' == ''">false</InstallToGame>
 		<TargetFramework>net471</TargetFramework>
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -14,6 +14,7 @@
 		<Compile Include="shared/*.cs" />
         <EmbeddedResource Include="Assets/avatar_bloom" LogicalName="ValheimVRM.avatar_bloom" />
         <EmbeddedResource Include="Assets/avatar_rendering" LogicalName="ValheimVRM.avatar_rendering" />
+        <EmbeddedResource Include="Assets/avatar_fur" LogicalName="ValheimVRM.avatar_fur" />
         <EmbeddedResource Include="Assets/player-animation-catalog.json" LogicalName="ValheimVRM.player-animation-catalog.json" />
 	</ItemGroup>
 
@@ -223,6 +224,7 @@
             <ProjectFiles Include="$(ROOT_DIR)/README.zh-CN.md" />
             <ProjectFiles Include="$(ROOT_DIR)/release-notes.md" />
             <ProjectDocs Include="$(ROOT_DIR)/docs/*.md" />
+            <ProjectDocs Include="$(ROOT_DIR)/docs/*.schema.json" />
 
 
             <ProjectFiles Include="$(LIBS_PLUGINS_64)/FreeImage-license.md" />

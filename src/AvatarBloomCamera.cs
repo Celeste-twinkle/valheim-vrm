@@ -22,6 +22,7 @@ namespace ValheimVRM
             internal Renderer Renderer;
             internal Material Mask;
             internal int Submesh;
+            internal int Pass;
         }
 
         internal void Prepare(Camera camera)
@@ -49,6 +50,13 @@ namespace ValheimVRM
                     for (int index = 0; index < sharedMaterials.Count; index++)
                     {
                         var source = sharedMaterials[index];
+                        if (AvatarFurSurface.IsFur(source))
+                        {
+                            int pass = source.FindPass("BLOOM_MASK");
+                            if (pass >= 0 && source.GetFloat("_FurLength") > 0)
+                                draws.Add(new Draw { Renderer = renderer, Mask = source, Submesh = index, Pass = pass });
+                            continue;
+                        }
                         if (!AvatarRenderingTarget.Supports(source)) continue;
                         draws.Add(new Draw { Renderer = renderer, Mask = GetMask(source), Submesh = index });
                     }
@@ -62,7 +70,7 @@ namespace ValheimVRM
             // The camera depth buffer keeps foreground walls and equipment out of this mask.
             commands.SetRenderTarget(new RenderTargetIdentifier(BloomMask), BuiltinRenderTextureType.CameraTarget);
             commands.ClearRenderTarget(false, true, Color.clear);
-            foreach (var draw in draws) commands.DrawRenderer(draw.Renderer, draw.Mask, draw.Submesh, 0);
+            foreach (var draw in draws) commands.DrawRenderer(draw.Renderer, draw.Mask, draw.Submesh, draw.Pass);
             commands.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
 
             foreach (var source in masks.Keys.Where(m => m == null).ToArray())

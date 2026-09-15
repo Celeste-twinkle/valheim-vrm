@@ -55,3 +55,19 @@ To rebuild the embedded bundles:
 
 Both bundles are committed for players/builders who do not have the Unity editor.
 Neither contains models, textures from avatars, scenes, or user data.
+
+`AvatarRendering/AvatarFur.shader` is built into a separate **avatar_fur** bundle.
+It is loaded only for a model with enabled `extras.ValheimVRM_fur`, and unloaded
+after the last imported owner is released. The `AVATAR_FUR_ON` local keyword
+compiles the geometry, coverage and lighting only for enabled fur materials;
+`AVATAR_FUR_SHADOWS` preserves the normal shadow/distance/cookie attenuation when
+shadow reception is enabled. Models without the extension have no extra renderer,
+material, texture, update component or draw. The binary stays embedded in the
+plugin installation but is not loaded by normal rendering initialization.
+
+The transparent overlay shares the source mesh and uses its clone's own bones
+and blend shape weights. Its named `BLOOM_MASK` pass is command-buffer-only and
+uses the same geometry, coverage and camera-dependent fade as the color passes.
+The base MToon continues to supply depth/normals; fur composites after AO.
+Rebuilding now produces **three** bundles; also copy `../Build/avatar_fur` into
+the repository's `Assets` directory. See [the authoring specification](../docs/FUR-EXTENSION.md).
