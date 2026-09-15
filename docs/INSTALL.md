@@ -1,4 +1,4 @@
-# Install ValheimVRM 1.8.13 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.14 (Celeste-twinkle fork)
 
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
@@ -16,7 +16,7 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.13.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.14.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -48,11 +48,19 @@ Changing appearance keeps items equipped and preserves their armor/damage stats.
 Existing per-model settings can still change collider size, interaction distance,
 weapon placement and equipment visibility. Switching does not edit character saves.
 
-Ground sitting now raises the posed soles to the character's ground plane when
-needed. Chair/ship/bed offsets remain separate. Hand attachments are calibrated
-from humanoid palm proportions and track the final animated pose; existing item
-offsets remain available for individual equipment. Avatars without enough finger
-bones use a wrist-following fallback. This does not add two-hand weapon IK.
+F8 **Animation position calibration** exposes searchable state/clip foldouts with
+XYZ offsets (−50 to +50 cm each). Loading/height changes calibrate fixed standing,
+seated, swimming, gripping, riding and reclining references. Playback reads the
+cache and blends transitions without live sole tracking or accumulated corrections.
+
+**Held item calibration** has separate left/right/two-handed 25–200% uniform scale
+and XYZ adjustments. Palm bones determine grips; original item size follows
+height / 2 m before the selected group's multiplier. Two-handed items use only
+their own group. Authored attachments are preserved; missing fingers use a wrist
+fallback. Preferences preview live and save on release in
+BepInEx/config/ValheimVRM/avatar_calibration.json. They are local per-avatar values;
+remote synchronized heights still independently drive automatic calibration.
+Fixed references may retain small intersections/gaps; no additional hand/foot IK.
 
 VRM 1.0 spring chains and their collision groups are retained on player clones,
 so exported hair, clothing and body springs can move. The plugin preserves the
@@ -135,7 +143,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.13.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.14.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -145,7 +153,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.13**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.14**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

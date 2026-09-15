@@ -390,19 +390,8 @@ namespace ValheimVRM
 			float equipmentScale = settings.EquipmentScale;
 			Vector3 equipmentScaleVector = new Vector3(equipmentScale, equipmentScale, equipmentScale);
 
-			var leftItem = __instance.GetField<VisEquipment, GameObject>("m_leftItemInstance");
-			if (leftItem != null)
-			{
-				leftItem.transform.localPosition = settings.LeftHandItemPos;
-				leftItem.transform.localScale = equipmentScaleVector;
-			}
-
-			var rightItem = __instance.GetField<VisEquipment, GameObject>("m_rightItemInstance");
-			if (rightItem != null)
-			{
-				rightItem.transform.localPosition = settings.RightHandItemPos;
-				rightItem.transform.localScale = equipmentScaleVector;
-			}
+			// Held items are calibrated by VRMEquipmentSync after retargeting.
+			// Keep their authored attach/equipoffset transforms as the baseline.
 
 			// divided  by 100 to keep the settings file positions in the same number range. (position offset appears to be on the world, not local)
 			var rightBackItem = __instance.GetField<VisEquipment, GameObject>("m_rightBackItemInstance");

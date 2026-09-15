@@ -1,3 +1,12 @@
+## 1.8.14 — Animation and held-item calibration
+
+- Add F8 animation foldouts with XYZ offsets, search and active-state filtering. Validate 172 native character states and 434 clip names from Valheim 1.0.12; blend clips have individual weighted adjustments.
+- Calibrate standing, ground/seat support, swimming, hand contacts, riding, kneeling and reclining from fixed reference poses during loading or height changes. Playback blends cached absolute offsets without resampling animated feet or modifying native bones.
+- Add separate left/right/two-handed item uniform scale and XYZ controls. Palm-derived grips retain authored transforms; item size follows player height relative to 2 m. Two-handed item types use their own group exclusively.
+- Save local per-avatar calibration preferences atomically; missing configuration uses defaults. Retain independent standing/sitting sliders, VRM 0.x/1.0 behavior and per-player synchronized height. Server protocol is unchanged.
+
+Validation: `docs/release-1.8.14-validation.md`.
+
 ## 1.8.13 — Consistent VRM 0.x and 1.0 behavior
 
 - Extend the existing linear base/shade brightness limits to native VRM 0.x MToon imports, before expression baselines are captured. Preserve lower colors, alpha, textures and source-file hashes.

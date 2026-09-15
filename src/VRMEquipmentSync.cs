@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Reflection;
+using HarmonyLib;
 using UnityEngine;
 
 namespace ValheimVRM
@@ -40,12 +42,25 @@ namespace ValheimVRM
 
         readonly List<Grip> grips = new List<Grip>(10);
         Animator target;
+        VisEquipment equipment;
+        Settings.VrmSettingsContainer settings;
+        AvatarCalibrationOptions.Profile profile;
+        HeldItem leftItem, rightItem;
+        float heightScale = 1;
+        static readonly FieldInfo LeftInstance = AccessTools.Field(typeof(VisEquipment), "m_leftItemInstance");
+        static readonly FieldInfo RightInstance = AccessTools.Field(typeof(VisEquipment), "m_rightItemInstance");
+        static readonly FieldInfo LeftHash = AccessTools.Field(typeof(VisEquipment), "m_leftItem");
+        static readonly FieldInfo RightHash = AccessTools.Field(typeof(VisEquipment), "m_rightItem");
 
-        public void Setup(Animator original, Animator avatar, VisEquipment equipment)
+        public void Setup(Animator original, Animator avatar, VisEquipment equipment, Settings.VrmSettingsContainer settings = null)
         {
             ResetAttachments();
             if (original == null || avatar == null || equipment == null) return;
             target = avatar;
+            this.equipment = equipment;
+            this.settings = settings ?? new Settings.VrmSettingsContainer();
+            profile = AvatarCalibrationOptions.Current.Get(this.settings.Name);
+            heightScale = (avatar.GetComponent<AvatarScale>()?.TargetHeight ?? AvatarScale.DefaultHeight) / AvatarScale.DefaultHeight;
             var sourcePose = GetBindPose(original);
             var targetPose = GetBindPose(avatar);
             AddGrip(original, avatar, equipment.m_leftHand, true, sourcePose, targetPose);
@@ -173,13 +188,66 @@ namespace ValheimVRM
         {
             if (target == null || !target.gameObject.activeInHierarchy) { ResetAttachments(); return; }
             foreach (var grip in grips) grip.Apply();
+            UpdateItem(ref leftItem, true);
+            UpdateItem(ref rightItem, false);
+        }
+
+        void UpdateItem(ref HeldItem held, bool left)
+        {
+            var instance = (left ? LeftInstance : RightInstance).GetValue(equipment) as GameObject;
+            var mount = left ? equipment.m_leftHand : equipment.m_rightHand;
+            if (held != null && (instance == null || held.Item != instance.transform || held.Mount != mount))
+            { held.Restore(); held = null; }
+            // Skin-bound gear is not a hand socket and must not scale native bones.
+            if (instance == null || mount == null || instance.transform.parent != mount) return;
+            if (held == null)
+            {
+                int hash = (int)(left ? LeftHash : RightHash).GetValue(equipment);
+                var data = ObjectDB.instance?.GetItemPrefab(hash)?.GetComponent<ItemDrop>()?.m_itemData?.m_shared;
+                held = new HeldItem(instance.transform, mount,
+                    data != null && IsTwoHanded(data.m_itemType) ? profile.TwoHanded : left ? profile.Left : profile.Right);
+            }
+            held.Apply(heightScale, settings.EquipmentScale, left ? settings.LeftHandItemPos : settings.RightHandItemPos);
+        }
+
+        public static bool IsTwoHanded(ItemDrop.ItemData.ItemType type) =>
+            type == ItemDrop.ItemData.ItemType.TwoHandedWeapon ||
+            type == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft || type == ItemDrop.ItemData.ItemType.Bow;
+
+        sealed class HeldItem
+        {
+            internal readonly Transform Item, Mount;
+            readonly Vector3 position, scale;
+            readonly Quaternion rotation;
+            readonly AvatarCalibrationOptions.Equipment options;
+            internal HeldItem(Transform item, Transform mount, AvatarCalibrationOptions.Equipment options)
+            {
+                Item = item; Mount = mount; this.options = options;
+                position = item.localPosition; rotation = item.localRotation; scale = item.localScale;
+            }
+            internal void Apply(float height, float legacyScale, Vector3 legacyPosition)
+            {
+                if (float.IsNaN(legacyScale) || float.IsInfinity(legacyScale) || legacyScale <= 0) legacyScale = 1;
+                float factor = height * options.Multiplier * legacyScale;
+                Item.localScale = scale * factor;
+                Item.localRotation = rotation;
+                Item.localPosition = position * factor + legacyPosition;
+                Item.position += Mount.rotation * options.Position.Value;
+            }
+            internal void Restore()
+            {
+                if (Item == null || Item.parent != Mount) return;
+                Item.localPosition = position; Item.localRotation = rotation; Item.localScale = scale;
+            }
         }
 
         public void ResetAttachments()
         {
+            leftItem?.Restore(); rightItem?.Restore();
+            leftItem = rightItem = null;
             foreach (var grip in grips) grip.Restore();
             grips.Clear();
-            target = null;
+            target = null; equipment = null;
         }
 
         void OnDisable() { ResetAttachments(); }

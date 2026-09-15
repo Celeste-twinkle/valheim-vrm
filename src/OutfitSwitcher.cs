@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace ValheimVRM
 {
-    public sealed class OutfitSwitcher : MonoBehaviour
+    public sealed partial class OutfitSwitcher : MonoBehaviour
     {
         public static OutfitSwitcher Instance { get; private set; }
         public bool IsBusy { get; private set; }
@@ -234,7 +234,7 @@ namespace ValheimVRM
 
         public void SetMenuOpen(bool value)
         {
-            if (!value) { SavePhysicsOptions(); SaveHeightOptions(); ApplyPendingModelHeight(); }
+            if (!value) { SavePhysicsOptions(); SaveHeightOptions(); SaveCalibrationOptions(); ApplyPendingModelHeight(); }
             MenuOpen = value && Player.m_localPlayer != null && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InIntro();
             if (!MenuOpen) return;
             RefreshModels();
@@ -248,6 +248,7 @@ namespace ValheimVRM
             if (pendingModelHeight.HasValue && GUIUtility.hotControl == 0) ApplyPendingModelHeight();
             if (physicsDirty && GUIUtility.hotControl == 0) SavePhysicsOptions();
             if (heightDirty.Count > 0 && GUIUtility.hotControl == 0) SaveHeightOptions();
+            if (AvatarCalibrationOptions.Current.Dirty && GUIUtility.hotControl == 0) SaveCalibrationOptions();
             if (Player.m_localPlayer == null || Player.m_localPlayer.IsDead() || !Settings.globalSettings.EnableAvatarPicker)
             {
                 MenuOpen = false;
@@ -297,6 +298,7 @@ namespace ValheimVRM
             DrawRenderingOptions();
             DrawPhysicsOptions();
             DrawHeightOptions(current);
+            DrawCalibrationOptions(current);
             DrawSyncOptions();
             GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();
@@ -443,6 +445,7 @@ namespace ValheimVRM
         {
             SavePhysicsOptions();
             SaveHeightOptions();
+            SaveCalibrationOptions();
             if (font != null) Destroy(font);
             if (Instance == this) Instance = null;
         }

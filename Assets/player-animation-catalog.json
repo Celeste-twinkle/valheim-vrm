@@ -1,0 +1,1528 @@
+[
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.wakeup ?",
+    "Clips": []
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Movement",
+    "Clips": [
+      "2-hand-pickaxe-Idle",
+      "2Hand-Spear-Idle",
+      "Atgeir Jog",
+      "Atgeir Strafe L",
+      "Atgeir Strafe R",
+      "Battleaxe Jog",
+      "Battleaxe Strafe Block R",
+      "Battleaxe Strafe L",
+      "Battleaxe Strafe R",
+      "Crossbow Strafe L",
+      "Crossbow Strafe R",
+      "CrossbowJog",
+      "DualAxes Idle",
+      "Feaster Jog",
+      "Feaster Strafe L",
+      "Feaster Strafe R",
+      "Greatsword Idle",
+      "Greatsword Jog",
+      "Greatsword Strafe L",
+      "Greatsword Strafe R",
+      "Idle Crossbow",
+      "Idle Feaster",
+      "Idle Scythe",
+      "Idle Staff 3",
+      "Idle magic item",
+      "IdleTweaked",
+      "Idle_Battleaxe",
+      "Idle_Fishing",
+      "Jog New",
+      "Jog New Atgeir",
+      "Jog New Atgeir Fast",
+      "Jog New Battleaxe",
+      "Jog New Battleaxe Fast",
+      "Jog New Crossbow",
+      "Jog New Crossbow Fast",
+      "Jog New Dual Wield",
+      "Jog New Dual Wield Fast",
+      "Jog New Fast",
+      "Jog New Feaster",
+      "Jog New Feaster Fast",
+      "Jog New Greatsword",
+      "Jog New Greatsword Fast",
+      "Jog New Magic Item",
+      "Jog New Magic Item Fast",
+      "Jog New Pickaxe",
+      "Jog New Pickaxe Fast",
+      "Jog New Scythe",
+      "Jog New Scythe Fast",
+      "Jog New Staff",
+      "Jog New Staff Fast",
+      "Jog New Sword Right",
+      "Jog New Sword Right Fast",
+      "Jog New Torch Left",
+      "Jog New Torch Left Fast",
+      "Jog New Torch Right",
+      "Jog New Torch Right Fast",
+      "Jog Strafe Left",
+      "Jog Strafe Left mirrored",
+      "Jog backward",
+      "Knife Idle",
+      "Magic Item Jog",
+      "Magic Item Strafe L",
+      "Magic Item Strafe R",
+      "PickAxe Jog",
+      "Pickaxe Strafe L",
+      "Pickaxe Strafe R",
+      "Run New",
+      "Run New Atgeir",
+      "Run New Battleaxe",
+      "Run New Crossbow",
+      "Run New Dual Wield",
+      "Run New Feaster",
+      "Run New Greatsword",
+      "Run New Magic Item",
+      "Run New Pickaxe",
+      "Run New Scythe",
+      "Run New Staff",
+      "Run New Sword Right",
+      "Run New Torch Left",
+      "Run New Torch Right",
+      "Scythe Jog",
+      "Scythe Strafe L",
+      "Scythe Strafe R",
+      "Standing Torch Idle left",
+      "Standing Torch Idle right",
+      "Walk New",
+      "Walk New Atgeir",
+      "Walk New Battleaxe",
+      "Walk New Crossbow",
+      "Walk New Dual Wield",
+      "Walk New Feaster",
+      "Walk New Greatsword",
+      "Walk New Magic Item",
+      "Walk New Pickaxe",
+      "Walk New Scythe",
+      "Walk New Staff",
+      "Walk New Sword Right",
+      "Walk New Torch Left",
+      "Walk New Torch Right"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Jump OLD",
+    "Clips": [
+      "JumpTweaked"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.In Water",
+    "Clips": [
+      "Swimming",
+      "Treading Water"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Wakeup",
+    "Clips": [
+      "Standing Up"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_pickaxe",
+    "Clips": [
+      "swing_pickaxe"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.bow aim",
+    "Clips": [
+      "Bow Aim Idle 01",
+      "Bow Aim Walk Back",
+      "Bow Aim Walk Forward",
+      "Bow Aim Walk Left",
+      "Bow Aim Walk Right"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.bow fire",
+    "Clips": [
+      "Bow Aim Recoil"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.spear_throw",
+    "Clips": [
+      "throw_spear"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Unarmed punch 1",
+    "Clips": [
+      "Punchstep 1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Dodge",
+    "Clips": [
+      "Dive"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.One handed Blocking",
+    "Clips": [
+      "Block TwoHand Jog BW",
+      "Block TwoHand Jog FW",
+      "Block TwoHand Jog Strafe BW L",
+      "Block TwoHand Jog Strafe BW R",
+      "Block TwoHand Jog Strafe FW L",
+      "Block TwoHand Jog Strafe FW R",
+      "Block TwoHand Jog Strafe L",
+      "Block TwoHand Jog Strafe R",
+      "Block TwoHand Walk BW",
+      "Block TwoHand Walk FW",
+      "Block TwoHand Walk Strafe BW L",
+      "Block TwoHand Walk Strafe BW R",
+      "Block TwoHand Walk Strafe FW L",
+      "Block TwoHand Walk Strafe FW R",
+      "Block TwoHand Walk Strafe L",
+      "Block TwoHand Walk Strafe R",
+      "Block idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Unarmed Blocking",
+    "Clips": [
+      "Block Unarmed Jog BW",
+      "Block Unarmed Jog FW",
+      "Block Unarmed Jog Strafe BW L",
+      "Block Unarmed Jog Strafe BW R",
+      "Block Unarmed Jog Strafe FW L",
+      "Block Unarmed Jog Strafe FW R",
+      "Block Unarmed Jog Strafe L",
+      "Block Unarmed Jog Strafe R",
+      "Block Unarmed Walk BW",
+      "Block Unarmed Walk FW",
+      "Block Unarmed Walk Strafe BW L",
+      "Block Unarmed Walk Strafe BW R",
+      "Block Unarmed Walk Strafe FW L",
+      "Block Unarmed Walk Strafe FW R",
+      "Block Unarmed Walk Strafe L",
+      "Block Unarmed Walk Strafe R",
+      "fight idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Shield blocking",
+    "Clips": [
+      "Block Shield Jog BW",
+      "Block Shield Jog FW",
+      "Block Shield Jog Strafe BW L",
+      "Block Shield Jog Strafe BW R",
+      "Block Shield Jog Strafe FW L",
+      "Block Shield Jog Strafe FW R",
+      "Block Shield Jog Strafe L",
+      "Block Shield Jog Strafe R",
+      "Block Shield Walk BW",
+      "Block Shield Walk FW",
+      "Block Shield Walk Strafe BW L",
+      "Block Shield Walk Strafe BW R",
+      "Block Shield Walk Strafe FW L",
+      "Block Shield Walk Strafe FW R",
+      "Block Shield Walk Strafe L",
+      "Block Shield Walk Strafe R",
+      "Sword And Shield Idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.knife slash 1",
+    "Clips": [
+      "knife_slash0"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.knife slash 2",
+    "Clips": [
+      "knife_slash1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.knife slash 3",
+    "Clips": [
+      "knife_slash2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_sword 0",
+    "Clips": [
+      "Attack1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_sword 1",
+    "Clips": [
+      "Attack2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_sword 2",
+    "Clips": [
+      "Attack3"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Intro Valkyria",
+    "Clips": [
+      "flying"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emote_sit",
+    "Clips": [
+      "Sitting idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.SitChair",
+    "Clips": [
+      "Player_Sit_Chair"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Crouch",
+    "Clips": [
+      "Atgeir Crouch Idle",
+      "Atgeir Sneak Walk",
+      "Battleaxe Crouch Idle",
+      "Battleaxe Sneak Walk",
+      "Crossbow Crouch Idle",
+      "Crossbow Sneak Walk",
+      "Crouch Idle",
+      "Greatsword Crouch Idle",
+      "Greatsword Sneak Walk",
+      "Magic Item Crouch",
+      "Magic Item Sneak",
+      "Pickaxe Crouch Idle",
+      "Pickaxe Sneak Walk",
+      "Sneak walk"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.throw_bomb",
+    "Clips": [
+      "BombThrow"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Sleeping",
+    "Clips": [
+      "Laying Sleeping"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.standup",
+    "Clips": [
+      "Standing Up"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Stagger",
+    "Clips": [
+      "player_stagger"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Two handed blocking",
+    "Clips": [
+      "Block TwoHand Jog BW",
+      "Block TwoHand Jog FW",
+      "Block TwoHand Jog Strafe BW L",
+      "Block TwoHand Jog Strafe BW R",
+      "Block TwoHand Jog Strafe FW L",
+      "Block TwoHand Jog Strafe FW R",
+      "Block TwoHand Jog Strafe L",
+      "Block TwoHand Jog Strafe R",
+      "Block TwoHand Walk BW",
+      "Block TwoHand Walk FW",
+      "Block TwoHand Walk Strafe BW L",
+      "Block TwoHand Walk Strafe BW R",
+      "Block TwoHand Walk Strafe FW L",
+      "Block TwoHand Walk Strafe FW R",
+      "Block TwoHand Walk Strafe L",
+      "Block TwoHand Walk Strafe R",
+      "Block idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_sledge",
+    "Clips": [
+      "Sledge-Attack1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.sword_secondary",
+    "Clips": [
+      "Sword-Attack-R4"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.atgeir_attack 0",
+    "Clips": [
+      "2Hand-Spear-Attack1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.atgeir_attack 1",
+    "Clips": [
+      "2Hand-Spear-Attack9"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.atgeir_attack 2",
+    "Clips": [
+      "2Hand-Spear-Attack3"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Encumbered",
+    "Clips": [
+      "Encumbered idle",
+      "Encumbered walk",
+      "Jog Strafe Left",
+      "Jog Strafe Left mirrored"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.standup 0",
+    "Clips": [
+      "Standing Up from sit"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.sit down",
+    "Clips": [
+      "Standing Up"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Laydown",
+    "Clips": [
+      "Standing Up"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.battleaxe_attack 0",
+    "Clips": [
+      "BattleAxe1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.battleaxe_attack 1",
+    "Clips": [
+      "BattleAxe2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.battleaxe_attack 2",
+    "Clips": [
+      "BattleAxe_Combo3"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_axe 0",
+    "Clips": [
+      "axe_swing"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_axe 1",
+    "Clips": [
+      "Axe combo 2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_axe 2",
+    "Clips": [
+      "Axe combo 3"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Unarmed punch 2",
+    "Clips": [
+      "Punchstep 2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Unarmed kick",
+    "Clips": [
+      "Kickstep"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Crafting_Workbench",
+    "Clips": [
+      "Workbench"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Interact",
+    "Clips": [
+      "Interact"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Crafting_forge",
+    "Clips": [
+      "Forge"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Crafting_cooking",
+    "Clips": [
+      "Cooking"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.HoldMast",
+    "Clips": [
+      "Hold The Mast"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.HoldDragon",
+    "Clips": [
+      "Hold The Dragon"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.spear_poke",
+    "Clips": [
+      "Javelin Stab"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.equip_hip",
+    "Clips": [
+      "EquipMid"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.equip_head",
+    "Clips": [
+      "EquipBack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.eat",
+    "Clips": [
+      "Eat"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.atgeir_secondary",
+    "Clips": [
+      "Atgeir360Attack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.knife secondary",
+    "Clips": [
+      "Knife JumpAttack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.uneqip_hip",
+    "Clips": [
+      "EquipMid"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Standup",
+    "Clips": [
+      "Hard Landing"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Droped 0",
+    "Clips": [
+      "Pre landing"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.knockeddown",
+    "Clips": [
+      "Dying Backwards"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.standup 2",
+    "Clips": [
+      "Standing Up"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.gpower",
+    "Clips": [
+      "GuardianPower"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Fishing throw",
+    "Clips": [
+      "Throw"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Fishing blocking (pull)",
+    "Clips": [
+      "Great sword walk back",
+      "Great sword walk f",
+      "ReelIn",
+      "strafe left",
+      "strafe right"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Fishing blocking (pull) 0",
+    "Clips": [
+      "Great sword walk back",
+      "Great sword walk f",
+      "Load",
+      "strafe left",
+      "strafe right"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.mace_secondary",
+    "Clips": [
+      "MaceAltAttack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.battleaxe_powerattack",
+    "Clips": [
+      "BattleAxeAltAttack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.RideLox",
+    "Clips": [
+      "Riding_Canter",
+      "Riding_Idle",
+      "Riding_Walk"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.SitThrone",
+    "Clips": [
+      "Sit_Throne_Idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.SitShip",
+    "Clips": [
+      "Sit_Ship"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.crossbow fire",
+    "Clips": [
+      "Fire Crossbow"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Crossbow Blocking",
+    "Clips": [
+      "Block Crossbow Jog BW",
+      "Block Crossbow Jog FW",
+      "Block Crossbow Jog Strafe BW L",
+      "Block Crossbow Jog Strafe BW R",
+      "Block Crossbow Jog Strafe FW L",
+      "Block Crossbow Jog Strafe FW R",
+      "Block Crossbow Jog Strafe L",
+      "Block Crossbow Jog Strafe R",
+      "Block Crossbow Walk BW",
+      "Block Crossbow Walk FW",
+      "Block Crossbow Walk Strafe BW L",
+      "Block Crossbow Walk Strafe BW R",
+      "Block Crossbow Walk Strafe FW L",
+      "Block Crossbow Walk Strafe FW R",
+      "Block Crossbow Walk Strafe L",
+      "Block Crossbow Walk Strafe R",
+      "Crossbow Idle Block"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Dual Wield Blocking",
+    "Clips": [
+      "Block DualWield Jog BW",
+      "Block DualWield Jog FW",
+      "Block DualWield Jog Strafe BW L",
+      "Block DualWield Jog Strafe BW R",
+      "Block DualWield Jog Strafe FW L",
+      "Block DualWield Jog Strafe FW R",
+      "Block DualWield Jog Strafe L",
+      "Block DualWield Jog Strafe R",
+      "Block DualWield Walk BW",
+      "Block DualWield Walk FW",
+      "Block DualWield Walk Strafe BW L",
+      "Block DualWield Walk Strafe BW R",
+      "Block DualWield Walk Strafe FW L",
+      "Block DualWield Walk Strafe FW R",
+      "Block DualWield Walk Strafe L",
+      "Block DualWield Walk Strafe R",
+      "Knife Idle Block"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.dual knives secondary",
+    "Clips": [
+      "Knife Attack Leap"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.dual knives slash 3",
+    "Clips": [
+      "Knife Attack Combo (3)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.dual knives slash 2",
+    "Clips": [
+      "Knife Attack Combo (2)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.dual knives slash 1",
+    "Clips": [
+      "Knife Attack Combo (1)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_fireball 0",
+    "Clips": [
+      "Fireball Staff Attacks (1)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_fireball 1",
+    "Clips": [
+      "Fireball Staff Attacks (2)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_rapidfire",
+    "Clips": [
+      "Beam Staff Attack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_rapidfire-loop",
+    "Clips": [
+      "Beam Staff Attack Loop"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_greatsword 2",
+    "Clips": [
+      "Greatsword BaseAttack (3)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_greatsword 0",
+    "Clips": [
+      "Greatsword BaseAttack (1)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.swing_greatsword 1",
+    "Clips": [
+      "Greatsword BaseAttack (2)"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Two handed blocking 0",
+    "Clips": [
+      "Block idle",
+      "Great sword walk back",
+      "Great sword walk f",
+      "strafe left",
+      "strafe right"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Staff Blocking",
+    "Clips": [
+      "Block Idle Staff",
+      "Block Staff Jog BW",
+      "Block Staff Jog FW",
+      "Block Staff Jog Strafe BW L",
+      "Block Staff Jog Strafe BW R",
+      "Block Staff Jog Strafe FW L",
+      "Block Staff Jog Strafe FW R",
+      "Block Staff Jog Strafe L",
+      "Block Staff Jog Strafe R",
+      "Block Staff Walk BW",
+      "Block Staff Walk FW",
+      "Block Staff Walk Strafe BW L",
+      "Block Staff Walk Strafe BW R",
+      "Block Staff Walk Strafe FW L",
+      "Block Staff Walk Strafe FW R",
+      "Block Staff Walk Strafe L",
+      "Block Staff Walk Strafe R"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Bow blocking",
+    "Clips": [
+      "Block Bow Idle",
+      "Block Bow Jog BW",
+      "Block Bow Jog FW",
+      "Block Bow Jog Strafe BW L",
+      "Block Bow Jog Strafe BW R",
+      "Block Bow Jog Strafe FW L",
+      "Block Bow Jog Strafe FW R",
+      "Block Bow Jog Strafe L",
+      "Block Bow Jog Strafe R",
+      "Block Bow Walk BW",
+      "Block Bow Walk FW",
+      "Block Bow Walk Strafe FW L",
+      "Block Bow Walk Strafe FW R",
+      "Block Bow Walk Strafe L",
+      "Block Bow Walk Strafe R"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.greatsword_secondary",
+    "Clips": [
+      "Greatsword Secondary Attack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.fireball_to_idle",
+    "Clips": [
+      "Fireball Staff Attacks to Idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_shield",
+    "Clips": [
+      "Ground Staff Attack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.axe_secondary",
+    "Clips": [
+      "Axe Secondary Attack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Atgeir Blocking",
+    "Clips": [
+      "Block Atgeir Jog BW",
+      "Block Atgeir Jog FW",
+      "Block Atgeir Jog Strafe BW L",
+      "Block Atgeir Jog Strafe BW R",
+      "Block Atgeir Jog Strafe FW L",
+      "Block Atgeir Jog Strafe FW R",
+      "Block Atgeir Jog Strafe L",
+      "Block Atgeir Jog Strafe R",
+      "Block Atgeir Walk BW",
+      "Block Atgeir Walk FW",
+      "Block Atgeir Walk Strafe BW L",
+      "Block Atgeir Walk Strafe BW R",
+      "Block Atgeir Walk Strafe FW L",
+      "Block Atgeir Walk Strafe FW R",
+      "Block Atgeir Walk Strafe L",
+      "Block Atgeir Walk Strafe R",
+      "Block idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Battleaxe Blocking",
+    "Clips": [
+      "Block TwoHand Jog BW",
+      "Block TwoHand Jog FW",
+      "Block TwoHand Jog Strafe BW L",
+      "Block TwoHand Jog Strafe BW R",
+      "Block TwoHand Jog Strafe FW L",
+      "Block TwoHand Jog Strafe FW R",
+      "Block TwoHand Jog Strafe L",
+      "Block TwoHand Jog Strafe R",
+      "Block TwoHand Walk BW",
+      "Block TwoHand Walk FW",
+      "Block TwoHand Walk Strafe BW L",
+      "Block TwoHand Walk Strafe BW R",
+      "Block TwoHand Walk Strafe FW L",
+      "Block TwoHand Walk Strafe FW R",
+      "Block TwoHand Walk Strafe L",
+      "Block TwoHand Walk Strafe R",
+      "Block idle"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Jump",
+    "Clips": [
+      "Atgeir Jump",
+      "Battleaxe Jump",
+      "Crossbow Jump",
+      "Feaster Jump",
+      "Greatsword Jump",
+      "Jump Start",
+      "JumpTweaked",
+      "Magic Item Jump",
+      "Pickaxe Jump",
+      "Scythe Jump",
+      "Staff Jump"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Jump Loop",
+    "Clips": [
+      "Atgeir Jump Loop",
+      "Battleaxe Jump Loop",
+      "Crossbow Jump Loop",
+      "Feaster Jump Loop",
+      "Greatsword Jump Loop",
+      "Jump Loop",
+      "Magic Item Jump Loop",
+      "Pickaxe Jump Loop",
+      "Scythe Jump Loop"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Jump End",
+    "Clips": [
+      "Atgeir Jump End",
+      "Battleaxe Jump End",
+      "Crossbow Jump End",
+      "Greatsword Jump End",
+      "Jump End",
+      "Pickaxe Jump End",
+      "Staff Jump End"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_summon",
+    "Clips": [
+      "Skeleton Summon"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.RideAsksvin",
+    "Clips": [
+      "AsksvinRide Canter",
+      "AsksvinRide Idle",
+      "AsksvinRide Run",
+      "AsksvinRide Walk"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.DualAxes 0",
+    "Clips": [
+      "DualAxes Attack 1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.DualAxes 1",
+    "Clips": [
+      "DualAxes Attack 2 2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.DualAxes 2",
+    "Clips": [
+      "DualAxes Attack 3 2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.DualAxes_secondary",
+    "Clips": [
+      "DualAxes Attack Cleave"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_Ahri",
+    "Clips": [
+      "Lightning Staff Attack"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.DualAxes 3",
+    "Clips": [
+      "DualAxes Attack 4"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_TrollSummon",
+    "Clips": [
+      "Troll Summon"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Scything",
+    "Clips": [
+      "Scything"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.SitDivan",
+    "Clips": [
+      "Lie Down Divan"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Slipping",
+    "Clips": [
+      "Slipping On Ice"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.RideMoose",
+    "Clips": [
+      "Player Riding Moose Gallop",
+      "Player Riding Moose Idle",
+      "Player Riding Moose Trot",
+      "Player Riding Moose Walk"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Shovel 1",
+    "Clips": [
+      "Attack Shovel 1"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Shovel 2",
+    "Clips": [
+      "Attack Shovel 2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Shovel 3",
+    "Clips": [
+      "Attack Shovel 3"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Shovel secondary",
+    "Clips": [
+      "Attack Shovel Secondary"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Dead",
+    "Clips": [
+      "KneelDeath"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_thunder",
+    "Clips": [
+      "Thunderstruck"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.staff_frostorb",
+    "Clips": [
+      "FrostShield"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_drink",
+    "Clips": [
+      "drink"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_wave",
+    "Clips": [
+      "Wave"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_challenge",
+    "Clips": [
+      "ChallengeAccepted"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_cheer",
+    "Clips": [
+      "Cheer"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_nonono",
+    "Clips": [
+      "No no no"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_tumbsup",
+    "Clips": [
+      "Thumbsup"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_point",
+    "Clips": [
+      "Point"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_blowkiss",
+    "Clips": [
+      "Blowkiss"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_bow",
+    "Clips": [
+      "Bow"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_cower",
+    "Clips": [
+      "Cower"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_cry",
+    "Clips": [
+      "Cry"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_despair",
+    "Clips": [
+      "Despair"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_flex",
+    "Clips": [
+      "Flex"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_comehere",
+    "Clips": [
+      "GetOverHere"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_headbang",
+    "Clips": [
+      "Headbang"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_kneel",
+    "Clips": [
+      "Kneel Start"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_laugh",
+    "Clips": [
+      "Laugh 2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_roar",
+    "Clips": [
+      "Roar"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_shrug",
+    "Clips": [
+      "Shrug"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Dance_Old",
+    "Clips": [
+      "Dance 1",
+      "Dance 2",
+      "Dance 3",
+      "Dance 4",
+      "Dance 5"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Kneel Loop",
+    "Clips": [
+      "Kneel Loop"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Dance",
+    "Clips": [
+      "Dance"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Laydown Relax",
+    "Clips": [
+      "Standing Up"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_toast",
+    "Clips": [
+      "Toast"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Laydown Rest",
+    "Clips": [
+      "Standing Up"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Relax Loop",
+    "Clips": [
+      "Lie Down"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Rest Loop",
+    "Clips": [
+      "Lie Down 2"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_vibe",
+    "Clips": [
+      "Lisa Dance"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Emotes.Emote_LoveYou",
+    "Clips": [
+      "Love You"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Grappling Hook.Grappling",
+    "Clips": [
+      "GrapplingHook Grappling Loop"
+    ]
+  },
+  {
+    "Layer": "Base Layer",
+    "Path": "Base Layer.Grappling Hook.Repell",
+    "Clips": [
+      "GrapplingHook Repel Loop"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.None",
+    "Clips": []
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.equip_hip",
+    "Clips": [
+      "EquipMid"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Interact",
+    "Clips": [
+      "Interact"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.eat",
+    "Clips": [
+      "Eat"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.equip_head",
+    "Clips": [
+      "EquipBack"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.swing_hammer",
+    "Clips": [
+      "hammer_Swing"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.swing_hoe",
+    "Clips": [
+      "swing_hoe"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Interact_forward",
+    "Clips": [
+      "Interact_forward"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Changing equipment",
+    "Clips": [
+      "EquipLoop"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.EquipExit",
+    "Clips": [
+      "EquipMid"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Reload crossbow",
+    "Clips": [
+      "Reload Crossbow"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.reload done",
+    "Clips": [
+      "Reload done"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.staff_rapidfire-loop",
+    "Clips": [
+      "Beam Staff Attack 2 FW",
+      "Beam Staff Attack Loop"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.staff_rapidfire",
+    "Clips": [
+      "Beam Staff Attack"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.staff_charge_attack",
+    "Clips": [
+      "Charge Staff Attack 2"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.staff_charge_loop",
+    "Clips": [
+      "Charge Staff Loop"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.staff_charge_start",
+    "Clips": [
+      "Charge Staff Start Charge"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Recharge LightningStaff",
+    "Clips": [
+      "Lightning Staff Recharge"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.recharge done",
+    "Clips": [
+      "Lightning Staff Recharge Done"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Place Feast",
+    "Clips": [
+      "Place Feast"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Shovel 3",
+    "Clips": [
+      "Attack Shovel 3"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Shovel 2",
+    "Clips": [
+      "Attack Shovel 2 Upperbody"
+    ]
+  },
+  {
+    "Layer": "upperbody",
+    "Path": "upperbody.Shovel 1",
+    "Clips": [
+      "Attack Shovel 1 Upperbody"
+    ]
+  }
+]

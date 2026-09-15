@@ -225,7 +225,7 @@ namespace ValheimVRM
 			physicsWeight.Setup();
 			vrmModel.SetActive(true);
 			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
-			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>());
+			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>(), settings);
 
 			// Detach the previous camera binding even when the next avatar opts out.
 			// Calibrate from this clone before any yield lets animation retargeting
