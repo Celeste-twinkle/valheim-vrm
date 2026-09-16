@@ -1,3 +1,11 @@
+## 1.8.19 — Calibration offsets up to one metre
+
+- Expand standing/sitting, animation state/clip XYZ and left/right/two-handed/back item XYZ sliders from ±50 to **±100 cm**, retaining 1 cm steps and zero defaults.
+- Use one shared offset limit for UI, local configuration and client/server validation so larger values survive saving and per-player synchronization. Retain existing values, absolute application, character axes, model-height and equipment-scale ranges.
+- Update sender, observers and server addon to 1.8.19+ for offsets beyond ±50 cm. The packet layout is unchanged; older versions retain their narrower validation/clamping range.
+
+Validation: `docs/release-1.8.19-validation.md`.
+
 ## 1.8.18 — Shared material depth fixes, fur lighting and item controls
 
 - Extend the shared depth/normal, alpha-aware bloom and transparent queue repairs to UniGLTF/UniUnlit, Standard/PBR and common Unlit surfaces. Prevent missing avatar depth from exposing background cloud/water effects over solid surfaces, while retaining real transparency, vertex alpha, Opaque alpha semantics and native PBR lighting. Preserve source shaders; custom shader opacity/displacement still needs dedicated support.

@@ -419,7 +419,7 @@ namespace ValheimVRM
         {
             value = AvatarHeightOffsets.Clamp(value);
             GUILayout.Label(label + "  " + (value * 100).ToString("+0;-0;0") + " cm");
-            return Mathf.Round(GUILayout.HorizontalSlider(value, -.5f, .5f) * 100) / 100;
+            return Mathf.Round(GUILayout.HorizontalSlider(value, -AvatarHeightOffsets.Maximum, AvatarHeightOffsets.Maximum) * 100) / 100;
         }
 
         void DrawModelHeight()

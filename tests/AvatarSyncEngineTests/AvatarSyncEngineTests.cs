@@ -39,10 +39,13 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
             if(!more){stack.Pop();continue;}
             if(value is IEnumerator nested)stack.Push(nested);else yield return value;
         }
+        report.Add("AVATAR_SYNC_ENGINE_TESTS_PASSED");
         File.WriteAllLines(Path.Combine(output,"results.txt"),report);Logger.LogInfo("AVATAR_SYNC_ENGINE_TESTS_PASSED");Application.Quit(0);
     }
     IEnumerator Run()
     {
+        OffsetRangeProbe.Run(output);
+        report.Add("Offset limits: +/-75 and +/-100 cm survive local save/reload for animation and all item groups; local clamp endpoints/nonfinite handling passed");
         float deadline=Time.realtimeSinceStartup+90;
         FejdStartup menu;
         while((menu=Object.FindFirstObjectByType<FejdStartup>())==null)

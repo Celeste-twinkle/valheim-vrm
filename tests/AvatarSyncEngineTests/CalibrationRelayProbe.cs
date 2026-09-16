@@ -9,6 +9,14 @@ using ValheimVRM.Sync;
 
 static class CalibrationRelayProbe
 {
+    public static string WideData(float offset = 1f)
+    {
+        var data=new AvatarCalibrationData { Standing=offset, Sitting=-offset };
+        foreach(var item in new[]{data.Left,data.Right,data.TwoHanded})item.Offset=new AvatarCalibrationData.Position(offset,-offset,offset);
+        data.Back=new AvatarCalibrationData.Item { Offset=new AvatarCalibrationData.Position(offset,-offset,offset) };
+        data.Animations["Base Layer.Wide Offset"]=new AvatarCalibrationData.Position(offset,-offset,offset);
+        return AvatarCalibrationCodec.Encode(data);
+    }
     public static string Data(float value, int entries = 1)
     {
         var data = new AvatarCalibrationData { Standing = value, Sitting = -value, Physics = .5f + value };
@@ -41,7 +49,7 @@ static class CalibrationRelayProbe
         var inboxes = new Dictionary<long, ServerRelayProbe.RelaySocket>();
         var received = new Dictionary<long, AvatarSelection[]>();
         int chunkPackets = 0;
-        string a = Data(.12f), b = Data(-.2f), newer = Data(.3f), large = Data(.08f, 768);
+        string a = Data(.12f), b = Data(-.2f), newer = WideData(), large = Data(.08f, 768);
         try
         {
             netField.SetValue(null, net); serverField.SetValue(null, true); zdoField.SetValue(null, manager);

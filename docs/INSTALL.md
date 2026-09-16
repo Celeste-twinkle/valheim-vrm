@@ -1,4 +1,6 @@
-# Install ValheimVRM 1.8.18 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.19 (Celeste-twinkle fork)
+
+**1.8.19 expands every offset slider to −100 to +100 cm per axis**, with 1 cm steps and default zero. This covers standing/sitting height, animation state/clip XYZ, and left/right/two-handed/back equipment XYZ. Existing saved values are retained. To synchronize offsets beyond ±50 cm, update sender, observers and server addon to 1.8.19 or newer; older versions may reject or clamp extended calibration. Model-height and item-scale ranges are unchanged.
 
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
@@ -16,7 +18,7 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.18.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.19.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -50,10 +52,10 @@ weapon placement and equipment visibility. Switching does not edit character sav
 
 The first F8 list entry is always **Original character model**, available even with no VRM files. It restores the native body, current gear, item mounts, collider and camera baseline. The choice is saved per game character and suppresses character-name/default VRM fallback after respawn or restart. Server sync stays enabled: other viewers see the native character, and selecting a VRM publishes it again.
 
-**Back equipment (optional adjustment)** is collapsed by default under **Held item calibration**. It adds an independent **25–200% uniform scale** and **−50 to +50 cm X/Y/Z offsets**, default 100%/0. Normal drawing/sheathing needs no manual adjustment; these controls accommodate different back proportions or thick clothing. Sheathed items retain the game's original attachment transforms and item offsets, scale with height, and apply absolute values without repeated rotation. Back controls share the owning player's sequenced calibration; sender and viewer need 1.8.15+, while a 1.8.14 server can continue relaying them.
+**Back equipment (optional adjustment)** is collapsed by default under **Held item calibration**. It adds an independent **25–200% uniform scale** and **−100 to +100 cm X/Y/Z offsets**, default 100%/0. Normal drawing/sheathing needs no manual adjustment; these controls accommodate different back proportions or thick clothing. Sheathed items retain the game's original attachment transforms and item offsets, scale with height, and apply absolute values without repeated rotation. Back controls share the owning player's sequenced calibration; sender and viewer need 1.8.15+, while a 1.8.14 server can relay values within its old ±50 cm limits.
 
 F8 **Animation position calibration** exposes searchable state/clip foldouts with
-XYZ offsets (−50 to +50 cm each). Loading/height changes calibrate fixed standing,
+XYZ offsets (−100 to +100 cm each). Loading/height changes calibrate fixed standing,
 seated, swimming, gripping, riding and reclining references. Playback reads the
 cache and blends transitions without live sole tracking or accumulated corrections.
 
@@ -150,7 +152,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.18.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.19.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -160,7 +162,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.18**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.19**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

@@ -156,7 +156,7 @@ static class GroundingProbe
             if (settings.StandingHeightOffset != .17f || settings.SittingHeightOffset != -.08f || settings.ModelScale != 1.25f || !File.ReadAllText(path).Contains("// preserved comment"))
                 throw new Exception("Height offset persistence changed other model settings");
             foreach (float value in new[] { float.NaN, float.PositiveInfinity, -2f, 2f })
-            { float result = AvatarHeightOffsets.Clamp(value); if (float.IsNaN(result) || result < -.5f || result > .5f) throw new Exception("Invalid height offset"); }
+            { float result = AvatarHeightOffsets.Clamp(value); if (float.IsNaN(result) || result < -1f || result > 1f) throw new Exception("Invalid height offset"); }
         }
         finally { ValheimVRM.Settings.RemoveSettings(name); if (File.Exists(path)) File.Delete(path); }
     }

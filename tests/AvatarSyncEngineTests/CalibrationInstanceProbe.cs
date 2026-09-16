@@ -51,6 +51,19 @@ public sealed partial class AvatarSyncEngineTests
                 Check(VrmManager.PlayerToVrmInstance[b] == rootB && boundB.Encoded == controlB, "A's controls changed B");
                 Check(AvatarCalibrationBinding.Capture(model) == localControls, "Remote controls overwrote observer preferences");
             }
+            foreach(float offset in new[]{-1f,-.75f,.75f,1f})
+            {
+                string wide=CalibrationRelayProbe.WideData(offset);
+                registry.Set(101,1001,1,model,hash,1.4f,wide);SetState(sync,registry);yield return PumpRemote(sync);
+                Check(VrmManager.PlayerToVrmInstance[a]==rootA && boundA.Encoded==wide,"Wide offset reloaded/lost A");
+                Check(boundA.Settings.StandingHeightOffset==offset && boundA.Settings.SittingHeightOffset==-offset,"Wide standing/sitting offset clamped");
+                foreach(var item in new[]{boundA.Profile.Left,boundA.Profile.Right,boundA.Profile.TwoHanded,boundA.Profile.Back})
+                    Check(item.Position.Value==new Vector3(offset,-offset,offset),"Wide equipment offset clamped");
+                Check(boundA.Profile.Get("Base Layer.Wide Offset")==new Vector3(offset,-offset,offset),"Wide animation offset clamped");
+                Check(boundB.Encoded==controlB && AvatarCalibrationBinding.Capture(model)==localControls,"Wide offset changed B or local preferences");
+            }
+            registry.Set(101,1001,1,model,hash,1.4f,CalibrationRelayProbe.Data(-.1f));SetState(sync,registry);yield return PumpRemote(sync);
+            report.Add("Extended offsets: +/-75 and +/-100 cm standing/sitting, animation XYZ and all four equipment groups arrive unchanged on player A; B and local preferences stay independent");
             yield return VrmManager.VrmDic[model].SetToPlayer(a);
             Check(VrmManager.PlayerToVrmInstance[a].GetComponent<AvatarCalibrationBinding>().Encoded == CalibrationRelayProbe.Data(-.1f),
                 "External reattachment lost received calibration");

@@ -8,7 +8,8 @@ namespace ValheimVRM
 {
     public static class AvatarHeightOffsets
     {
-        public static float Clamp(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0 : Mathf.Clamp(value, -.5f, .5f);
+        public const float Maximum = Sync.AvatarCalibrationCodec.MaxOffset;
+        public static float Clamp(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0 : Mathf.Clamp(value, -Maximum, Maximum);
 
         public static void Save(string modelName)
         {

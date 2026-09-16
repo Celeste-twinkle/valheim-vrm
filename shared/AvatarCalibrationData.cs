@@ -42,18 +42,19 @@ namespace ValheimVRM.Sync
 
     public static class AvatarCalibrationCodec
     {
+        public const float MaxOffset = 1f;
         public const int MaxEntries = 768, MaxBytes = 128 * 1024, MaxEncodedLength = (MaxBytes + 2) / 3 * 4;
         public static readonly string Default = Encode(new AvatarCalibrationData());
         static bool Range(float value, float min, float max) => !float.IsNaN(value) && !float.IsInfinity(value) && value >= min && value <= max;
         static bool Valid(AvatarCalibrationData.Position p, float limit) => Range(p.X, -limit, limit) && Range(p.Y, -limit, limit) && Range(p.Z, -limit, limit);
-        static bool Valid(AvatarCalibrationData.Item item) => item != null && Range(item.Scale, .25f, 2) && Valid(item.Offset, .5f);
+        static bool Valid(AvatarCalibrationData.Item item) => item != null && Range(item.Scale, .25f, 2) && Valid(item.Offset, MaxOffset);
         static void Write(BinaryWriter writer, AvatarCalibrationData.Position p) { writer.Write(p.X); writer.Write(p.Y); writer.Write(p.Z); }
         static AvatarCalibrationData.Position Read(BinaryReader reader) => new AvatarCalibrationData.Position(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
         static void Write(BinaryWriter writer, AvatarCalibrationData.Item item) { writer.Write(item.Scale); Write(writer, item.Offset); }
         static AvatarCalibrationData.Item ReadItem(BinaryReader reader) => new AvatarCalibrationData.Item { Scale = reader.ReadSingle(), Offset = Read(reader) };
         public static string Encode(AvatarCalibrationData data)
         {
-            if (data == null || !Range(data.Standing, -.5f, .5f) || !Range(data.Sitting, -.5f, .5f) ||
+            if (data == null || !Range(data.Standing, -MaxOffset, MaxOffset) || !Range(data.Sitting, -MaxOffset, MaxOffset) ||
                 !Range(data.ModelY, -5, 5) || !Range(data.Physics, 0, 1) || !Range(data.EquipmentScale, .01f, 10) ||
                 !Valid(data.LegacyLeft, 5) || !Valid(data.LegacyRight, 5) ||
                 !Valid(data.Left) || !Valid(data.Right) || !Valid(data.TwoHanded) || !Valid(data.Back) || data.Animations.Count > MaxEntries)
@@ -70,7 +71,7 @@ namespace ValheimVRM.Sync
                 foreach (var pair in data.Animations.OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
                     if (string.IsNullOrEmpty(pair.Key) || pair.Key.Length > 384 || pair.Key.Any(char.IsControl) ||
-                        !Valid(pair.Value, pair.Key.StartsWith("legacy:", StringComparison.Ordinal) ? 5 : .5f))
+                        !Valid(pair.Value, pair.Key.StartsWith("legacy:", StringComparison.Ordinal) ? 5 : MaxOffset))
                         throw new ArgumentException("Invalid animation calibration.");
                     writer.Write(pair.Key); Write(writer, pair.Value);
                 }

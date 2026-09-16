@@ -61,15 +61,15 @@ static class Program
         foreach(var invalid in new[]{null,"",encoded+" ",encoded.Substring(0,encoded.Length-4),new string('a',AvatarCalibrationCodec.MaxEncodedLength+1)})
             Check(!AvatarCalibrationCodec.TryDecode(invalid,out _),"Malformed calibration accepted");
         var bytes=Convert.FromBase64String(encoded);
-        foreach(float invalid in new[]{float.NaN,float.PositiveInfinity,float.NegativeInfinity,.51f,-.51f})
+        foreach(float invalid in new[]{float.NaN,float.PositiveInfinity,float.NegativeInfinity,1.01f,-1.01f})
         {
             Array.Copy(BitConverter.GetBytes(invalid),0,bytes,1,4);
             Check(!AvatarCalibrationCodec.TryDecode(Convert.ToBase64String(bytes),out _),"Nonfinite/out-of-range offset accepted");
         }
         foreach(Action<AvatarCalibrationData> corrupt in new Action<AvatarCalibrationData>[]{
-            d=>d.Physics=1.1f, d=>d.Left.Scale=.2f, d=>d.Right.Offset=new AvatarCalibrationData.Position(0,.51f,0),
+            d=>d.Physics=1.1f, d=>d.Left.Scale=.2f, d=>d.Right.Offset=new AvatarCalibrationData.Position(0,1.01f,0),
             d=>d.Animations["\n"]=default(AvatarCalibrationData.Position),
-            d=>d.Animations["Base Layer.Movement"]=new AvatarCalibrationData.Position(0, .51f, 0),
+            d=>d.Animations["Base Layer.Movement"]=new AvatarCalibrationData.Position(0, 1.01f, 0),
             d=>{for(int i=0;i<=AvatarCalibrationCodec.MaxEntries;i++)d.Animations["state"+i]=default(AvatarCalibrationData.Position);}
         })
         {
@@ -86,6 +86,28 @@ static class Program
         controls.Back = new AvatarCalibrationData.Item { Scale=2.1f };
         bool backRejected=false; try{AvatarCalibrationCodec.Encode(controls);}catch(ArgumentException){backRejected=true;}
         Check(backRejected,"Out-of-range back scale accepted");
+        foreach(float offset in new[]{-1f,-.75f,.75f,1f})
+        {
+            var wide=new AvatarCalibrationData { Standing=offset, Sitting=-offset };
+            foreach(var item in new[]{wide.Left,wide.Right,wide.TwoHanded})item.Offset=new AvatarCalibrationData.Position(offset,-offset,offset);
+            wide.Back=new AvatarCalibrationData.Item { Offset=new AvatarCalibrationData.Position(-offset,offset,-offset) };
+            wide.Animations["Base Layer.Movement"]=new AvatarCalibrationData.Position(offset,offset,-offset);
+            string state=AvatarCalibrationCodec.Encode(wide);
+            Check(AvatarCalibrationCodec.TryDecode(state,out var roundtrip) && AvatarCalibrationCodec.Encode(roundtrip)==state,"100 cm calibration was lost");
+            Check(server.Set(101,1001,2,b.Model,b.Sha256,2f,state) && server.Snapshot().Single(s=>s.Peer==101).Calibration==state,"Server rejected extended offsets");
+            Check(server.Snapshot().Single(s=>s.Peer==202).SameAs(b),"Extended offsets changed player B");
+        }
+        foreach(float invalid in new[]{-1.01f,1.01f,float.NaN,float.PositiveInfinity,float.NegativeInfinity})
+        foreach(Action<AvatarCalibrationData,float> set in new Action<AvatarCalibrationData,float>[] {
+            (d,v)=>d.Standing=v,(d,v)=>d.Sitting=v,(d,v)=>d.Left.Offset.X=v,(d,v)=>d.Right.Offset.Y=v,
+            (d,v)=>d.TwoHanded.Offset.Z=v,(d,v)=>d.Back=new AvatarCalibrationData.Item { Offset=new AvatarCalibrationData.Position(v,0,0) },
+            (d,v)=>d.Animations["Base Layer.Movement"]=new AvatarCalibrationData.Position(0,0,v) })
+        {
+            var bad=new AvatarCalibrationData();set(bad,invalid);bool rejected=false;
+            try{AvatarCalibrationCodec.Encode(bad);}catch(ArgumentException){rejected=true;}
+            Check(rejected,"Invalid extended calibration escaped validation");
+        }
+        Console.WriteLine("PASS: +/-75 and +/-100 cm across every offset group; beyond +/-100 cm and nonfinite values rejected; per-player relay isolation preserved.");
         Console.WriteLine("PASS: canonical calibration roundtrip, malformed/nonfinite/range/entry limits, revision deduplication and per-player isolation.");
         Console.WriteLine("PASS: request ordering, duplicate/downgrade/overflow rejection, independent player identities, rapid switches, respawn, reconnect, late join, opt-out and path/hash rejection.");
     }
