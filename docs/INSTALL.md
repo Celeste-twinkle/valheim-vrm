@@ -1,4 +1,6 @@
-# Install ValheimVRM 1.8.19 (Celeste-twinkle fork)
+# Install ValheimVRM 1.8.20 (Celeste-twinkle fork)
+
+**1.8.20 fixes calibration restoration after death and respawn.** Local avatars load after character identity/profile restoration; remote avatars rebind complete per-player controls to the new character ID. Model choice, height, standing/sitting offsets, every animation/clip XYZ, left/right/two-handed/back equipment scales and XYZ, and physics weight are retained. Existing preferences need no readjustment. Update both the owner and observers to 1.8.20; the server wire format is unchanged, and updating the matching server package is recommended.
 
 **1.8.19 expands every offset slider to −100 to +100 cm per axis**, with 1 cm steps and default zero. This covers standing/sitting height, animation state/clip XYZ, and left/right/two-handed/back equipment XYZ. Existing saved values are retained. To synchronize offsets beyond ±50 cm, update sender, observers and server addon to 1.8.19 or newer; older versions may reject or clamp extended calibration. Model-height and item-scale ranges are unchanged.
 
@@ -18,7 +20,7 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.19.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-1.8.20.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -152,7 +154,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.19.zip` on a BepInEx 5 server and give each
+selection, install `ValheimVRM-Server-1.8.20.zip` on a BepInEx 5 server and give each
 client identical model files. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -162,7 +164,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.19**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **1.8.20**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

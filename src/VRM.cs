@@ -183,12 +183,12 @@ namespace ValheimVRM
 
 		private IEnumerator AttachToPlayer(Player player, float? height, string calibration)
 		{
-			if (player == null) yield break;
+			if (player == null || player.IsDead()) yield break;
 			var animator = player.GetField<Player, Animator>("m_animator") ?? player.GetComponentInChildren<Animator>();
 			while (animator == null)
 			{
 				yield return null;
-				if (player == null) yield break;
+				if (player == null || player.IsDead()) yield break;
 				animator = player.GetComponentInChildren<Animator>();
 			}
 
@@ -208,10 +208,11 @@ namespace ValheimVRM
 			var vrmModel = Object.Instantiate(VisualModel);
 			if (vrmModel == null) yield break;
 			AvatarResidency.Bind(this, vrmModel);
+			VrmManager.PlayerToName[player] = Name;
 			VrmManager.PlayerToVrmInstance[player] = vrmModel;
 			vrmModel.name = "VRM_Visual";
 			vrmController.visual = vrmModel;
-			Func<bool> stillAttached = () => player != null && animator != null &&
+			Func<bool> stillAttached = () => player != null && !player.IsDead() && animator != null &&
 				vrmModel != null && vrmController != null && vrmController.visual == vrmModel;
 
 			var oldModel = parent.Find("VRM_Visual");
@@ -242,7 +243,7 @@ namespace ValheimVRM
 			if (calibrationBinding != null) physicsWeight.SynchronizedWeight = calibrationBinding.PhysicsWeight;
 			vrmModel.SetActive(true);
 			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
-			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>(), settings);
+			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>(true), settings);
 
 			// Detach the previous camera binding even when the next avatar opts out.
 			// Calibrate from this clone before any yield lets animation retargeting

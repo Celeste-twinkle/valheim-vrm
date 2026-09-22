@@ -404,7 +404,8 @@ namespace ValheimVRM
 		[HarmonyPostfix]
 		static void Postfix(Humanoid __instance, Ragdoll ragdoll)
 		{
-			if (__instance is Player player)
+			if (__instance is Player player &&
+				VrmManager.PlayerToVrmInstance.TryGetValue(player, out var vrm) && vrm != null)
 			{
 				player.GetComponent<VRMEquipmentSync>()?.ResetAttachments();
 				foreach (var smr in ragdoll.GetComponentsInChildren<SkinnedMeshRenderer>())
@@ -433,8 +434,15 @@ namespace ValheimVRM
 					Debug.LogWarning($"[ValheimVRM] ☠️ Original animator or avatar is null for player {player.GetPlayerName()}");
 				}
 
-				if (VrmManager.PlayerToVrmInstance.TryGetValue(player, out var vrm))
+				if (vrm != null)
 				{
+					// The corpse keeps its instance settings, but is no longer the
+					// player's live visual. Cancel any attachment still yielding.
+					var settings = vrm.GetComponent<AvatarCalibrationBinding>()?.Settings ??
+						Settings.GetSettings(VrmManager.PlayerToName[player]);
+					VrmManager.PlayerToVrmInstance.Remove(player);
+					var controller = player.GetComponent<VrmController>();
+					if (controller != null) { controller.visual = null; controller.ClearAvatarPhysics(); }
 					vrm.transform.SetParent(ragdoll.transform);
 
 					// Keep VRM visible and drive it from ragdoll bones
@@ -443,7 +451,6 @@ namespace ValheimVRM
 					var sync = vrm.GetComponent<VRMAnimationSync>();
 					if (sync != null)
 					{
-						var settings = Settings.GetSettings(VrmManager.PlayerToName[player]);
 						if (settings != null)
 						{
 							sync.Setup(ragAnim, settings, true);
@@ -649,6 +656,28 @@ namespace ValheimVRM
 	{
 		[HarmonyPostfix]
 		static void Postfix(Player __instance, ZNetView ___m_nview)
+		{
+			if (___m_nview != null && ___m_nview.GetZDO() != null && ___m_nview.IsOwner())
+			{
+				// Game.SpawnPlayer assigns the local player and restores its profile
+				// AFTER Instantiate/Awake. Cached imports used to attach immediately
+				// with the old local-player pointer and default height. Cold imports
+				// hid the race by yielding during IO. Use the same ordering for both.
+				if (__instance.GetComponent<VrmController>() == null) __instance.gameObject.AddComponent<VrmController>();
+				CoroutineHelper.Instance.StartCoroutine(InitializeAfterSpawn(__instance, ___m_nview));
+				return;
+			}
+			Initialize(__instance, ___m_nview);
+		}
+
+		static IEnumerator InitializeAfterSpawn(Player player, ZNetView view)
+		{
+			yield return null;
+			if (player == null || view == null || view.GetZDO() == null || !view.IsOwner() || player.IsDead()) yield break;
+			Initialize(player, view);
+		}
+
+		static void Initialize(Player __instance, ZNetView ___m_nview)
 		{
 			bool online = ___m_nview != null && ___m_nview.GetZDO() != null;
 			if (online && !___m_nview.IsOwner() && !Settings.globalSettings.EnableLegacyVrmSharing)

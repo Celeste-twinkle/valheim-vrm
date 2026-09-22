@@ -123,6 +123,7 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         Check(!VrmManager.PlayerToVrmInstance.ContainsKey(a) && VrmManager.PlayerToVrmInstance[b]==rootB,"Restoring A affected B");
         Check(before==null?!File.Exists(selectionPath):File.ReadAllBytes(selectionPath).SequenceEqual(before),"Remote switch overwrote local saved choice");
         report.Add("Respawn IDs, stale snapshots, local-player exclusion, opt-out restoration and local selection persistence passed");
+        yield return RespawnTests(prefab, sync, names[1], hashes[1]);
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VRM_ONLY_LIBRARY_TEST")))
             Check(Directory.GetFileSystemEntries(ValheimVRM.Settings.ValheimVRMDir).All(p => Path.GetExtension(p).Equals(".vrm", StringComparison.OrdinalIgnoreCase)),
                 "Remote sync wrote non-VRM files into the model directory");

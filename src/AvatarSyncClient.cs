@@ -219,6 +219,7 @@ namespace ValheimVRM
                 if (applied.TryGetValue(player, out var current) && current.SameAs(desired) &&
                     VrmManager.PlayerToVrmInstance.TryGetValue(player, out var existing) && existing != null &&
                     existing.GetComponent<AvatarScale>()?.TargetHeight == desired.Height &&
+                    existing.GetComponent<AvatarCalibrationBinding>()?.Encoded == (desired.Calibration ?? AvatarCalibrationCodec.Default) &&
                     VrmManager.PlayerToName.TryGetValue(player, out var existingName) && existingName == desired.Model) continue;
                 if (failed.TryGetValue(player, out var bad) && bad.SameAs(desired)) continue;
                 if (current != null && current.Model == desired.Model && current.Sha256 == desired.Sha256 && current.Height == desired.Height &&

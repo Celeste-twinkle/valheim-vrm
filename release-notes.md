@@ -1,3 +1,12 @@
+## 1.8.20 — Preserve avatar calibration through respawn
+
+- Restore local avatars after the game assigns the new local player and loads character identity/profile data. Cached models now use the same initialization order as freshly imported models, preserving selected height and calibration.
+- Verify the calibration actually bound to a remote visual before accepting an unchanged synchronized selection; recover reset/missing bindings without overwriting the observer's personal preferences.
+- Retain per-instance synchronized settings on death ragdolls, detach corpses from live-player tracking, and stop unfinished attachments when their player dies. Leave native ragdolls visible when no VRM is attached.
+- Preserve model choice, height, standing/sitting offsets, all animation/clip XYZ, left/right/two-handed/back item scale/XYZ and physics weight independently for each player. Configuration and network formats are unchanged; update both the owner and observers.
+
+Validation: `docs/release-1.8.20-validation.md`.
+
 ## 1.8.19 — Calibration offsets up to one metre
 
 - Expand standing/sitting, animation state/clip XYZ and left/right/two-handed/back item XYZ sliders from ±50 to **±100 cm**, retaining 1 cm steps and zero defaults.
