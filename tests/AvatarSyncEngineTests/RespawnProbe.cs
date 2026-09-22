@@ -12,7 +12,7 @@ using Object = UnityEngine.Object;
 
 public sealed partial class AvatarSyncEngineTests
 {
-    IEnumerator RespawnTests(GameObject prefab, AvatarSyncClient sync, string model, string hash)
+    IEnumerator RespawnTests(GameObject prefab, AvatarSyncClient sync, Player fixturePlayer, string model, string hash)
     {
         var picker = OutfitSwitcher.Instance;
         var local = Player.m_localPlayer;
@@ -35,12 +35,19 @@ public sealed partial class AvatarSyncEngineTests
         var settings = ValheimVRM.Settings.GetSettings(model); var controls = AvatarCalibrationOptions.Current.Get(model);
         string saved = AvatarCalibrationBinding.Capture(model);
         var backup = new GameObject("Calibration backup").AddComponent<AvatarCalibrationBinding>(); backup.Initialize(settings, saved);
+        var partCurrent = AccessTools.Field(typeof(AvatarPartOptions), "current"); var oldPartOptions = partCurrent.GetValue(null);
+        var partOptions = new AvatarPartOptions(Path.Combine(output, "respawn-parts")); partCurrent.SetValue(null, partOptions);
+        var fixtureParts = VrmManager.PlayerToVrmInstance[fixturePlayer].GetComponent<AvatarPartVisibility>().Parts
+            .OrderByDescending(p => p.Enabled).Take(2).ToArray();
+        Check(fixtureParts.Length == 2 && fixtureParts[0].Enabled, "Respawn fixture needs one visible and two total parts");
+        partOptions.Set(model, fixtureParts[0].Id, false, fixtureParts[0].AuthoredVisible);
         var awake = AccessTools.Method(typeof(MainPlugin).Assembly.GetType("ValheimVRM.Patch_Player_Awake"), "Postfix");
         var players = Player.GetAllPlayers(); var created = new List<Player>();
         var prefs = Directory.GetFiles(ValheimVRM.Settings.ConfigDir, "*", SearchOption.AllDirectories).ToDictionary(p => p, File.ReadAllBytes);
         var registry = new AvatarSyncRegistry();
         var world = UnityEngine.SceneManagement.SceneManager.CreateScene("RespawnTestWorld");
         var savedClient = new Dictionary<string, object>();
+        bool oldShareParts = sync.SharePartSettings, oldApplyParts = sync.ApplyRemotePartSettings;
         foreach (string key in new[] { "server", "hostPlugin", "lastSent", "requestSequence", "<HeightSync>k__BackingField", "<CalibrationSync>k__BackingField", "<SequencedRequests>k__BackingField" })
             savedClient[key] = AccessTools.Field(typeof(AvatarSyncClient), key).GetValue(sync);
         var left = new MemorySocket(); var right = new MemorySocket(); left.Other = right; right.Other = left;
@@ -64,6 +71,7 @@ public sealed partial class AvatarSyncEngineTests
             AccessTools.Field(typeof(AvatarSyncClient), "requestSequence").SetValue(sync, 0L);
             foreach (string key in new[] { "HeightSync", "CalibrationSync", "SequencedRequests" })
                 AccessTools.Field(typeof(AvatarSyncClient), "<" + key + ">k__BackingField").SetValue(sync, true);
+            sync.SetSharePartSettings(true); sync.SetApplyRemotePartSettings(true);
             settings.StandingHeightOffset = .27f; settings.SittingHeightOffset = -.31f; settings.ModelOffsetY = .08f;
             var native = prefab.GetComponentInChildren<Animator>(true);
             var entries = new AvatarAnimationCatalog(native).Entries;
@@ -72,7 +80,8 @@ public sealed partial class AvatarSyncEngineTests
             foreach (var item in new[] { controls.Left, controls.Right, controls.TwoHanded, controls.Back })
             { item.Scale = .7f + .2f * group++; item.Position.Value = new Vector3(.18f * group, -.12f * group, .09f * group); }
             string expected = AvatarCalibrationBinding.Capture(model);
-            string remoteA = CalibrationRelayProbe.Data(.24f, 300), remoteB = CalibrationRelayProbe.Data(-.18f, 300);
+            string remoteA = WithParts(CalibrationRelayProbe.Data(.24f, 300), fixtureParts[0].Id);
+            string remoteB = WithParts(CalibrationRelayProbe.Data(-.18f, 300), fixtureParts[1].Id);
             Player previousOwner = null, previousRemote = null;
             var observerB = MakePlayer(prefab, 903, 9030, 1); created.Add(observerB); players.Add(observerB);
             registry.Set(903, 9030, 1, model, hash, 2.2f, remoteB); SetState(sync, registry); yield return PumpRemote(sync);
@@ -94,6 +103,7 @@ public sealed partial class AvatarSyncEngineTests
                     Check(ReferenceEquals(AccessTools.Field(typeof(VRMAnimationSync), "settings").GetValue(corpseVisual.GetComponent<VRMAnimationSync>()), corpseSettings),
                         "Remote corpse inherited observer settings");
                     Check(corpseVisual.GetComponent<AvatarScale>().TargetHeight == 1.4f, "Corpse lost received height");
+                    Check(corpseVisual.GetComponent<AvatarPartVisibility>().IsHidden(fixtureParts[0].Id), "Corpse lost part visibility");
                     send();
                 }
                 // Exercise the cold-import path as well, retaining the old template's
@@ -119,14 +129,18 @@ public sealed partial class AvatarSyncEngineTests
                 Check(ReferenceEquals(AccessTools.Field(typeof(VRMEquipmentSync), "profile").GetValue(owner.GetComponent<VRMEquipmentSync>()), controls), "Local respawn equipment lost controls");
                 Check(Mathf.Abs((float)AccessTools.Field(typeof(VRMEquipmentSync), "heightScale").GetValue(owner.GetComponent<VRMEquipmentSync>()) - .7f) < .0001f, "Respawn equipment lost height scaling");
                 Check(AvatarCalibrationBinding.Capture(model) == expected, "Respawn changed personal controls");
+                Check(visual.GetComponent<AvatarPartVisibility>().IsHidden(fixtureParts[0].Id), "Local respawn lost part visibility");
                 send(); Check(packets.Count == 1 && packets[0] == expected, "Respawn published changed/default controls or duplicate requests");
                 var remote = MakePlayer(prefab, 902, 9020, life); created.Add(remote); players.Add(remote);
                 registry.Set(902, 9020, life, model, hash, 1.4f, remoteA); SetState(sync, registry); yield return PumpRemote(sync);
                 var rv = VrmManager.PlayerToVrmInstance[remote]; var binding = rv.GetComponent<AvatarCalibrationBinding>();
                 Check(rv.GetComponent<AvatarScale>().TargetHeight == 1.4f && binding.Encoded == remoteA, "Remote respawn lost height/calibration");
+                Check(rv.GetComponent<AvatarPartVisibility>().IsHidden(fixtureParts[0].Id), "Remote respawn lost part visibility");
                 Check(ReferenceEquals(AccessTools.Field(typeof(VRMAnimationSync), "profile").GetValue(rv.GetComponent<VRMAnimationSync>()), binding.Profile), "Remote animation consumer lost binding");
                 Check(ReferenceEquals(AccessTools.Field(typeof(VRMEquipmentSync), "profile").GetValue(remote.GetComponent<VRMEquipmentSync>()), binding.Profile), "Remote equipment lost controls");
-                Check(VrmManager.PlayerToVrmInstance[observerB] == rootB && rootB.GetComponent<AvatarCalibrationBinding>().Encoded == remoteB, "Respawn changed independent same-model B");
+                Check(VrmManager.PlayerToVrmInstance[observerB] == rootB && rootB.GetComponent<AvatarCalibrationBinding>().Encoded == remoteB &&
+                    rootB.GetComponent<AvatarPartVisibility>().IsHidden(fixtureParts[1].Id) && !rootB.GetComponent<AvatarPartVisibility>().IsHidden(fixtureParts[0].Id),
+                    "Respawn changed independent same-model B part settings");
                 // A recreated/stale binding must not pass the unchanged-selection fast path.
                 binding.Apply(AvatarCalibrationCodec.Default); yield return PumpRemote(sync);
                 Check(binding.Encoded == remoteA, "Unchanged remote selection failed to repair reset calibration");
@@ -139,7 +153,7 @@ public sealed partial class AvatarSyncEngineTests
                 previousOwner = owner; previousRemote = remote;
             }
             Check(prefs.All(p => File.ReadAllBytes(p.Key).SequenceEqual(p.Value)), "Respawn rewrote personal config");
-            report.Add("Respawn: three cached and one cold Awake -> SetLocalPlayer/identity lifecycles retain local 1.4 m, complete animation/clip profile, standing/sitting and all four equipment groups; remote reincarnations retain 300 animation controls and independent 1.4/2.2 m same-model players; unchanged snapshots repair reset/missing bindings; corpses retain instance settings; owner RPC never publishes defaults; personal files unchanged");
+            report.Add("Respawn: three cached and one cold Awake -> SetLocalPlayer/identity lifecycles retain local 1.4 m, part visibility, complete animation/clip profile, standing/sitting and all four equipment groups; remote reincarnations retain 300 animation controls, parts and independent 1.4/2.2 m same-model players; unchanged snapshots repair reset/missing bindings; corpses retain instance settings; owner RPC never publishes defaults; personal files unchanged");
         }
         finally
         {
@@ -154,7 +168,16 @@ public sealed partial class AvatarSyncEngineTests
             AccessTools.Field(typeof(OutfitSwitcher), "<Heights>k__BackingField").SetValue(picker, heights);
             AccessTools.Field(typeof(OutfitSwitcher), "<Catalog>k__BackingField").SetValue(picker, catalog);
             foreach (var pair in savedClient) AccessTools.Field(typeof(AvatarSyncClient), pair.Key).SetValue(sync, pair.Value);
+            sync.SetSharePartSettings(oldShareParts); sync.SetApplyRemotePartSettings(oldApplyParts);
+            partCurrent.SetValue(null, oldPartOptions);
             client.Dispose(); relay.Dispose();
         }
+    }
+
+    static string WithParts(string encoded, params string[] ids)
+    {
+        Check(AvatarCalibrationCodec.TryDecode(encoded, out var data), "Part fixture calibration invalid");
+        foreach (var key in AvatarPartSync.Encode(ids)) data.Animations[key] = new AvatarCalibrationData.Position(0, 0, 0);
+        return AvatarCalibrationCodec.Encode(data);
     }
 }

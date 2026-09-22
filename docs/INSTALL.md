@@ -1,4 +1,6 @@
-# Install ValheimVRM 1.8.20 (Celeste-twinkle fork)
+# Install ValheimVRM 2.0.0 (Celeste-twinkle fork)
+
+**2.0.0 adds the F8 Model parts list.** It can explicitly show exporter-inactive renderers, hide visible renderers, or restore the whole model to its authored defaults. Choices are saved per model. Independent switches control whether your overrides are shared and whether remote players' overrides are applied; all part state remains isolated through model/height changes, death and respawn. The protocol stays at version 1: 1.8.14–1.8.20 calibration servers relay the reserved entries, older clients ignore them, and the 2.0 server continues accepting old or unmodded clients.
 
 **1.8.20 fixes calibration restoration after death and respawn.** Local avatars load after character identity/profile restoration; remote avatars rebind complete per-player controls to the new character ID. Model choice, height, standing/sitting offsets, every animation/clip XYZ, left/right/two-handed/back equipment scales and XYZ, and physics weight are retained. Existing preferences need no readjustment. Update both the owner and observers to 1.8.20; the server wire format is unchanged, and updating the matching server package is recommended.
 
@@ -20,7 +22,7 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-1.8.20.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-2.0.0.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -73,6 +75,19 @@ changes update in place after release; model/height changes rerun fixed calibrat
 from the original reference. F8 reports whether full calibration sync is active.
 Fixed references may retain small intersections/gaps; no additional hand/foot IK.
 
+F8 **Model parts** lists every renderer in the selected VRM, including inactive
+hierarchy nodes. Individual switches and **Show all / Model defaults / Hide all**
+write per-model overrides to `BepInEx/config/ValheimVRM/avatar_parts.json`.
+Showing an inactive part activates its required hierarchy; restoring defaults starts
+again from the exported GameObject/Renderer state, so repeated refresh or respawn does
+not accumulate changes. Combined meshes remain one switch and missing stable IDs are
+ignored after a model replacement. GPU fur follows its source renderer.
+
+**Share my avatar part settings** controls outgoing overrides; **Apply other players'
+part settings** controls received overrides. Turning either off preserves personal
+choices and files. Both participating clients need 2.0 to display shared part choices;
+a calibration-capable 1.8.14–1.8.20 server can relay them unchanged.
+
 VRM 1.0 spring chains and their collision groups are retained on player clones,
 so exported hair, clothing and body springs can move. The plugin preserves the
 exported parameters; it cannot reconstruct VRChat PhysBones omitted from the VRM.
@@ -124,6 +139,8 @@ The mod creates its configuration directory and these files on demand:
 
 - `avatar_selections.json`: after selecting a model.
 - `avatar_heights.json`: after applying height; stored per local game character.
+- `avatar_calibration.json`: after saving animation or equipment calibration.
+- `avatar_parts.json`: after changing an individual/all-parts visibility control.
 - `physics_options.json`: after saving a physics slider adjustment.
 - `rendering_options.json`: after changing a rendering option.
 
@@ -154,8 +171,8 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-1.8.20.zip` on a BepInEx 5 server and give each
-client identical model files. See [server setup](SERVER-SYNC.md), including the
+selection, install `ValheimVRM-Server-2.0.0.zip` on a BepInEx 5 server. Give each
+client the matching files for models it needs to display; whole folders may differ. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
 using this new protocol. Share model files only when their license permits it.
@@ -164,7 +181,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **1.8.20**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **2.0.0**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

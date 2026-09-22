@@ -1,3 +1,13 @@
+## 2.0.0 — Per-model part visibility and optional sharing
+
+- Add an F8 **Model parts** list for the selected VRM. Every authored renderer, including inactive objects, has an independent visible/hidden switch plus search, show-all, model-default and hide-all controls. Explicit show activates exporter-inactive hierarchy nodes; resetting restores their authored state. GPU fur overlays follow their source part instead of appearing as duplicate entries.
+- Save shown/hidden overrides per model in `BepInEx/config/ValheimVRM/avatar_parts.json`. Stable hierarchy/component IDs keep choices independent between models; changed or missing parts are ignored safely.
+- Add separate **Share my avatar part settings** and **Apply other players' part settings** switches. Disabling sharing retains local choices while viewers receive the authored default; disabling receipt immediately restores other avatars to authored visibility without changing the sender or personal files.
+- Synchronize compact per-player part visibility through reserved entries in calibration format 1. The network protocol/version is unchanged: 2.0 clients work with 1.8.14–1.8.20 calibration-capable servers, 2.0 servers accept older clients, and older clients safely ignore the reserved part entries.
+- Bind part choices to each rendered player instance and carry them through cached/cold loads, model/height reattachment, death ragdolls, respawn, late join and unchanged-snapshot repair. Same-model players remain isolated; folder/model differences never index a missing part.
+
+Validation: `docs/release-2.0.0-validation.md`.
+
 ## 1.8.20 — Preserve avatar calibration through respawn
 
 - Restore local avatars after the game assigns the new local player and loads character identity/profile data. Cached models now use the same initialization order as freshly imported models, preserving selected height and calibration.

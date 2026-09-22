@@ -7,7 +7,7 @@ using ValheimVRM.Sync;
 
 namespace ValheimVRM.Server
 {
-    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "1.8.20")]
+    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "2.0.0")]
     public sealed class ServerPlugin : BaseUnityPlugin
     {
         sealed class Session
@@ -41,7 +41,7 @@ namespace ValheimVRM.Server
         void Awake()
         {
             syncEnabled = Config.Bind("Sync", "Enabled", true, "Relay per-player avatar selections. No VRM files or shaders are loaded by the server.");
-            Logger.LogInfo("Avatar sync server 1.8.20 ready; model and height use authenticated peer and character ZDO IDs.");
+            Logger.LogInfo("Avatar sync server 2.0.0 ready; model, height, calibration and optional part visibility use authenticated peer and character ZDO IDs.");
         }
 
         void Update()

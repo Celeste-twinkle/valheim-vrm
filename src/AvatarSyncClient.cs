@@ -18,8 +18,10 @@ namespace ValheimVRM
         public bool HeightSync { get; private set; }
         public bool CalibrationSync { get; private set; }
         public bool SyncEnabled => syncEnabled.Value;
+        public bool SharePartSettings => sharePartSettings.Value;
+        public bool ApplyRemotePartSettings => applyRemotePartSettings.Value;
         public string LastError { get; private set; } = "";
-        ConfigEntry<bool> syncEnabled;
+        ConfigEntry<bool> syncEnabled, sharePartSettings, applyRemotePartSettings;
         ZNet network;
         ZRpc server;
         object hostPlugin;
@@ -34,13 +36,26 @@ namespace ValheimVRM
         readonly HashSet<ZRpc> registered = new HashSet<ZRpc>();
         readonly AvatarSnapshotAssembly snapshotParts = new AvatarSnapshotAssembly();
 
-        public void Initialize(ConfigEntry<bool> setting) { syncEnabled = setting; Instance = this; }
+        public void Initialize(ConfigEntry<bool> setting, ConfigEntry<bool> shareParts, ConfigEntry<bool> applyRemoteParts)
+        { syncEnabled = setting; sharePartSettings = shareParts; applyRemotePartSettings = applyRemoteParts; Instance = this; }
         public void SetEnabled(bool value)
         {
             syncEnabled.Value = value; lastSent = null; failed.Clear();
             if (!value) LastError = "";
         }
         public void RetryMissing() { failed.Clear(); LastError = ""; }
+        public void SetSharePartSettings(bool value)
+        { sharePartSettings.Value = value; lastSent = null; }
+        public void SetApplyRemotePartSettings(bool value)
+        {
+            applyRemotePartSettings.Value = value; failed.Clear();
+            foreach (var pair in VrmManager.PlayerToVrmInstance.ToArray())
+            {
+                if (pair.Key == null || pair.Key == Player.m_localPlayer || pair.Value == null) continue;
+                var binding = pair.Value.GetComponent<AvatarCalibrationBinding>();
+                if (binding != null && binding.Encoded != null) binding.Apply(binding.Encoded, value);
+            }
+        }
 
         public void Register(ZNetPeer peer)
         {
@@ -155,7 +170,7 @@ namespace ValheimVRM
                 height = visual.GetComponent<AvatarScale>()?.TargetHeight ?? AvatarHeightRules.Default;
                 if (CalibrationSync)
                 {
-                    try { calibration = AvatarCalibrationBinding.Capture(name); }
+                    try { calibration = AvatarCalibrationBinding.Capture(name, SharePartSettings); }
                     catch (Exception ex) { LastError = "Cannot synchronize calibration: " + ex.Message; return; }
                 }
             }
@@ -219,7 +234,9 @@ namespace ValheimVRM
                 if (applied.TryGetValue(player, out var current) && current.SameAs(desired) &&
                     VrmManager.PlayerToVrmInstance.TryGetValue(player, out var existing) && existing != null &&
                     existing.GetComponent<AvatarScale>()?.TargetHeight == desired.Height &&
-                    existing.GetComponent<AvatarCalibrationBinding>()?.Encoded == (desired.Calibration ?? AvatarCalibrationCodec.Default) &&
+                    existing.GetComponent<AvatarCalibrationBinding>() is AvatarCalibrationBinding existingBinding &&
+                    existingBinding.Encoded == (desired.Calibration ?? AvatarCalibrationCodec.Default) &&
+                    existingBinding.PartVisibilityEnabled == ApplyRemotePartSettings &&
                     VrmManager.PlayerToName.TryGetValue(player, out var existingName) && existingName == desired.Model) continue;
                 if (failed.TryGetValue(player, out var bad) && bad.SameAs(desired)) continue;
                 if (current != null && current.Model == desired.Model && current.Sha256 == desired.Sha256 && current.Height == desired.Height &&
@@ -227,7 +244,7 @@ namespace ValheimVRM
                     currentVisual.GetComponent<AvatarScale>()?.TargetHeight == desired.Height &&
                     VrmManager.PlayerToName.TryGetValue(player, out var currentName) && currentName == desired.Model &&
                     currentVisual.GetComponent<AvatarCalibrationBinding>() is AvatarCalibrationBinding binding &&
-                    binding.Apply(desired.Calibration ?? AvatarCalibrationCodec.Default))
+                    binding.Apply(desired.Calibration ?? AvatarCalibrationCodec.Default, ApplyRemotePartSettings))
                 {
                     applied[player] = desired; failed.Remove(player); continue;
                 }

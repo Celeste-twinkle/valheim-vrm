@@ -86,6 +86,23 @@ static class Program
         controls.Back = new AvatarCalibrationData.Item { Scale=2.1f };
         bool backRejected=false; try{AvatarCalibrationCodec.Encode(controls);}catch(ArgumentException){backRejected=true;}
         Check(backRejected,"Out-of-range back scale accepted");
+        var partIds=Enumerable.Range(0,19).Select(i=>i.ToString("x64")).ToArray();
+        var partKeys=AvatarPartSync.Encode(partIds).ToArray();
+        var shownKeys=AvatarPartSync.EncodeShown(partIds.Take(2)).ToArray();
+        Check(partKeys.Length==3 && partKeys.All(k=>k.Length<=384),"Part visibility was not compactly encoded");
+        var recovered=new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+        Check(partKeys.All(k=>AvatarPartSync.TryDecode(k,recovered)) && recovered.SetEquals(partIds),"Part visibility roundtrip failed");
+        var shown=new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+        Check(shownKeys.All(k=>AvatarPartSync.TryDecodeShown(k,shown)) && shown.SetEquals(partIds.Take(2)) &&
+            shownKeys.All(AvatarPartSync.IsReserved),"Shown-part visibility roundtrip failed");
+        Check(!AvatarPartSync.TryDecode(AvatarPartSync.Prefix+"broken",recovered),"Malformed part visibility accepted");
+        var partsPayload=new AvatarCalibrationData();
+        foreach(var key in partKeys.Concat(shownKeys))partsPayload.Animations[key]=new AvatarCalibrationData.Position(0,0,0);
+        string partsEncoded=AvatarCalibrationCodec.Encode(partsPayload);
+        Check(AvatarCalibrationCodec.TryDecode(partsEncoded,out var partsDecoded) &&
+            partsDecoded.Animations.Keys.SequenceEqual(partKeys.Concat(shownKeys).OrderBy(k=>k,StringComparer.Ordinal)),"Format-1 calibration did not preserve part extension keys");
+        Check(server.Set(101,1001,2,b.Model,b.Sha256,2f,partsEncoded) &&
+            server.Snapshot().Single(s=>s.Peer==101).Calibration==partsEncoded,"Existing calibration relay rejected part extension");
         foreach(float offset in new[]{-1f,-.75f,.75f,1f})
         {
             var wide=new AvatarCalibrationData { Standing=offset, Sitting=-offset };
@@ -108,6 +125,7 @@ static class Program
             Check(rejected,"Invalid extended calibration escaped validation");
         }
         Console.WriteLine("PASS: +/-75 and +/-100 cm across every offset group; beyond +/-100 cm and nonfinite values rejected; per-player relay isolation preserved.");
+        Console.WriteLine("PASS: compact part visibility extension roundtrip and unchanged format-1 relay compatibility.");
         Console.WriteLine("PASS: canonical calibration roundtrip, malformed/nonfinite/range/entry limits, revision deduplication and per-player isolation.");
         Console.WriteLine("PASS: request ordering, duplicate/downgrade/overflow rejection, independent player identities, rapid switches, respawn, reconnect, late join, opt-out and path/hash rejection.");
     }

@@ -330,6 +330,7 @@ namespace ValheimVRM
             DrawPhysicsOptions();
             DrawHeightOptions(current);
             DrawCalibrationOptions(current);
+            DrawPartOptions(current);
             DrawSyncOptions();
             GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();
@@ -376,6 +377,12 @@ namespace ValheimVRM
             if (sync == null) return;
             bool value = GUILayout.Toggle(sync.SyncEnabled, Text("Server avatar sync (when available)", "服务器外观同步（服务器支持时）"));
             if (value != sync.SyncEnabled) sync.SetEnabled(value);
+            bool shareParts = GUILayout.Toggle(sync.SharePartSettings,
+                Text("Share my avatar part settings", "同步我的模型配件设置"));
+            if (shareParts != sync.SharePartSettings) sync.SetSharePartSettings(shareParts);
+            bool receiveParts = GUILayout.Toggle(sync.ApplyRemotePartSettings,
+                Text("Apply other players' part settings", "同步其他玩家的配件设置"));
+            if (receiveParts != sync.ApplyRemotePartSettings) sync.SetApplyRemotePartSettings(receiveParts);
             GUILayout.Label(sync.Connected && sync.SyncEnabled
                 ? Text("Server sync connected · Each player's choice is independent", "服务器同步已连接 · 每位玩家独立选择")
                 : Text("Local mode · Your choice stays on this computer", "本地模式 · 切换仅在本机生效"));

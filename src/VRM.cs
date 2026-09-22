@@ -228,9 +228,14 @@ namespace ValheimVRM
 			if (calibration != null)
 			{
 				calibrationBinding = vrmModel.AddComponent<AvatarCalibrationBinding>();
-				if (!calibrationBinding.Initialize(settings, calibration)) throw new InvalidOperationException("Invalid synchronized calibration.");
+				if (!calibrationBinding.Initialize(settings, calibration, AvatarSyncClient.Instance?.ApplyRemotePartSettings ?? true))
+					throw new InvalidOperationException("Invalid synchronized calibration.");
 				settings = calibrationBinding.Settings;
 			}
+			var partVisibility = vrmModel.AddComponent<AvatarPartVisibility>();
+			var localParts = calibrationBinding == null ? AvatarPartOptions.Current.Get(Name) : null;
+			partVisibility.Initialize(calibrationBinding != null ? calibrationBinding.HiddenParts : localParts.Hidden,
+				calibrationBinding != null ? calibrationBinding.ShownParts : localParts.Shown);
 			// Scale the clone before springs, camera, and both posture calibrations.
 			// The imported template and any other player's clone remain unchanged.
 			AvatarScale.ApplyHeight(vrmModel, height ?? (player == Player.m_localPlayer

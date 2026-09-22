@@ -29,6 +29,11 @@ static class CalibrationRelayProbe
         for (int i = 0; i < entries; i++)
             data.Animations["Base Layer.Test " + i.ToString("D4") + (entries > 1 ? new string('x', 100) : "")] =
                 new AvatarCalibrationData.Position(value, -value, value);
+        // Keep one real 2.0 reserved entry in ordinary relay probes. The full
+        // 768-entry boundary fixture cannot add another entry by definition.
+        if (entries < AvatarCalibrationCodec.MaxEntries)
+            foreach (var key in AvatarPartSync.Encode(new[] { value < 0 ? new string('b', 64) : new string('a', 64) }))
+                data.Animations[key] = new AvatarCalibrationData.Position(0, 0, 0);
         return AvatarCalibrationCodec.Encode(data);
     }
     public static void Run(string model, string hash)

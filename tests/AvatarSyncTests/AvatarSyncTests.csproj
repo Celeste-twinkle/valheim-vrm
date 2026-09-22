@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net7.0</TargetFramework></PropertyGroup>
   <ItemGroup><Compile Include="../../shared/AvatarSyncState.cs" Link="AvatarSyncState.cs" />
-    <Compile Include="../../shared/AvatarCalibrationData.cs" Link="AvatarCalibrationData.cs" /></ItemGroup>
+    <Compile Include="../../shared/AvatarCalibrationData.cs" Link="AvatarCalibrationData.cs" />
+    <Compile Include="../../shared/AvatarPartSync.cs" Link="AvatarPartSync.cs" /></ItemGroup>
 </Project>

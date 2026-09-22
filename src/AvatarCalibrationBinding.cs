@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using ValheimVRM.Sync;
 
@@ -12,21 +14,32 @@ namespace ValheimVRM
         public Settings.VrmSettingsContainer Settings { get; private set; }
         public AvatarCalibrationOptions.Profile Profile { get; private set; }
         public float PhysicsWeight { get; private set; } = .5f;
+        public HashSet<string> HiddenParts { get; } = new HashSet<string>(StringComparer.Ordinal);
+        public HashSet<string> ShownParts { get; } = new HashSet<string>(StringComparer.Ordinal);
+        public bool PartVisibilityEnabled { get; private set; } = true;
 
-        public bool Initialize(Settings.VrmSettingsContainer source, string encoded)
+        public bool Initialize(Settings.VrmSettingsContainer source, string encoded, bool applyParts = true)
         {
             Settings = source.CloneForInstance();
             Profile = new AvatarCalibrationOptions.Profile();
-            return Apply(encoded);
+            return Apply(encoded, applyParts);
         }
-        public bool Apply(string encoded)
+        public bool Apply(string encoded, bool applyParts = true)
         {
             if (!AvatarCalibrationCodec.TryDecode(encoded, out var data)) return false;
             // Update existing objects in place: held items retain their group
             // references, and changes do not need a model reload or spring reset.
             Profile.Animations.Clear();
+            HiddenParts.Clear(); ShownParts.Clear(); PartVisibilityEnabled = applyParts;
             foreach (var pair in data.Animations)
+            {
+                if (AvatarPartSync.IsReserved(pair.Key))
+                {
+                    if (applyParts) { AvatarPartSync.TryDecode(pair.Key, HiddenParts); AvatarPartSync.TryDecodeShown(pair.Key, ShownParts); }
+                    continue;
+                }
                 if (!pair.Key.StartsWith("legacy:", StringComparison.Ordinal)) Profile.Set(pair.Key, Vector(pair.Value));
+            }
             Copy(Profile.Left, data.Left); Copy(Profile.Right, data.Right); Copy(Profile.TwoHanded, data.TwoHanded);
             Copy(Profile.Back, data.Back);
             Settings.StandingHeightOffset = data.Standing; Settings.SittingHeightOffset = data.Sitting;
@@ -39,6 +52,7 @@ namespace ValheimVRM
             PhysicsWeight = data.Physics; Encoded = encoded;
             var physics = GetComponent<AvatarPhysicsWeight>();
             if (physics != null) physics.SynchronizedWeight = data.Physics;
+            GetComponent<AvatarPartVisibility>()?.SetOverrides(HiddenParts, ShownParts);
             return true;
         }
         static Vector3 Legacy(AvatarCalibrationData data, string key) => data.Animations.TryGetValue("legacy:" + key, out var value) ? Vector(value) : Vector3.zero;
@@ -48,7 +62,7 @@ namespace ValheimVRM
         { target.Scale = source.Scale; target.Position.Value = Vector(source.Offset); }
         static AvatarCalibrationData.Item Item(AvatarCalibrationOptions.Equipment source) =>
             new AvatarCalibrationData.Item { Scale = source.Multiplier, Offset = Position(source.Position.Value) };
-        public static string Capture(string model)
+        public static string Capture(string model, bool includeParts = true)
         {
             var settings = ValheimVRM.Settings.GetSettings(model) ?? new ValheimVRM.Settings.VrmSettingsContainer();
             var profile = AvatarCalibrationOptions.Current.Get(model);
@@ -64,6 +78,16 @@ namespace ValheimVRM
             AddLegacy(data, "chair", settings.SittingOnChairOffset); AddLegacy(data, "throne", settings.SittingOnThroneOffset);
             AddLegacy(data, "ship", settings.SittingOnShipOffset); AddLegacy(data, "mast", settings.HoldingMastOffset);
             AddLegacy(data, "dragon", settings.HoldingDragonOffset); AddLegacy(data, "sleep", settings.SleepingOffset);
+            if (includeParts)
+            {
+                var state = AvatarPartOptions.Current.Get(model);
+                var keys = AvatarPartSync.Encode(state.Hidden).Concat(AvatarPartSync.EncodeShown(state.Shown)).ToArray();
+                if (data.Animations.Count + keys.Length > AvatarCalibrationCodec.MaxEntries)
+                    throw new InvalidOperationException("Too many avatar part overrides to synchronize.");
+                // The value is only a format-1 carrier marker. Keep it zero so
+                // calibration relays predating the +/-1 m range accept it too.
+                foreach (var key in keys) data.Animations[key] = new AvatarCalibrationData.Position(0, 0, 0);
+            }
             return AvatarCalibrationCodec.Encode(data);
         }
         static void AddLegacy(AvatarCalibrationData data, string key, Vector3 value)

@@ -99,6 +99,7 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         report.Add("Same-named game Player fixtures: A and B own distinct VRM clones; A switching to B's asset leaves B's object/bones untouched; remote collider unchanged");
         yield return HeightInstanceTests(sync, registry, a, b, names[1], hashes[1]);
         yield return CalibrationInstanceTests(sync, registry, a, b, names[1], hashes[1]);
+        yield return AvatarPartTests(a, b, names[1]);
         yield return NativeChoiceTests(sync, a, b, names[1]);
         rootB = VrmManager.PlayerToVrmInstance[b];
         yield return FolderMismatchTests(prefab, sync, registry, a, b, names, hashes);
@@ -123,7 +124,7 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         Check(!VrmManager.PlayerToVrmInstance.ContainsKey(a) && VrmManager.PlayerToVrmInstance[b]==rootB,"Restoring A affected B");
         Check(before==null?!File.Exists(selectionPath):File.ReadAllBytes(selectionPath).SequenceEqual(before),"Remote switch overwrote local saved choice");
         report.Add("Respawn IDs, stale snapshots, local-player exclusion, opt-out restoration and local selection persistence passed");
-        yield return RespawnTests(prefab, sync, names[1], hashes[1]);
+        yield return RespawnTests(prefab, sync, b, names[1], hashes[1]);
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VRM_ONLY_LIBRARY_TEST")))
             Check(Directory.GetFileSystemEntries(ValheimVRM.Settings.ValheimVRMDir).All(p => Path.GetExtension(p).Equals(".vrm", StringComparison.OrdinalIgnoreCase)),
                 "Remote sync wrote non-VRM files into the model directory");

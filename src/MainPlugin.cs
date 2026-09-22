@@ -33,8 +33,13 @@ namespace ValheimVRM
             Settings.ReloadGlobalSettings();
             AvatarRendering.Initialize();
             AvatarPhysics.Initialize();
-            gameObject.AddComponent<AvatarSyncClient>().Initialize(Config.Bind("AvatarSync", "Enabled", true,
-                "Sync each player's selected local VRM when the server runs ValheimVRM.Server. Without it, selections remain local."));
+            gameObject.AddComponent<AvatarSyncClient>().Initialize(
+                Config.Bind("AvatarSync", "Enabled", true,
+                    "Sync each player's selected local VRM when the server runs ValheimVRM.Server. Without it, selections remain local."),
+                Config.Bind("AvatarSync", "SharePartVisibility", true,
+                    "Share hidden/visible avatar parts with other players. Older clients safely ignore these settings."),
+                Config.Bind("AvatarSync", "ApplyRemotePartVisibility", true,
+                    "Apply hidden/visible part settings received from other players."));
             gameObject.AddComponent<OutfitSwitcher>();
             gameObject.AddComponent<AvatarResidency>();
             gameObject.AddComponent<AvatarBloomController>();
