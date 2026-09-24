@@ -45,6 +45,11 @@ static class Program
             reload.Select("First player", "中文 空格");
             Require(!reload.IsOriginalSelected("First player"), "Selecting VRM did not leave native mode.");
             File.Delete(path);
+            Require(reload.Names.Contains("中文 空格"), "Fixture did not begin with a cached catalog entry.");
+            Require(reload.RefreshAndReportChanges(), "Deleting a VRM was not detected as a catalog change.");
+            Require(!reload.Names.Contains("中文 空格") && !reload.TryGetPath("中文 空格", out _),
+                "A deleted VRM remained in the refreshed picker catalog.");
+            Require(!reload.RefreshAndReportChanges(), "An unchanged folder was reported as changed.");
             Require(reload.Resolve("First player") == "First player", "Removed models must fall back to character matching.");
             File.WriteAllText(Path.Combine(root, "avatar_selections.json"), "{\"First player\":\"../outside\"}");
             reload.LoadSelections();

@@ -326,75 +326,7 @@ namespace ValheimVRM
 			var name = VrmManager.PlayerToName[player];
 
 			var settings = Settings.GetSettings(name);
-
-			var hair = __instance.GetField<VisEquipment, GameObject>("m_hairItemInstance");
-			if (hair != null) SetVisible(hair, false);
-
-			var beard = __instance.GetField<VisEquipment, GameObject>("m_beardItemInstance");
-			if (beard != null) SetVisible(beard, false);
-
-			var chestList = __instance.GetField<VisEquipment, List<GameObject>>("m_chestItemInstances");
-			if (chestList != null)
-			{
-				if (!settings.ChestVisible)
-				{
-					foreach (var chest in chestList) SetVisible(chest, false);
-				}
-			}
-
-			var legList = __instance.GetField<VisEquipment, List<GameObject>>("m_legItemInstances");
-			if (legList != null)
-			{
-				if (!settings.LegsVisible)
-				{
-					foreach (var leg in legList) SetVisible(leg, false);
-				}
-			}
-
-			var shoulderList = __instance.GetField<VisEquipment, List<GameObject>>("m_shoulderItemInstances");
-			if (shoulderList != null)
-			{
-				if (shoulderList != null)
-				{
-					if (!settings.ShouldersVisible)
-					{
-						foreach (var shoulder in shoulderList) SetVisible(shoulder, false);
-					}
-				}
-			}
-
-			var utilityList = __instance.GetField<VisEquipment, List<GameObject>>("m_utilityItemInstances");
-			if (utilityList != null)
-			{
-				if (!settings.UtilityVisible)
-				{
-					foreach (var utility in utilityList) SetVisible(utility, false);
-				}
-			}
-
-			var helmet = __instance.GetField<VisEquipment, GameObject>("m_helmetItemInstance");
-			if (helmet != null)
-			{
-				if (!settings.HelmetVisible)
-				{
-					SetVisible(helmet, false);
-				}
-				else
-				{
-					helmet.transform.localScale = settings.HelmetScale;
-					helmet.transform.localPosition = settings.HelmetOffset;
-				}
-			}
-
-			// Hand and back items retain the game's authored attach/equipoffset
-			// transforms. VRMEquipmentSync applies absolute scale and offsets.
-
-		}
-
-		private static void SetVisible(GameObject obj, bool flag)
-		{
-			foreach (var mr in obj.GetComponentsInChildren<MeshRenderer>()) mr.enabled = flag;
-			foreach (var smr in obj.GetComponentsInChildren<SkinnedMeshRenderer>()) smr.enabled = flag;
+			NativeEquipmentVisibility.Apply(__instance, settings);
 		}
 	}
 

@@ -28,14 +28,25 @@ namespace ValheimVRM
 
         public void Refresh()
         {
+            RefreshAndReportChanges();
+        }
+
+        internal bool RefreshAndReportChanges()
+        {
             var files = Directory.Exists(directory)
                 ? Directory.GetFiles(directory, "*", SearchOption.TopDirectoryOnly)
                     .Where(path => string.Equals(Path.GetExtension(path), ".vrm", StringComparison.OrdinalIgnoreCase))
+                    .Where(File.Exists)
                     .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase).ToArray()
                 : new string[0];
+            var next = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var path in files) next[Path.GetFileNameWithoutExtension(path)] = path;
+            bool changed = paths.Count != next.Count || paths.Any(pair =>
+                !next.TryGetValue(pair.Key, out var path) || !string.Equals(path, pair.Value, StringComparison.Ordinal));
             paths.Clear();
-            foreach (var path in files) paths[Path.GetFileNameWithoutExtension(path)] = path;
+            foreach (var pair in next) paths[pair.Key] = pair.Value;
             Names = paths.Keys.ToArray();
+            return changed;
         }
 
         public bool TryGetPath(string name, out string path)

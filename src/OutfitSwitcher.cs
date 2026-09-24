@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using HarmonyLib;
@@ -25,6 +26,7 @@ namespace ValheimVRM
         Texture2D windowBackground;
         string loadingName;
         bool physicsDirty;
+        float nextCatalogRefresh;
         float? pendingModelHeight;
         Player pendingHeightPlayer;
         readonly HashSet<string> heightDirty = new HashSet<string>();
@@ -49,11 +51,16 @@ namespace ValheimVRM
 
         public void RefreshModels()
         {
+            RefreshModels(true);
+        }
+
+        void RefreshModels(bool clearPreviousError)
+        {
             try
             {
-                Catalog.Refresh();
-                LastError = "";
-                AvatarSyncClient.Instance?.RetryMissing();
+                bool changed = Catalog.RefreshAndReportChanges();
+                if (clearPreviousError) LastError = "";
+                if (changed || clearPreviousError) AvatarSyncClient.Instance?.RetryMissing();
             }
             catch (Exception ex) { ReportError("Cannot scan the VRM folder", ex); }
         }
@@ -248,6 +255,7 @@ namespace ValheimVRM
             MenuOpen = value && Player.m_localPlayer != null && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InIntro();
             if (!MenuOpen) return;
             RefreshModels();
+            nextCatalogRefresh = Time.realtimeSinceStartup + 1f;
             float width = Mathf.Min(500, Screen.width - 20);
             float height = Mathf.Min(640, Screen.height - 20);
             window = new Rect((Screen.width - width) / 2, (Screen.height - height) / 2, width, height);
@@ -271,6 +279,11 @@ namespace ValheimVRM
                     (Chat.instance == null || !Chat.instance.HasFocus())) SetMenuOpen(true);
             }
             if (MenuOpen && ZInput.GetKeyDown(KeyCode.Escape, false)) SetMenuOpen(false);
+            if (MenuOpen && !IsBusy && Time.realtimeSinceStartup >= nextCatalogRefresh)
+            {
+                nextCatalogRefresh = Time.realtimeSinceStartup + 1f;
+                RefreshModels(false);
+            }
         }
 
         void OnGUI()
@@ -317,13 +330,14 @@ namespace ValheimVRM
                 (!VrmManager.PlayerToVrmInstance.TryGetValue(Player.m_localPlayer, out var currentVisual) || currentVisual == null);
             if (GUILayout.Button((original ? "✓  " : "    ") + Text("Original character model", "原始角色模型"), button, GUILayout.Height(36)))
                 RequestSwitch(AvatarCatalog.OriginalModel);
-            foreach (var name in Catalog.Names)
+            var availableNames = Catalog.Names.Where(name => Catalog.TryGetPath(name, out _)).ToArray();
+            foreach (var name in availableNames)
             {
                 var display = name == "___Default" ? Text("Default avatar", "默认模型") : name;
                 if (GUILayout.Button((name == current ? "✓  " : "    ") + display, button, GUILayout.Height(36))) RequestSwitch(name);
             }
             GUI.enabled = true;
-            if (Catalog.Names.Length == 0)
+            if (availableNames.Length == 0)
                 GUILayout.Label(Text("Add .vrm files to the ValheimVRM folder beside valheim.exe, then refresh.", "将 .vrm 放入 valheim.exe 旁的 ValheimVRM 文件夹，然后刷新列表。"), label);
             GUILayout.Label(IsBusy ? Text("Loading: ", "正在载入：") + loadingName : LastError, label);
             DrawRenderingOptions();

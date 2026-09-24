@@ -53,7 +53,10 @@ public sealed class AvatarPoseTests : BaseUnityPlugin
     {
         PhysicsWeightProbe.CheckSettings();
         GroundingProbe.CheckSettings();
+        NativeEquipmentVisibilityProbe.Run();
+        report.Add("native equipment: current trinket and inactive wearable renderers hide immediately; held/back items and configured armor remain independent");
         report.Add("physics settings: atomic save/reload and finite 0..1 bounds passed");
+        if (Environment.GetEnvironmentVariable("VRM_NATIVE_EQUIPMENT") == "1") yield break;
         float deadline = Time.realtimeSinceStartup + 90;
         FejdStartup menu;
         while ((menu = Object.FindFirstObjectByType<FejdStartup>()) == null)

@@ -1,4 +1,6 @@
-# ValheimVRM 2.0.0 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 2.0.1 安装说明（Celeste-twinkle 分支）
+
+**2.0.1 会让原版饰品槽随被替换的身体一起隐藏，并在 F8 面板打开期间同步 `.vrm` 文件的新增和删除。** 手持与背负装备仍会显示；服务端协议未改变。
 
 **2.0.0 新增 F8“模型部件”列表。** 可以强制显示导出时处于非活动状态的 Renderer、隐藏可见 Renderer，或把整个模型恢复为作者导出的默认状态；选择按模型保存。“同步我的模型配件设置”和“同步其他玩家的配件设置”分别控制发送与接收，切换模型／身高、死亡和重生后仍按玩家隔离。协议版本仍为 1：1.8.14～1.8.20 的校准服务端可原样中转保留字段，旧客户端会安全忽略，2.0 服务端仍允许旧客户端和未装 Mod 的客户端进入。
 
@@ -20,7 +22,7 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-2.0.0.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-2.0.1.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
@@ -155,7 +157,7 @@ F8 新增“站姿高度偏移”和“坐姿高度偏移”，默认均为 **0 
 不会自动覆盖用户设置。在 `global_settings.txt` 中写入 `EnableAvatarPicker=false` 可禁用 F8 菜单。
 
 只改变本机外观时，无需服务器安装。多人同步时，在已安装 BepInEx 5 的服务器上
-解压 `ValheimVRM-Server-2.0.0.zip`，并让各客户端安装相同模型文件，详见
+解压 `ValheimVRM-Server-2.0.1.zip`，并让各客户端安装相同模型文件，详见
 [服务器安装说明](SERVER-SYNC.md)。F8 可随时退出同步；通过游戏“启动服务器”的
 房主也可同时安装服务端插件。旧版整文件分享协议默认通过
 `EnableLegacyVrmSharing=false` 停用，使用新同步时请保持关闭。分发模型仍需遵守其许可。
@@ -164,7 +166,7 @@ F8 新增“站姿高度偏移”和“坐姿高度偏移”，默认均为 **0 
 
 - F8 请在进入世界后使用，并先关闭聊天、物品栏和其他菜单。
 - 空列表时检查文件是否直接位于游戏根目录的 `ValheimVRM` 中。
-- 查看 `BepInEx/LogOutput.log` 中的插件版本 **2.0.0**、模型导入错误和着色器错误。
+- 查看 `BepInEx/LogOutput.log` 中的插件版本 **2.0.1**、模型导入错误和着色器错误。
 - 老版本升级请阅读仓库 `Libs/README.md`，避免混用新旧 UniVRM 依赖；
   不要用旧版 Unity.Burst、Unity.Mathematics 覆盖游戏自带 DLL。
 - 卸载时退出游戏并移除 `BepInEx/plugins/ValheimVRM`；模型、配置可自行保留。

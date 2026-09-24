@@ -248,7 +248,12 @@ namespace ValheimVRM
 			if (calibrationBinding != null) physicsWeight.SynchronizedWeight = calibrationBinding.PhysicsWeight;
 			vrmModel.SetActive(true);
 			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
-			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), player.GetComponentInChildren<VisEquipment>(true), settings);
+			var nativeEquipment = player.GetComponentInChildren<VisEquipment>(true);
+			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), nativeEquipment, settings);
+			// Existing equipment may have been built before this VRM was registered,
+			// so UpdateLodgroup's patch could not hide it. Apply the same slot policy
+			// immediately, including wearable slots added by newer Valheim versions.
+			NativeEquipmentVisibility.Apply(nativeEquipment, settings);
 
 			// Detach the previous camera binding even when the next avatar opts out.
 			// Calibrate from this clone before any yield lets animation retargeting

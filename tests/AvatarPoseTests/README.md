@@ -7,6 +7,10 @@ six stepped animations. It checks character-relative XYZ, automatic/user scale,
 non-accumulation and original-transform restoration. Run on VRM 0.x and 1.0
 fixtures. Completion includes `AVATAR_EQUIPMENT_AXES_PASSED` in `results.txt`.
 
+`VRM_NATIVE_EQUIPMENT=1` runs only the native wearable visibility regression.
+It checks the current Valheim trinket slot, inactive renderer variants, optional
+native armor and preservation of held/back equipment.
+
 Build against the local game and the Release client DLL:
 
 ```powershell

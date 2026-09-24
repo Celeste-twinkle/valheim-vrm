@@ -1,3 +1,12 @@
+## 2.0.1 — Native trinket visibility and live model-folder refresh
+
+- Hide Valheim's current trinket equipment slot, including the reported `命运之鳍` amulet, with the native body and clothing whenever a VRM replacement is attached. Apply the rule immediately as well as after equipment refreshes, cover inactive renderer variants, and retain held/back items plus existing optional armor visibility settings.
+- Treat future non-hand/non-back `VisEquipment` instance slots as native wearables by default, avoiding item-name or model-specific exceptions.
+- Refresh the top-level VRM catalog while F8 remains open and filter each displayed entry against the current filesystem. Deleted `.vrm` files disappear without closing the panel; additions appear within one second. Persisted selections fall back safely if their file is absent.
+- Keep server protocol and configuration formats unchanged. The 2.0.1 server remains compatible with older, newer and unmodded clients under the existing optional-sync rules.
+
+Validation: `docs/release-2.0.1-validation.md`.
+
 ## 2.0.0 — Per-model part visibility and optional sharing
 
 - Add an F8 **Model parts** list for the selected VRM. Every authored renderer, including inactive objects, has an independent visible/hidden switch plus search, show-all, model-default and hide-all controls. Explicit show activates exporter-inactive hierarchy nodes; resetting restores their authored state. GPU fur overlays follow their source part instead of appearing as duplicate entries.
