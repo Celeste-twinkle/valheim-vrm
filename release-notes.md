@@ -1,3 +1,12 @@
+## 2.0.2 — Startup and manual-only model catalog refresh
+
+- Scan the top-level `ValheimVRM` model directory once during plugin startup.
+- After startup, scan only when the player presses F8 → **Refresh list**. Opening and drawing the menu perform no directory polling or per-frame file-existence checks.
+- Keep the current cached list until manual refresh, so file additions and deletions cannot create background filesystem work during play.
+- Keep the server protocol, synchronized settings and configuration formats unchanged. The 2.0.2 server remains compatible with older, newer and unmodded clients under the existing optional-sync rules.
+
+Validation: `docs/release-2.0.2-validation.md`.
+
 ## 2.0.1 — Native trinket visibility and live model-folder refresh
 
 - Hide Valheim's current trinket equipment slot, including the reported `命运之鳍` amulet, with the native body and clothing whenever a VRM replacement is attached. Apply the rule immediately as well as after equipment refreshes, cover inactive renderer variants, and retain held/back items plus existing optional armor visibility settings.

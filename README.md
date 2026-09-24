@@ -1,5 +1,7 @@
 # ValheimVRM — Celeste-twinkle fork
 
+**2.0.2 makes model-folder scanning explicit and bounded.** The top-level `ValheimVRM` directory is scanned once when the plugin starts and only when the player presses **Refresh list** in F8. Opening or drawing the menu performs no filesystem access, directory polling or per-frame `File.Exists` checks.
+
 **2.0.1 fixes native trinkets leaking through VRM replacements and stale model-picker entries.** Valheim's current trinket slot, including the reported `命运之鳍` amulet, now hides with the native body and clothing while held and back equipment remain visible. The F8 picker follows top-level `.vrm` additions and deletions while it is open; removed files disappear without reopening the panel.
 
 **2.0.0 adds per-model part visibility controls and optional per-player sharing.** F8 lists every renderable part in the selected VRM with search, individual switches, show all, model defaults and hide all. Separate switches decide whether to share your choices and whether to apply choices received from other players. Parts remain isolated by player through model changes, height changes, death and respawn. The wire format stays compatible with older servers and clients.
@@ -12,7 +14,7 @@
 
 Replace Valheim characters with your own humanoid VRM avatars and switch them with **F8**. Use it locally or install the separate server addon so players can see one another's selected avatars.
 
-**Current release: 2.0.1** · Tested with Valheim **1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.3**, D3D11.
+**Current release: 2.0.2** · Tested with Valheim **1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.3**, D3D11.
 
 [Download Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [Release source](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [Changelog](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -39,10 +41,10 @@ Avatar authors can add optional GPU fur using the [fur extension integration spe
 
 | Use case | Install |
 | --- | --- |
-| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-2.0.1.zip` + your own `.vrm` files. |
-| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-2.0.1.zip`; no avatars or client dependencies needed. |
+| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-2.0.2.zip` + your own `.vrm` files. |
+| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-2.0.2.zip`; no avatars or client dependencies needed. |
 | Player hosting through **Start server**, with avatar synchronization | Both client and server packages on the host; other players use the client package. |
-| Source development | `ValheimVRM-2.0.1-source.zip` contains source, not an installable plugin. |
+| Source development | `ValheimVRM-2.0.2-source.zip` contains source, not an installable plugin. |
 
 Neither public runtime ZIP includes BepInEx. See the [installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) for the loader and dependency provenance.
 
@@ -55,7 +57,7 @@ Neither public runtime ZIP includes BepInEx. See the [installation guide](https:
 
 Install the loader once per game/server directory. The complete client ZIP already provides the matching UniVRM runtime libraries and shaders; the server addon does not need those client dependencies.
 
-The separately shared **local Windows x64 bundles** `09_ValheimVRM_2.0.1_完整插件.zip` and `10_ValheimVRM_Server_2.0.1.zip` both include BepInEx **5.4.23.3**, so a fresh installation needs no separate loader download. Stop the game/server before installing. On a server that already has compatible BepInEx, copy only `BepInEx/plugins/ValheimVRM.Server` from the local server ZIP and preserve the existing loader and configuration.
+The separately shared **local Windows x64 bundles** `09_ValheimVRM_2.0.2_完整插件.zip` and `10_ValheimVRM_Server_2.0.2.zip` both include BepInEx **5.4.23.3**, so a fresh installation needs no separate loader download. Stop the game/server before installing. On a server that already has compatible BepInEx, copy only `BepInEx/plugins/ValheimVRM.Server` from the local server ZIP and preserve the existing loader and configuration.
 
 ### Player setup
 
@@ -63,7 +65,7 @@ The separately shared **local Windows x64 bundles** `09_ValheimVRM_2.0.1_完整�
 2. Extract the **complete client ZIP** beside `valheim.exe`, merging `BepInEx` and `valheim_Data`. Copying only `ValheimVRM.dll` is insufficient.
 3. Create `ValheimVRM` in the game root and add `.vrm` files directly inside. One model is enough.
 4. Start the game, enter a world, close chat/inventory and other menus, then press **F8** and select a model.
-5. Confirm **ValheimVRM 2.0.1** loads in `BepInEx/LogOutput.log`.
+5. Confirm **ValheimVRM 2.0.2** loads in `BepInEx/LogOutput.log`.
 
 ```text
 Valheim/
@@ -121,7 +123,7 @@ Optional automatic matching still supports `CharacterName.vrm` and `___Default.v
 Use F8 while alive in a world. Close with F8, Esc or **Close**. The panel uses Chinese for a Chinese game language, and English otherwise.
 
 - Click a model to switch. Choices persist per character across restarts and respawns. Import failure displays an error and retains the last usable appearance.
-- Use **Refresh list** after adding/removing files. Restart after replacing a same-name file or editing model TXT settings.
+- The game scans the model directory once at startup and does not scan it automatically afterward. Use **Refresh list** after adding/removing files. Restart after replacing a same-name file or editing model TXT settings.
 - There is no fixed list-size limit and browsing does not preload the library. Large models still require sufficient RAM and VRAM.
 - **Server avatar sync (when available)** controls publishing your choice and receiving other players' avatars, as described below.
 
@@ -245,7 +247,7 @@ to either MToon generation; existing model settings can keep `ModelBrightness=1`
 
 ### Server setup
 
-Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-2.0.1.zip` into its root and start it normally:
+Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-2.0.2.zip` into its root and start it normally:
 
 ```text
 Dedicated server/
@@ -256,7 +258,7 @@ Dedicated server/
 
 **Neither `ValheimVRM.Server` directory needs client avatar files.** The server does not import models and needs no client UniVRM DLLs or shaders. Its own `ValheimVRM` folder can be absent.
 
-Participating players install the complete client and the matching `.vrm` files they want to display. Join a world, enable sync in F8 and confirm **Server sync connected**. Use **2.0.1** on the server and participating clients for consistent current behavior. Part visibility requires 2.0.0 or newer on the sender and observer. It uses reserved entries in the unchanged calibration format: calibration-capable 1.8.14–1.8.20 servers relay it, while older clients ignore those entries and continue showing authored visibility. The 2.0.1 server accepts older, newer and unmodded clients under the existing optional-sync rules.
+Participating players install the complete client and the matching `.vrm` files they want to display. Join a world, enable sync in F8 and confirm **Server sync connected**. Use **2.0.2** on the server and participating clients for consistent current behavior. Part visibility requires 2.0.0 or newer on the sender and observer. It uses reserved entries in the unchanged calibration format: calibration-capable 1.8.14–1.8.20 servers relay it, while older clients ignore those entries and continue showing authored visibility. The 2.0.2 server accepts older, newer and unmodded clients under the existing optional-sync rules.
 
 ### Installation combinations
 
@@ -296,7 +298,7 @@ Keep the old whole-file sharing option `EnableLegacyVrmSharing=false` in `global
 | Version-incompatible login dialog | Compare client/server game versions and inspect both connection logs. VRM does not reject clients missing its addon. |
 | Excessive motion / clothes clip through the body | Reduce physics weight, then inspect exported skinning, blend shapes and colliders if necessary. |
 | Leaf-like dark patches remain after disabling shadows | Shadow maps and screen-space post-processing differ. This build supplies missing depth/normals for MToon, UniUnlit and other supported surfaces. Check complete dependencies and include material types/rendering options in reports. |
-| Increasing lag or GPU allocation failures after leaving a world | Install complete **2.0.1**, remove duplicate plugin copies and restart. This version includes the duplicate-patch leak fix for menu reentry. |
+| Increasing lag or GPU allocation failures after leaving a world | Install complete **2.0.2**, remove duplicate plugin copies and restart. This version includes the duplicate-patch leak fix for menu reentry. |
 | Memory does not drop when an avatar leaves the camera view | Off-camera active players still need their assets. Eviction begins after the last instance is destroyed; see below. |
 
 For reports, include game/mod versions, reproduction steps and relevant log excerpts:
@@ -311,7 +313,7 @@ Imported templates and their meshes, textures, materials and rig resources are r
 
 Unity and graphics drivers can retain memory pools, so Task Manager need not drop immediately after resource release. 1.8.7 passed sustained 4K bloom allocation/release, three actual menu reloads, attachment cancellation, minimum sizing, sitting, grips, physics weight and resource-lifetime probes.
 
-Networking probes cover real ZRpc serialization, production server handlers and independent binding to two player fixtures. A public-network Steam/PlayFab dedicated-server session has not been verified. Linux, macOS, Vulkan and all other mod combinations have not been comprehensively tested. See the [2.0.1 native equipment and picker validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.1-validation.md), [2.0.0 part visibility and compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.0-validation.md), [1.8.16 transparent SSAO validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.16-validation.md), [1.8.15 native character/back equipment validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.15-validation.md), [1.8.12 height/sync validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md) and the earlier [1.8.7 validation record](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md).
+Networking probes cover real ZRpc serialization, production server handlers and independent binding to two player fixtures. A public-network Steam/PlayFab dedicated-server session has not been verified. Linux, macOS, Vulkan and all other mod combinations have not been comprehensively tested. See the [2.0.2 manual refresh validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.2-validation.md), [2.0.1 native equipment and picker validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.1-validation.md), [2.0.0 part visibility and compatibility validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.0-validation.md), [1.8.16 transparent SSAO validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.16-validation.md), [1.8.15 native character/back equipment validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.15-validation.md), [1.8.12 height/sync validation](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md) and the earlier [1.8.7 validation record](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md).
 
 ## Development and provenance
 
@@ -329,7 +331,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Outputs are `release/ValheimVRM-2.0.1.zip` and `release/ValheimVRM-Server-2.0.1.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
+Outputs are `release/ValheimVRM-2.0.2.zip` and `release/ValheimVRM-Server-2.0.2.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
 
 [Shader rebuilding](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [Dependency sources/licenses](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [Project license](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [Issues](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 

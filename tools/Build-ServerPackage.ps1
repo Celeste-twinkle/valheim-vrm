@@ -9,6 +9,7 @@ $version = ([xml](Get-Content -LiteralPath $project -Raw)).Project.PropertyGroup
 $destination = Join-Path $repo "release/ValheimVRM-Server-$version.zip"
 New-Item -ItemType Directory -Path (Split-Path $destination) -Force | Out-Null
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+Add-Type -AssemblyName System.IO.Compression
 # Package an explicit allowlist, never the build directory's copied game references.
 $files = [ordered]@{
     'BepInEx/plugins/ValheimVRM.Server/ValheimVRM.Server.dll' = 'server/bin/Release/net471/ValheimVRM.Server.dll'

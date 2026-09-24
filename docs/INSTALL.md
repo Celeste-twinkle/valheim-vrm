@@ -1,4 +1,6 @@
-# Install ValheimVRM 2.0.1 (Celeste-twinkle fork)
+# Install ValheimVRM 2.0.2 (Celeste-twinkle fork)
+
+**2.0.2 scans the top-level model directory once at plugin startup and only scans again when the player presses F8 → Refresh list.** Opening or drawing the menu does not access the filesystem, poll the directory or run per-frame existence checks.
 
 **2.0.1 hides native trinket-slot visuals with the replaced body and keeps the open F8 model list synchronized with `.vrm` file additions and deletions.** Held and sheathed equipment remain visible. The server protocol is unchanged.
 
@@ -24,13 +26,13 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-2.0.1.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-2.0.2.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
    Subfolders, including `Shared`, are not listed. Spaces and Unicode names work.
 5. Enter a world and press **F8**. Select a model from the scrollable list.
-   **Refresh list** discovers added or removed files; F8 or Esc closes the panel.
+   The plugin scans once at startup. **Refresh list** is the only scan after startup and discovers added or removed files; F8 or Esc closes the panel.
 
 ```text
 Valheim/
@@ -173,7 +175,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-2.0.1.zip` on a BepInEx 5 server. Give each
+selection, install `ValheimVRM-Server-2.0.2.zip` on a BepInEx 5 server. Give each
 client the matching files for models it needs to display; whole folders may differ. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -183,7 +185,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **2.0.1**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **2.0.2**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models
