@@ -41,7 +41,8 @@ namespace ValheimVRM
         public void SetEnabled(bool value)
         {
             syncEnabled.Value = value; lastSent = null; failed.Clear();
-            if (!value) LastError = "";
+            if (value && Connected) AvatarResidency.SetRemoteSelections(states);
+            else if (!value) { AvatarResidency.ClearRemoteSelections(); LastError = ""; }
         }
         public void RetryMissing() { failed.Clear(); LastError = ""; }
         public void SetSharePartSettings(bool value)
@@ -108,6 +109,7 @@ namespace ValheimVRM
             if (!AvatarSyncWire.ReadSnapshot(package, out var next, out var selections, out var withHeight, out var withCalibration) ||
                 (HeightSync && !withHeight) || (CalibrationSync && !withCalibration) || next <= revision) return;
             revision = next; states = selections;
+            if (SyncEnabled) AvatarResidency.SetRemoteSelections(states);
             snapshotParts.Clear();
         }
         void ResetConnectionIfNeeded()
@@ -115,6 +117,9 @@ namespace ValheimVRM
             var net = ZNet.instance;
             var rpc = net != null && !net.IsServer() ? net.GetServerPeer()?.m_rpc : null;
             if (network == net && (net == null || net.IsServer() || server == rpc)) return;
+            var previousNetwork = network;
+            if (previousNetwork != null && previousNetwork != net) AvatarResidency.ClearAll();
+            else AvatarResidency.LoseRemoteAuthority();
             network = net; server = rpc; Connected = false; revision = -1;
             requestSequence = 0; SequencedRequests = false; HeightSync = CalibrationSync = false; snapshotParts.Clear();
             states = new AvatarSelection[0]; lastSent = null; hostPlugin = null; failed.Clear(); LastError = "";
@@ -270,7 +275,11 @@ namespace ValheimVRM
                 break; // Serialize imports so shared model caches cannot race.
             }
         }
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        void OnDestroy()
+        {
+            AvatarResidency.ClearAll();
+            if (Instance == this) Instance = null;
+        }
     }
 
     [HarmonyPatch(typeof(ZNet), "OnNewConnection")]

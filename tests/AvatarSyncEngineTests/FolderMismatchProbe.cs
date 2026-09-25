@@ -84,7 +84,10 @@ public sealed partial class AvatarSyncEngineTests
             yield return PumpRemote(sync);
             Check(failed.ContainsKey(a) && sync.LastError.Contains("Missing local VRM"), "Deleted file was still imported");
 
-            registry.Set(101, 1001, 1, names[0], hashes[1]); SetState(sync, registry);
+            // names[0] may have been correctly released once no player selected
+            // it. Exercise a guaranteed live cache entry instead of depending
+            // on the former 15-second idle cache.
+            registry.Set(101, 1001, 1, names[1], hashes[0]); SetState(sync, registry);
             yield return PumpRemote(sync);
             Check(failed.ContainsKey(a) && sync.LastError.Contains("Cached VRM differs"), "Different cached contents were attached");
             Check(VrmManager.PlayerToVrmInstance[a] == originalA && VrmManager.PlayerToVrmInstance[b] == originalB,
@@ -97,12 +100,14 @@ public sealed partial class AvatarSyncEngineTests
             yield return PumpRemote(sync);
             Check(VrmManager.PlayerToName[b] == names[0] && VrmManager.PlayerToVrmInstance[a] == originalA,
                 "A's mismatch prevented B from switching independently");
+            int importsBeforeRecovery = mismatchImportCalls;
             File.Copy(Path.Combine(ValheimVRM.Settings.ValheimVRMDir, names[0] + ".vrm"), path);
             registry.Set(101, 1001, 1, name, hashes[0]); SetState(sync, registry); picker.RefreshModels();
             yield return PumpRemote(sync); yield return PumpRemote(sync);
             Check(VrmManager.PlayerToName[a] == name && VrmManager.PlayerToName[c] == name,
                 "Adding the matching file and refreshing did not recover");
-            Check(VrmManager.PlayerToVrmInstance[a] != VrmManager.PlayerToVrmInstance[c] && mismatchImportCalls == 1,
+            Check(VrmManager.PlayerToVrmInstance[a] != VrmManager.PlayerToVrmInstance[c] &&
+                mismatchImportCalls == importsBeforeRecovery + 1,
                 "Recovered model shared player instances or imported repeatedly");
             report.Add("Folder mismatch: missing/empty/deleted/unreadable files, differing uncached/cached bytes, vanilla/existing appearance retention, no importer/cache pollution, bounded retries and independent healthy player switches passed");
             report.Add("Recovery: replacing an unimported differing file with matching bytes and refreshing attached independent avatars without reconnecting; no local selection was changed");

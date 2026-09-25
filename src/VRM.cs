@@ -357,6 +357,7 @@ namespace ValheimVRM
 			{
 				controller.ReloadSpringBones();
 			}
+			if (stillAttached()) AvatarResidency.Attached(this, player);
 		}
 
 		private static void PrepareVrm10Clone(GameObject source, GameObject model)

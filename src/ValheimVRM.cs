@@ -661,6 +661,7 @@ namespace ValheimVRM
 
 			if (playerName == AvatarCatalog.OriginalModel)
 			{
+				if (!online || ___m_nview.IsOwner()) AvatarResidency.SetLocalSelection(null);
 				VrmManager.PlayerToName.Remove(__instance);
 				return; // An explicit native choice suppresses character/default VRM fallback.
 			}

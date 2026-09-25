@@ -9,6 +9,7 @@ using HarmonyLib;
 using UniGLTF;
 using UnityEngine;
 using ValheimVRM;
+using ValheimVRM.Sync;
 using Object = UnityEngine.Object;
 using Avatar = ValheimVRM.VRM;
 
@@ -19,6 +20,7 @@ public sealed class AvatarResidencyEngineTests : BaseUnityPlugin
     string output;
     readonly List<string> report = new List<string>();
     static int disposedImports;
+    static readonly HashSet<int> fixturePlayers = new HashSet<int>();
     readonly List<Material> instanceMaterials = new List<Material>();
     void Awake()
     {
@@ -28,11 +30,20 @@ public sealed class AvatarResidencyEngineTests : BaseUnityPlugin
         var harmony=new Harmony("valheimvrm.tests.residency.isolation");
         harmony.Patch(AccessTools.PropertyGetter(typeof(FileHelpers),"CloudStorageSupported"),prefix:new HarmonyMethod(typeof(AvatarResidencyEngineTests),nameof(NoCloud)));
         harmony.Patch(AccessTools.Method(typeof(GltfData),"Dispose"),postfix:new HarmonyMethod(typeof(AvatarResidencyEngineTests),nameof(ImportDisposed)));
+        harmony.Patch(AccessTools.Method(typeof(Player),"IsDead"),prefix:new HarmonyMethod(typeof(AvatarResidencyEngineTests),nameof(FixtureIsAlive)));
     }
     static bool NoCloud(ref bool __result){__result=false;return false;}
+    static bool FixtureIsAlive(Player __instance,ref bool __result)
+    {if(__instance!=null && fixturePlayers.Contains(__instance.GetInstanceID())){__result=false;return false;}return true;}
     static void ImportDisposed(){disposedImports++;}
     static void Check(bool ok,string message){if(!ok)throw new Exception(message);}
-    static void Sweep(){AccessTools.Method(typeof(AvatarResidency),"Collect").Invoke(null,new object[]{Time.realtimeSinceStartup+30});}
+    static void Sweep(){AccessTools.Method(typeof(AvatarResidency),"Collect").Invoke(null,null);}
+    static void RetainRemote(params string[] models)
+    {
+        var states=models.Select((model,index)=>new AvatarSelection{Peer=index+1,CharacterUser=index+100,CharacterId=(uint)(index+1),Model=model}).ToArray();
+        AccessTools.Method(typeof(AvatarResidency),"SetRemoteSelections").Invoke(null,new object[]{states});
+    }
+    static void ClearResidency(){AccessTools.Method(typeof(AvatarResidency),"ClearAll").Invoke(null,null);}
     IEnumerator Start()
     {
         if(string.IsNullOrEmpty(output))yield break;
@@ -54,6 +65,7 @@ public sealed class AvatarResidencyEngineTests : BaseUnityPlugin
         while((menu=Object.FindFirstObjectByType<FejdStartup>())==null || !VRMShaders.Shaders.ContainsKey("VRM10/MToon10"))
         {if(Time.realtimeSinceStartup>deadline)throw new Exception("Menu timeout");yield return null;}
         AvatarSyncClient.Instance.enabled=false;
+        RetainRemote();
         var prefab=(GameObject)AccessTools.Field(typeof(FejdStartup),"m_playerPrefab").GetValue(menu);
         var a=MakePlayer(prefab);var b=MakePlayer(prefab);
         Avatar first=null,second=null,reloaded=null;
@@ -87,14 +99,16 @@ public sealed class AvatarResidencyEngineTests : BaseUnityPlugin
         Check(reloaded.VisualModel==null && reloadResources.All(x=>x==null),"Unused reloaded avatar resources survived collection");
         Check(!VrmManager.VrmDic.ContainsKey(reloaded.Name) && !VrmManager.VrmHashes.ContainsKey(reloaded.Name),"Unused cache entry survived");
         Check(secondResources.All(x=>x!=null),"Second avatar lost shared resources");
+        RetainRemote(second.Name);
         Destroy(a.transform.parent.gameObject);Destroy(b.transform.parent.gameObject);
-        yield return null;
-        // Exercise the actual Update timer, without a forced sweep.
-        deadline=Time.realtimeSinceStartup+19;
-        while(second.VisualModel!=null && Time.realtimeSinceStartup<deadline)yield return null;
+        yield return null;Sweep();
         yield return null;yield return null;
-        Check(second.VisualModel==null && secondResources.All(x=>x==null),"Automatic idle timer did not destroy template resources");
-        report.Add("Last player removed: the production 15-second timer clears template, cache/hash and every owned native asset.");
+        Check(second.VisualModel!=null && secondResources.All(x=>x!=null),"Temporarily invisible online player lost template resources");
+        Check(VrmManager.VrmDic[second.Name]==second && VrmManager.VrmHashes.ContainsKey(second.Name),"Online selection lost its cache identity/hash");
+        report.Add("A synchronized player outside the local AOI retains its imported template; collection only culls rendering instances.");
+        RetainRemote();Sweep();yield return null;yield return null;
+        Check(second.VisualModel==null && secondResources.All(x=>x==null),"Disconnected player's template resources survived collection");
+        report.Add("Removing the player from the authoritative snapshot releases its template, cache/hash and every owned native asset.");
 
         var c=MakePlayer(prefab);
         yield return Load("Shinano_LightAdjustment",c,x=>reloaded=x);
@@ -104,9 +118,11 @@ public sealed class AvatarResidencyEngineTests : BaseUnityPlugin
         pin.Dispose();yield return Attach(reloaded,c);yield return null;
         var finalResources=ResourcesOf(reloaded);
         Check(finalResources.All(x=>x!=null),"Reimport after eviction failed");
-        Destroy(c.transform.parent.gameObject);yield return null;Sweep();yield return null;yield return null;
-        Check(finalResources.All(x=>x==null),"Reimport cleanup leaked");
-        report.Add("Reselecting an evicted model imports successfully; pending attachments are pinned through asynchronous work.");
+        RetainRemote(reloaded.Name);Destroy(c.transform.parent.gameObject);yield return null;Sweep();yield return null;
+        Check(finalResources.All(x=>x!=null),"Session-retained reimport was released before world exit");
+        ClearResidency();yield return null;yield return null;
+        Check(finalResources.All(x=>x==null),"World-exit cleanup leaked");
+        report.Add("Reselecting after release imports successfully; pending attachments are pinned, and local world exit clears every retained template.");
 
         var pixel=new Texture2D(1,1,TextureFormat.RGBA32,false);pixel.SetPixel(0,0,Color.white);pixel.Apply();
         var bytes=pixel.EncodeToPNG();Destroy(pixel);
@@ -171,6 +187,6 @@ public sealed class AvatarResidencyEngineTests : BaseUnityPlugin
         var animator=go.GetComponentInChildren<Animator>(true);
         AccessTools.Field(typeof(Character),"m_animator").SetValue(p,animator);
         AccessTools.Field(typeof(Character),"m_visual").SetValue(p,animator.gameObject);
-        go.AddComponent<VrmController>();return p;
+        go.AddComponent<VrmController>();fixturePlayers.Add(p.GetInstanceID());return p;
     }
 }

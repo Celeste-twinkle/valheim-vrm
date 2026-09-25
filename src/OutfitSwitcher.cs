@@ -147,6 +147,7 @@ namespace ValheimVRM
                 // Save first: an IO failure must leave the current appearance intact.
                 Catalog.Select(player.GetPlayerName(), AvatarCatalog.OriginalModel);
                 pendingModelHeight = null; pendingHeightPlayer = null;
+                AvatarResidency.SetLocalSelection(null);
                 RemoteAvatarBaseline.Restore(player);
                 yield break;
             }

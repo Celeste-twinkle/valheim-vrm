@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>2.0.2</Version>
+		<Version>2.0.3</Version>
 		<InstallToGame Condition="'$(InstallToGame)' == ''">false</InstallToGame>
 		<TargetFramework>net471</TargetFramework>
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -10,7 +10,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="src/**/*.cs" />
+		<Compile Include="src/**/*.cs" Exclude="src/VersionInfo.g.cs" />
+		<!-- Keep the generated version source in the evaluated compile set even
+		     when it does not exist yet in a clean checkout. -->
+		<Compile Include="src/VersionInfo.g.cs" />
 		<Compile Include="shared/*.cs" />
         <EmbeddedResource Include="Assets/avatar_bloom" LogicalName="ValheimVRM.avatar_bloom" />
         <EmbeddedResource Include="Assets/avatar_rendering" LogicalName="ValheimVRM.avatar_rendering" />

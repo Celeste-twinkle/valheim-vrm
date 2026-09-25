@@ -1,3 +1,13 @@
+## 2.0.3 — Session-resident avatar templates
+
+- Treat visibility and local area-of-interest unloads as rendering-only events. Imported avatar templates stay resident while a local selection or an online player's synchronized selection still references them, preventing repeated file reads and UniVRM imports.
+- Release a template after the last using player switches models, returns to the native model or leaves the server and the final rendered instance is gone. Without an authoritative synchronization snapshot, use Valheim's connected-character list to distinguish an area unload from a real disconnect.
+- Clear all imported templates and cache hashes when the local client exits the world. Same-name generations and shared models retain independent ownership, so one player cannot destroy resources still used by another.
+- Client-only update: synchronization protocol and configuration formats are unchanged; the existing 2.0.2 server addon remains compatible and does not require an update.
+- Include the generated plugin-version source explicitly so a clean checkout succeeds on its first build instead of depending on a previously generated file.
+
+Validation: `docs/release-2.0.3-validation.md`.
+
 ## 2.0.2 — Startup and manual-only model catalog refresh
 
 - Scan the top-level `ValheimVRM` model directory once during plugin startup.

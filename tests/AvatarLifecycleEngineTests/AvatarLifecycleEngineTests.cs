@@ -21,6 +21,7 @@ public sealed partial class AvatarLifecycleEngineTests : BaseUnityPlugin
     bool diagnose;
     readonly List<string> report = new List<string>();
     static bool recording;
+    static readonly HashSet<int> fixturePlayers = new HashSet<int>();
     static readonly List<RenderTexture> acquired = new List<RenderTexture>();
     static readonly List<RenderTexture> released = new List<RenderTexture>();
     void Awake()
@@ -29,10 +30,19 @@ public sealed partial class AvatarLifecycleEngineTests : BaseUnityPlugin
         if (string.IsNullOrEmpty(output)) { enabled = false; return; }
         diagnose = Environment.GetEnvironmentVariable("VRM_LIFECYCLE_DIAGNOSE") == "1";
         Directory.CreateDirectory(output);
-        new Harmony("valheimvrm.tests.lifecycle.cloud").Patch(AccessTools.PropertyGetter(typeof(FileHelpers), "CloudStorageSupported"),
+        var harmony = new Harmony("valheimvrm.tests.lifecycle.cloud");
+        harmony.Patch(AccessTools.PropertyGetter(typeof(FileHelpers), "CloudStorageSupported"),
             prefix: new HarmonyMethod(typeof(AvatarLifecycleEngineTests), nameof(NoCloud)));
+        harmony.Patch(AccessTools.Method(typeof(Player), "IsDead"),
+            prefix: new HarmonyMethod(typeof(AvatarLifecycleEngineTests), nameof(FixtureIsAlive)));
     }
     static bool NoCloud(ref bool __result) { __result = false; return false; }
+    static bool FixtureIsAlive(Player __instance, ref bool __result)
+    {
+        if (__instance != null && fixturePlayers.Contains(__instance.GetInstanceID()))
+        { __result = false; return false; }
+        return true;
+    }
     static void Check(bool value, string message) { if (!value) throw new Exception(message); }
     void Log(string value) { report.Add(value); File.WriteAllLines(Path.Combine(output, "results.txt"), report); }
     static void Acquired(RenderTexture __2) { if (recording && __2 != null) acquired.Add(__2); }
@@ -57,6 +67,11 @@ public sealed partial class AvatarLifecycleEngineTests : BaseUnityPlugin
         FejdStartup menu;
         while ((menu = Object.FindFirstObjectByType<FejdStartup>()) == null || !VRMShaders.Shaders.ContainsKey("VRM10/MToon10"))
         { Check(Time.realtimeSinceStartup < timeout, "Startup timeout"); yield return null; }
+        if (Environment.GetEnvironmentVariable("VRM_LIFECYCLE_RESIDENCY_ONLY") == "1")
+        {
+            yield return CancellationTests((GameObject)AccessTools.Field(typeof(FejdStartup), "m_playerPrefab").GetValue(menu));
+            yield break;
+        }
         var startup = typeof(MainPlugin).Assembly.GetType("ValheimVRM.PatchFejdStartup");
         var bloom = AccessTools.DeclaredMethod(typeof(BloomComponent), "Prepare", new[] { typeof(RenderTexture), typeof(Material), typeof(Texture) });
         int before = Harmony.GetPatchInfo(bloom).Prefixes.Count(p => p.owner == Owner);
@@ -169,6 +184,7 @@ public sealed partial class AvatarLifecycleEngineTests : BaseUnityPlugin
             {
                 var holder = new GameObject("Inactive cancellation fixture"); holder.SetActive(false);
                 var player = Object.Instantiate(prefab, holder.transform).GetComponent<Player>();
+                fixturePlayers.Add(player.GetInstanceID());
                 var animator = player.GetComponentInChildren<Animator>(true);
                 AccessTools.Field(typeof(Character), "m_animator").SetValue(player, animator);
                 AccessTools.Field(typeof(Character), "m_visual").SetValue(player, animator.gameObject);
