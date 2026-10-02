@@ -1,5 +1,9 @@
 # ValheimVRM — Celeste-twinkle fork
 
+**2.0.4 修复外观切换成功后配置无法更新的问题。** 保存使用独立临时文件、带备份的替换、有限重试和 Windows 后备方式，日志可区分失败阶段及成功保存方式。已有配置自动沿用，2.0.2 服务端插件继续兼容，无需更新。
+
+**2.0.3 在玩家仍在线时保留已导入的模型模板**，重新进入可见范围会复用模板，无需再次完整导入。
+
 **2.0.2 将模型目录扫描限制为启动一次和手动刷新。** 插件启动时扫描游戏根目录下的 `ValheimVRM` 顶层目录；启动后只有玩家点击 F8 的“刷新列表”按钮才会再次扫描。打开或绘制 F8 菜单不会访问文件系统，也没有定时轮询或逐帧 `File.Exists` 检查。
 
 **2.0.1 修复原版护符残留和模型列表残留。** 当前 Valheim 的饰品槽（包括“命运之鳍”）现在会随原版身体和衣服一起隐藏，手持与背负装备仍正常保留。F8 面板打开期间会跟踪顶层 `.vrm` 文件的新增和删除，已删除模型无需关闭面板即可从列表消失。
@@ -14,7 +18,7 @@
 
 将英灵神殿角色替换为自己的 VRM 人形模型，游戏内按 **F8** 切换。可以只在本机生效，也可以安装独立服务器插件，让其他玩家看到各自选择的模型。
 
-**当前发布版：2.0.2** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
+**当前客户端发布版：2.0.4** · 验证环境：Valheim **1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.3**、D3D11。
 
 [下载 Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [发布版源码](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [更新记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -40,10 +44,10 @@
 
 | 使用场景 | 安装内容 |
 | --- | --- |
-| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-2.0.2.zip` + 自备 `.vrm`。 |
+| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-2.0.4.zip` + 自备 `.vrm`。 |
 | 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-2.0.2.zip`；无需模型或客户端依赖。 |
 | 通过游戏“启动服务器”的房主，需要外观同步 | 在房主游戏目录安装客户端包和服务器包；其他玩家按客户端方式安装。 |
-| 仅下载源码 | `ValheimVRM-2.0.2-source.zip` 用于开发，不能代替编译好的插件包。 |
+| 仅下载源码 | `ValheimVRM-2.0.4-source.zip` 用于开发，不能代替编译好的插件包。 |
 
 公开客户端、服务器 ZIP 均不附带 BepInEx。前置加载器与依赖来源见[详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)。
 
@@ -58,13 +62,15 @@
 
 另外分发的**本地 Windows x64 完整包** `09_ValheimVRM_2.0.2_完整插件.zip` 和 `10_ValheimVRM_Server_2.0.2.zip` 均已包含 BepInEx **5.4.23.3**，首次安装无需再下载前置。安装前退出游戏／停止服务器。服务器已有兼容 BepInEx 时，只复制本地服务端 ZIP 中的 `BepInEx/plugins/ValheimVRM.Server`，保留原加载器和配置。
 
+已完整安装 2.0.3 的用户可使用 `ValheimVRM-2.0.4-update.zip` 仅替换插件 DLL；替换前退出游戏。其他安装使用完整客户端包。
+
 ### 玩家安装步骤
 
 1. 正常退出游戏。尚未安装 BepInEx 5 时先安装加载器，启动一次游戏后退出。
 2. 将**完整客户端 ZIP**解压到 `valheim.exe` 所在目录，合并 `BepInEx` 和 `valheim_Data`。不能只复制 `ValheimVRM.dll`。
 3. 在游戏根目录创建 `ValheimVRM`，把自己的 `.vrm` 直接放进去。一个模型就能使用。
 4. 启动游戏，进入世界后关闭聊天、物品栏等菜单，按 **F8** 选择模型。
-5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 2.0.2**。
+5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 2.0.4**。
 
 ```text
 Valheim/
@@ -248,7 +254,7 @@ VRM 0.x／1.0 MToon 均不应用该配置，现有模型配置继续保持 `Mode
 
 **这两个 `ValheimVRM.Server` 目录都不需要放客户端模型文件。** 服务器不导入模型，不需要客户端 UniVRM DLL 或着色器；服务器自己的 `ValheimVRM` 目录可以不存在。
 
-参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐服务器和参与同步的客户端统一为 **2.0.2**。配件显示同步要求发送端和观察端为 2.0.0 或更高版本；数据使用未改变的校准格式保留字段，因此 1.8.14–1.8.20 的校准服务端也能原样中转，旧客户端会安全忽略并显示模型默认部件。2.0.2 服务端继续允许旧客户端、新客户端和未装 Mod 的客户端进服。含背负装备的完整校准同步要求服务端 1.8.14+、发送端和观察端为 1.8.15+，F8 显示是否启用。
+参与同步的玩家安装完整客户端，并准备需要显示的同名、同内容 `.vrm`。进入世界后按 F8，保持同步勾选，确认“服务器同步已连接”。推荐客户端更新至 **2.0.4**，现有 **2.0.2** 服务端无需更新，协议保持兼容。配件显示同步要求发送端和观察端为 2.0.0 或更高版本；数据使用未改变的校准格式保留字段，因此 1.8.14–1.8.20 的校准服务端也能原样中转，旧客户端会安全忽略并显示模型默认部件。2.0.2 服务端继续允许旧客户端、新客户端和未装 Mod 的客户端进服。含背负装备的完整校准同步要求服务端 1.8.14+、发送端和观察端为 1.8.15+，F8 显示是否启用。
 
 ### 不同安装组合的行为
 
@@ -288,7 +294,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 | 进服提示“版本不兼容” | 核对客户端与服务器的游戏版本，并查看双方连接日志。VRM 服务端不会因客户端缺少本插件而拒绝入服。 |
 | 摆动过大／衣服与身体穿模 | 降低 F8 物理权重；仍穿模时检查导出资产的蒙皮、形态键和碰撞设置。 |
 | 身体有树叶状暗斑／关闭接收阴影仍存在 | 阴影贴图与屏幕空间后处理不同。本版为MToon、UniUnlit 等表面补充缺少的深度与法线；检查是否装全新依赖，反馈时附材质类型及渲染选项。 |
-| 退出世界后越来越卡、报显存分配错误 | 更新完整 **2.0.2** 并排除重复 DLL。该版包含主菜单重入时重复补丁造成的显存泄漏修复。 |
+| 退出世界后越来越卡、报显存分配错误 | 更新完整 **2.0.4** 并排除重复 DLL。该版包含主菜单重入时重复补丁造成的显存泄漏修复。 |
 | 模型退出视野后内存没有立刻下降 | 镜头外的活动角色仍需模型；只有最后一个实例销毁后才进入释放等待，详见下一节。 |
 
 反馈问题请提供游戏版本、Mod 版本、触发步骤和相关日志片段：
@@ -303,7 +309,7 @@ A 选择模型 1、B 选择模型 2，其他客户端看到的就是 A = 模型 
 
 Unity 和显卡驱动可能保留内存池，因此资源已释放不代表任务管理器占用立刻下降。1.8.7 已通过持续 4K 泛光分配／释放、三次实际主菜单重载、异步挂接取消、模型缩放、坐姿、持物、物理权重及资源生命周期测试。
 
-联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。2.0.2 的手动刷新行为见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.2-validation.md)。2.0.1 的原版装备与列表修复见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.1-validation.md)。2.0.0 的部件显示与兼容性见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.0-validation.md)。1.8.16 透明材质 SSAO 修复见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.16-validation.md)。1.8.15 的原始角色切换／背负装备验证见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.15-validation.md)。1.8.12 的贴地与姿态回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
+2.0.4 的配置保存修复见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.4-validation.md)及[故障复盘](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/CONFIG-SAVE-POSTMORTEM.zh-CN.md)。联机验证覆盖实际 ZRpc 序列化、生产服务端处理器和两名角色的独立绑定；尚未完成真实 Steam／PlayFab 专用服务器公网验收。Linux、macOS、Vulkan 和所有其他 Mod 组合未得到全面验证。2.0.2 的手动刷新行为见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.2-validation.md)。2.0.1 的原版装备与列表修复见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.1-validation.md)。2.0.0 的部件显示与兼容性见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-2.0.0-validation.md)。1.8.16 透明材质 SSAO 修复见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.16-validation.md)。1.8.15 的原始角色切换／背负装备验证见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.15-validation.md)。1.8.12 的贴地与姿态回归见[验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.12-validation.md)。旧版生命周期测试见[1.8.7 验证记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/release-1.8.7-validation.md)。
 
 ## 开发与来源
 
@@ -321,7 +327,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-输出为 `release/ValheimVRM-2.0.2.zip` 和 `release/ValheimVRM-Server-2.0.2.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
+输出为 `release/ValheimVRM-2.0.4.zip` 和 `release/ValheimVRM-Server-2.0.2.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
 
 [着色器重建](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [依赖来源与许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [项目许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [问题反馈](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 

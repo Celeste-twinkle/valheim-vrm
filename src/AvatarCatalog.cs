@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace ValheimVRM
@@ -80,22 +79,24 @@ namespace ValheimVRM
 
         public void Select(string characterName, string name)
         {
+            Select(characterName, name, false);
+        }
+
+        // The appearance has already been applied by OutfitSwitcher. Keep that
+        // choice through respawn even if persistence is unavailable this session.
+        internal void SelectForSession(string characterName, string name)
+        {
+            Select(characterName, name, true);
+        }
+
+        void Select(string characterName, string name, bool keepForSession)
+        {
             if (string.IsNullOrEmpty(characterName)) throw new ArgumentException("Character name is missing.");
             if (name != OriginalModel && !TryGetPath(name, out _)) throw new FileNotFoundException("The selected VRM is no longer available.");
             var updated = new Dictionary<string, string>(selections, StringComparer.Ordinal) { [characterName] = name };
-            Directory.CreateDirectory(configurationDirectory);
-            var temporary = SelectionPath + ".tmp";
-            try
-            {
-                File.WriteAllText(temporary, JsonConvert.SerializeObject(updated, Formatting.Indented), new UTF8Encoding(false));
-                if (File.Exists(SelectionPath)) File.Replace(temporary, SelectionPath, null);
-                else File.Move(temporary, SelectionPath);
-                selections = updated;
-            }
-            finally
-            {
-                if (File.Exists(temporary)) File.Delete(temporary);
-            }
+            if (keepForSession) selections = updated;
+            AvatarConfigFile.WriteAllText(SelectionPath, JsonConvert.SerializeObject(updated, Formatting.Indented), "avatar selections");
+            selections = updated;
         }
     }
 }

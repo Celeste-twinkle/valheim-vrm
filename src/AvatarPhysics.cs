@@ -27,15 +27,8 @@ namespace ValheimVRM
         public static void Preview(float weight) { Weight = ClampWeight(weight); }
         public static void Save()
         {
-            Directory.CreateDirectory(Settings.ConfigDir);
-            var temporary = SettingsPath + ".tmp";
-            try
-            {
-                File.WriteAllText(temporary, JsonConvert.SerializeObject(new Options { Weight = Weight }, Formatting.Indented));
-                if (File.Exists(SettingsPath)) File.Replace(temporary, SettingsPath, null);
-                else File.Move(temporary, SettingsPath);
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            AvatarConfigFile.WriteAllText(SettingsPath,
+                JsonConvert.SerializeObject(new Options { Weight = Weight }, Formatting.Indented), "physics options");
         }
     }
 }

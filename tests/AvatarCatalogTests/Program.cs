@@ -56,6 +56,7 @@ static class Program
             Require(reload.Resolve("First player") == "First player", "Stored paths must not bypass the catalog.");
             File.Delete(Path.Combine(root, "avatar_selections.json"));
             VrmOnly(Path.Combine(root, "vrm-only"));
+            ConfigurationSaveTests.Run(Path.Combine(root, "save-errors"));
             Console.WriteLine("PASS: discovery, 25 models, Unicode, cached snapshot until manual refresh, persistence, boundaries, and separate configuration.");
         }
         finally

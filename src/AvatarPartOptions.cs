@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace ValheimVRM
@@ -76,19 +75,12 @@ namespace ValheimVRM
         Dictionary<string, State> Copy() => states.ToDictionary(p => p.Key, p => p.Value.Clone(), StringComparer.Ordinal);
         void Save(Dictionary<string, State> updated)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
             var serialized = updated.ToDictionary(p => p.Key, p => new StoredState {
                 Hidden = p.Value.Hidden.OrderBy(v => v, StringComparer.Ordinal).ToArray(),
                 Shown = p.Value.Shown.OrderBy(v => v, StringComparer.Ordinal).ToArray()
             }, StringComparer.Ordinal);
-            var temporary = path + ".tmp";
-            try
-            {
-                File.WriteAllText(temporary, JsonConvert.SerializeObject(serialized, Formatting.Indented), new UTF8Encoding(false));
-                if (File.Exists(path)) File.Replace(temporary, path, null); else File.Move(temporary, path);
-                states = updated;
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            AvatarConfigFile.WriteAllText(path, JsonConvert.SerializeObject(serialized, Formatting.Indented), "avatar parts");
+            states = updated;
         }
     }
 }

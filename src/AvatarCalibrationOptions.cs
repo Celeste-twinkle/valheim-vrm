@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -86,16 +85,8 @@ namespace ValheimVRM
         public void Save()
         {
             if (!Dirty) return;
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            string temporary = path + ".tmp";
-            try
-            {
-                File.WriteAllText(temporary, JsonConvert.SerializeObject(profiles, Formatting.Indented), new UTF8Encoding(false));
-                if (File.Exists(path)) File.Replace(temporary, path, null);
-                else File.Move(temporary, path);
-                Dirty = false;
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            AvatarConfigFile.WriteAllText(path, JsonConvert.SerializeObject(profiles, Formatting.Indented), "avatar calibration");
+            Dirty = false;
         }
     }
 }

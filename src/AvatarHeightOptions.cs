@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Newtonsoft.Json;
 using ValheimVRM.Sync;
 
@@ -28,16 +27,8 @@ namespace ValheimVRM
         {
             if (string.IsNullOrEmpty(character)) throw new ArgumentException("Character name is missing.");
             var updated = new Dictionary<string, float>(heights, StringComparer.Ordinal) { [character] = AvatarHeightRules.Clamp(height) };
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            var temporary = path + ".tmp";
-            try
-            {
-                File.WriteAllText(temporary, JsonConvert.SerializeObject(updated, Formatting.Indented), new UTF8Encoding(false));
-                if (File.Exists(path)) File.Replace(temporary, path, null);
-                else File.Move(temporary, path);
-                heights = updated;
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            AvatarConfigFile.WriteAllText(path, JsonConvert.SerializeObject(updated, Formatting.Indented), "avatar heights");
+            heights = updated;
         }
     }
 }

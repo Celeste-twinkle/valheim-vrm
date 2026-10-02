@@ -405,10 +405,13 @@ namespace ValheimVRM
             var path = PlayerSettingsPath(playerName, shared);
             if (File.Exists(path))
             {
+                Debug.Log("[ValheimVRM Config] MODEL_SETTINGS_READ path=\"" + Path.GetFullPath(path) + "\"");
                 AddSettingsRaw(playerName, File.ReadAllLines(path));
             }
             else
             {
+                Debug.Log("[ValheimVRM Config] MODEL_SETTINGS_DEFAULT path=\"" + Path.GetFullPath(path) +
+                    "\"; optional TXT absent, using defaults. Saving F8 standing/sitting height offsets creates it.");
                 if (!playerSettings.ContainsKey(playerName)) playerSettings[playerName] = new VrmSettingsContainer();
                 playerSettings[playerName].Name = playerName;
                 playerSettings[playerName].Reset();

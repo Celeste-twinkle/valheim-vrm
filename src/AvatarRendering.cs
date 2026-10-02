@@ -53,15 +53,7 @@ namespace ValheimVRM
         public static void Set(bool sceneLighting, bool receiveShadows, bool bloom)
         {
             var next = new Options { SceneLighting = sceneLighting, ReceiveShadows = receiveShadows, Bloom = bloom };
-            Directory.CreateDirectory(Settings.ConfigDir);
-            var temporary = SettingsPath + ".tmp";
-            try
-            {
-                File.WriteAllText(temporary, JsonConvert.SerializeObject(next, Formatting.Indented));
-                if (File.Exists(SettingsPath)) File.Replace(temporary, SettingsPath, null);
-                else File.Move(temporary, SettingsPath);
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            AvatarConfigFile.WriteAllText(SettingsPath, JsonConvert.SerializeObject(next, Formatting.Indented), "rendering options");
             Current = next;
             AvatarBloomController.Enabled = !bloom;
             foreach (var target in UnityEngine.Object.FindObjectsByType<AvatarRenderingTarget>(FindObjectsSortMode.None)) target.Apply();

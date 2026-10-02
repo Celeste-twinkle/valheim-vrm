@@ -144,11 +144,10 @@ namespace ValheimVRM
             if (!valid()) yield break;
             if (localSelection && name == AvatarCatalog.OriginalModel)
             {
-                // Save first: an IO failure must leave the current appearance intact.
-                Catalog.Select(player.GetPlayerName(), AvatarCatalog.OriginalModel);
                 pendingModelHeight = null; pendingHeightPlayer = null;
                 AvatarResidency.SetLocalSelection(null);
                 RemoteAvatarBaseline.Restore(player);
+                SaveLocalSelection(player, AvatarCatalog.OriginalModel);
                 yield break;
             }
             if (!Catalog.TryGetPath(name, out var path))
@@ -232,9 +231,19 @@ namespace ValheimVRM
             if (localSelection)
             {
                 player.m_maxInteractDistance = priorDistance * settings.InteractionDistanceScale / Mathf.Max(.001f, priorScale);
-                Catalog.Select(player.GetPlayerName(), name);
+                SaveLocalSelection(player, name);
             }
             Debug.Log("[ValheimVRM] " + (localSelection ? "Local" : "Remote") + " avatar selected for player instance " + player.GetInstanceID() + ": " + name);
+        }
+
+        void SaveLocalSelection(Player player, string name)
+        {
+            try { Catalog.SelectForSession(player.GetPlayerName(), name); }
+            catch (AvatarConfigSaveException ex)
+            {
+                ReportError(Text("Avatar switched, but selection could not be saved. Kept for this session only",
+                    "模型已切换，但选择记录保存失败；本次游戏内仍保留此选择"), ex);
+            }
         }
 
         void ReportError(string context, Exception ex)

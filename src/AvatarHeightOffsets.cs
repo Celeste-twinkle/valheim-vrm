@@ -29,15 +29,7 @@ namespace ValheimVRM
             }
             lines.Add(nameof(settings.StandingHeightOffset) + "=" + Clamp(settings.StandingHeightOffset).ToString("R", CultureInfo.CurrentCulture));
             lines.Add(nameof(settings.SittingHeightOffset) + "=" + Clamp(settings.SittingHeightOffset).ToString("R", CultureInfo.CurrentCulture));
-            Directory.CreateDirectory(Settings.ConfigDir);
-            var temporary = path + ".tmp";
-            try
-            {
-                File.WriteAllLines(temporary, lines);
-                if (File.Exists(path)) File.Replace(temporary, path, null);
-                else File.Move(temporary, path);
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            AvatarConfigFile.WriteAllLines(path, lines, "avatar height offsets");
         }
     }
 }

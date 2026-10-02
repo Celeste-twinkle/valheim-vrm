@@ -57,6 +57,13 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
             names=fixtureNames.Split('|');
             Check(names.Length==2 && names[0]!=names[1],"Two distinct fixture model names are required");
         }
+        if (Environment.GetEnvironmentVariable("VRM_CONFIG_SAVE_TEST_ONLY") == "1")
+        {
+            var configurationPrefab = (GameObject)AccessTools.Field(typeof(FejdStartup), "m_playerPrefab").GetValue(menu);
+            AvatarSyncClient.Instance.enabled = false;
+            yield return ConfigurationSaveTests(MakePlayer(configurationPrefab, 404, 4004, 4), names[0], names[1]);
+            yield break;
+        }
         var hashes=names.Select(n=>Hash(File.ReadAllBytes(Path.Combine(ValheimVRM.Settings.ValheimVRMDir,n+".vrm")))).ToArray();
         WireTests(names,hashes);
         report.Add("Real ZRpc serialization over isolated in-memory sockets: two senders, three receivers, snapshots and malformed data passed");
@@ -101,6 +108,7 @@ public sealed partial class AvatarSyncEngineTests : BaseUnityPlugin
         yield return CalibrationInstanceTests(sync, registry, a, b, names[1], hashes[1]);
         yield return AvatarPartTests(a, b, names[1]);
         yield return NativeChoiceTests(sync, a, b, names[1]);
+        yield return ConfigurationSaveTests(a, names[1], names[0]);
         rootB = VrmManager.PlayerToVrmInstance[b];
         yield return FolderMismatchTests(prefab, sync, registry, a, b, names, hashes);
         rootB = VrmManager.PlayerToVrmInstance[b];

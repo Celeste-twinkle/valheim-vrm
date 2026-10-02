@@ -30,6 +30,9 @@ namespace ValheimVRM
             // avoid float parsing error on computers with different cultures
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
+            AvatarConfigFile.Info = message => Debug.Log("[ValheimVRM Config] " + message);
+            AvatarConfigFile.Warning = message => Debug.LogWarning("[ValheimVRM Config] " + message);
+            AvatarConfigFile.LogEnvironment(Settings.ConfigDir);
             Settings.ReloadGlobalSettings();
             AvatarRendering.Initialize();
             AvatarPhysics.Initialize();

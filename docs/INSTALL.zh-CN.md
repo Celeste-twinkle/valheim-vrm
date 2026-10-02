@@ -1,4 +1,8 @@
-# ValheimVRM 2.0.2 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 2.0.4 安装说明（Celeste-twinkle 分支）
+
+**2.0.4 修复外观切换成功后配置无法更新的问题。** 保存使用独立临时文件、带备份的替换、有限重试和 Windows 后备方式，日志可区分失败阶段及成功保存方式。已有配置自动沿用，2.0.2 服务端插件继续兼容，无需更新。
+
+**2.0.3 在玩家仍在线时保留已导入的模型模板**，重新进入可见范围会复用模板，无需再次完整导入。
 
 **2.0.2 在插件启动时扫描一次顶层模型目录，之后只有玩家点击 F8 →“刷新列表”才会再次扫描。** 打开或绘制菜单不会访问文件系统，也没有目录轮询和逐帧存在性检查。
 
@@ -20,11 +24,13 @@ BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译
 
 ## 安装与升级
 
+已完整安装 2.0.3 的用户可以使用 `ValheimVRM-2.0.4-update.zip`，退出游戏后仅替换 `BepInEx/plugins/ValheimVRM/ValheimVRM.dll`。首次安装及其他版本请使用完整客户端包。现有配置和模型无需删除，2.0.2 服务端无需更新。
+
 1. 退出游戏。尚未安装 BepInEx 时，先安装
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-2.0.2.zip` 直接解压到 `valheim.exe` 所在目录，合并
+3. 将 `ValheimVRM-2.0.4.zip` 直接解压到 `valheim.exe` 所在目录，合并
    `BepInEx`、`valheim_Data` 文件夹。务必使用完整包，不能只替换 DLL。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。

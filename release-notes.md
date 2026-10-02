@@ -1,3 +1,14 @@
+## 2.0.4 — Reliable configuration saves and diagnostics
+
+- Fix configuration updates that failed in `File.Replace` after a successful avatar switch. Use unique same-directory temporary files, backed replacement, bounded retries and a Windows `MoveFileExW` fallback for supported replacement errors.
+- Restore a missing target from its recovery copy after partial replacement failure. Keep recovery backups on failure and log cleanup errors independently without changing the actual save result.
+- Apply the same save implementation to model selections, heights, standing/sitting TXT offsets, calibration, model parts, physics and rendering preferences. Preserve existing configuration formats and readonly/permission restrictions.
+- Keep an already-applied VRM/native choice in the current session if saving fails, and report a selection-save warning accurately. Restart persistence still requires a successful save.
+- Add `[ValheimVRM Config]` logs with absolute paths, file attributes, filesystem/free space, failure stage, HRESULT/native error and successful commit method. Explain optional model-settings TXT defaults instead of treating an absent TXT as a save failure.
+- Retain the user-confirmed configuration fix from the 2.0.3.1 test DLL on the public 2.0.3 baseline, including its existing session-resident template behavior. This is a client-only update; existing 2.0.2 servers remain compatible.
+
+Validation: `docs/release-2.0.4-validation.md`. Chinese [diagnostic guide](docs/CONFIG-SAVE-DIAGNOSTICS.zh-CN.md) and [incident retrospective](docs/CONFIG-SAVE-POSTMORTEM.zh-CN.md).
+
 ## 2.0.3 — Session-resident avatar templates
 
 - Treat visibility and local area-of-interest unloads as rendering-only events. Imported avatar templates stay resident while a local selection or an online player's synchronized selection still references them, preventing repeated file reads and UniVRM imports.
