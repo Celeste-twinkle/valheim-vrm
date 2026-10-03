@@ -1,3 +1,12 @@
+## 2.0.5 — Compatible mounted-player position repair
+
+- Fix observers seeing a mounted player at the creature's origin when standing on that creature and then riding it leaves the network parent unchanged. Synchronize attachment-joint changes independently of parent changes, including clearing the saddle joint on dismount.
+- Recover a missing joint from older rider clients on updated observers only when the connected, active saddle names that player as its user and the native animator has the synchronized riding flag. Preserve received ZDO data, native mount synchronization and existing avatar calibration.
+- Support updated riders with older/native receivers and older riders with updated observers. Keep the synchronization protocol and configuration formats unchanged; existing 2.0.2 server addons require no update.
+- Build on public 2.0.4, retaining its configuration-save recovery and the session-resident templates introduced in 2.0.3. Existing model files, part choices, heights and calibration need no migration.
+
+Validation: `docs/release-2.0.5-validation.md`. Root cause and installation: `docs/MOUNTED-PLAYER-SYNC.zh-CN.md`.
+
 ## 2.0.4 — Reliable configuration saves and diagnostics
 
 - Fix configuration updates that failed in `File.Replace` after a successful avatar switch. Use unique same-directory temporary files, backed replacement, bounded retries and a Windows `MoveFileExW` fallback for supported replacement errors.

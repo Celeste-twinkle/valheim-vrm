@@ -1,4 +1,6 @@
-# ValheimVRM 2.0.4 安装说明（Celeste-twinkle 分支）
+# ValheimVRM 2.0.5 安装说明（Celeste-twinkle 分支）
+
+**2.0.5 修复骑乘时旁观者看到玩家落在坐骑脚下的问题。** 更新骑乘者可向旧旁观者发送正确挂点，更新旁观者也可恢复旧客户端漏发的鞍座位置。已有配置、模型及 2.0.2 服务端继续兼容。
 
 **2.0.4 修复外观切换成功后配置无法更新的问题。** 保存使用独立临时文件、带备份的替换、有限重试和 Windows 后备方式，日志可区分失败阶段及成功保存方式。已有配置自动沿用，2.0.2 服务端插件继续兼容，无需更新。
 
@@ -16,22 +18,22 @@
 
 多人外观同步需要服务器另外安装独立服务端插件，详见[服务器同步与本地模式](SERVER-SYNC.md)。
 
-适用于 Windows x64 客户端，验证环境为英灵神殿 1.0.12、Unity 6000.0.75f1、
-BepInExPack Valheim 5.4.2333（BepInEx 5.4.23.3）。这是独立 fork 的编译版本。
+适用于 Windows x64 客户端，骑乘回归验证环境为英灵神殿 1.0.16 / 1.0.12、Unity 6000.0.75f1、
+BepInExPack Valheim 5.4.2351 / 5.4.2333（BepInEx 5.4.23.5 / 5.4.23.3）。这是独立 fork 的编译版本。
 安装包不含角色模型，请自行准备有权使用的 VRM。
 
 前置下载：[Valheim 专用 BepInEx 整合包（推荐）](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) · [BepInEx 5.4.23.3 Release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.3) · [全部 Release](https://github.com/BepInEx/BepInEx/releases)。完整客户端包已提供配套 UniVRM 运行库和着色器。GitHub 公开包需另装加载器；本地 Windows x64 的 09、10 号完整包已包含 BepInEx 5.4.23.3。
 
 ## 安装与升级
 
-已完整安装 2.0.3 的用户可以使用 `ValheimVRM-2.0.4-update.zip`，退出游戏后仅替换 `BepInEx/plugins/ValheimVRM/ValheimVRM.dll`。首次安装及其他版本请使用完整客户端包。现有配置和模型无需删除，2.0.2 服务端无需更新。
+已完整安装 2.0.3 或 2.0.4 的用户可以使用 `ValheimVRM-2.0.5-update.zip`，退出游戏后仅替换 `BepInEx/plugins/ValheimVRM/ValheimVRM.dll`。首次安装及其他版本请使用完整客户端包。现有配置和模型无需删除，2.0.2 服务端无需更新。
 
 1. 退出游戏。尚未安装 BepInEx 时，先安装
    [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)，启动一次游戏后退出。
 2. 已装旧插件时先备份。`BepInEx/plugins` 下只保留一份 `ValheimVRM.dll`，
    移除重复的旧插件目录。保留自己原有的 VRM 和设置文件。
-3. 将 `ValheimVRM-2.0.4.zip` 直接解压到 `valheim.exe` 所在目录，合并
-   `BepInEx`、`valheim_Data` 文件夹。务必使用完整包，不能只替换 DLL。
+3. 将 `ValheimVRM-2.0.5.zip` 直接解压到 `valheim.exe` 所在目录，合并
+   `BepInEx`、`valheim_Data` 文件夹。首次安装及其他旧版本使用完整包；已完整安装 2.0.3 / 2.0.4 的用户可按上文使用 DLL 更新包。
 4. 将任意数量的 `.vrm` 放入游戏根目录的 `ValheimVRM` 文件夹中。
    支持中文、空格文件名；不扫描子文件夹和 `Shared` 联机缓存。
 5. 进入世界后按 **F8** 打开人物外观面板，点击模型切换。列表可以滚动。

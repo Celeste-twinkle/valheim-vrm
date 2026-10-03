@@ -1,4 +1,6 @@
-# Install ValheimVRM 2.0.2 (Celeste-twinkle fork)
+# Install ValheimVRM 2.0.5 (Celeste-twinkle fork)
+
+**2.0.5 fixes mounted players appearing at the creature's feet to observers.** Updated riders send saddle-joint changes even when the parent is unchanged; updated observers can recover the missing joint from older riders. Configuration and server protocol stay unchanged, and the 2.0.4 configuration-save repair is retained.
 
 **2.0.2 scans the top-level model directory once at plugin startup and only scans again when the player presses F8 → Refresh list.** Opening or drawing the menu does not access the filesystem, poll the directory or run per-frame existence checks.
 
@@ -13,20 +15,22 @@
 For optional per-player multiplayer appearance, also install the separate server
 addon. See [server setup and local fallback](SERVER-SYNC.md).
 
-Windows x64 client release, tested with Valheim 1.0.12, Unity 6000.0.75f1 and
-BepInExPack Valheim 5.4.2333 (BepInEx 5.4.23.3). This is an independent fork
+Windows x64 client release, with mounted-player regression tested in Valheim 1.0.16 / 1.0.12, Unity 6000.0.75f1 and
+BepInExPack Valheim 5.4.2351 / 5.4.2333 (BepInEx 5.4.23.5 / 5.4.23.3). This is an independent fork
 release, not a release by the upstream maintainer. No avatars are included.
 
 Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) · [BepInEx 5.4.23.3 Release](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.3) · [All BepInEx releases](https://github.com/BepInEx/BepInEx/releases). The client ZIP includes its matching UniVRM libraries and shaders. Public runtime ZIPs require a separate loader installation; the local Windows x64 bundles numbered 09 and 10 include BepInEx 5.4.23.3.
 
 ## Install or upgrade
 
+With a complete 2.0.3 or 2.0.4 installation, use `ValheimVRM-2.0.5-update.zip`: exit the game and replace `BepInEx/plugins/ValheimVRM/ValheimVRM.dll`. Keep models and configuration. Existing 2.0.2 servers need no update. For a fresh installation or another older version, follow the complete-package steps below.
+
 1. Close Valheim. Install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)
    if BepInEx is not already installed. Start the game once and close it.
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-2.0.2.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-2.0.5.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
