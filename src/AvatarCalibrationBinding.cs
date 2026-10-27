@@ -14,6 +14,7 @@ namespace ValheimVRM
         public Settings.VrmSettingsContainer Settings { get; private set; }
         public AvatarCalibrationOptions.Profile Profile { get; private set; }
         public float PhysicsWeight { get; private set; } = .5f;
+        public float Brightness { get; private set; } = AvatarCalibrationData.DefaultBrightness;
         public HashSet<string> HiddenParts { get; } = new HashSet<string>(StringComparer.Ordinal);
         public HashSet<string> ShownParts { get; } = new HashSet<string>(StringComparer.Ordinal);
         public bool PartVisibilityEnabled { get; private set; } = true;
@@ -52,6 +53,9 @@ namespace ValheimVRM
             PhysicsWeight = data.Physics; Encoded = encoded;
             var physics = GetComponent<AvatarPhysicsWeight>();
             if (physics != null) physics.SynchronizedWeight = data.Physics;
+            Brightness = data.Brightness;
+            var brightness = GetComponent<AvatarBrightnessTarget>();
+            if (brightness != null) { brightness.SynchronizedBrightness = Brightness; brightness.Apply(); }
             GetComponent<AvatarPartVisibility>()?.SetOverrides(HiddenParts, ShownParts);
             return true;
         }
@@ -69,6 +73,7 @@ namespace ValheimVRM
             var data = new AvatarCalibrationData {
                 Standing = AvatarHeightOffsets.Clamp(settings.StandingHeightOffset), Sitting = AvatarHeightOffsets.Clamp(settings.SittingHeightOffset),
                 ModelY = settings.ModelOffsetY, EquipmentScale = settings.EquipmentScale, Physics = AvatarPhysics.Weight,
+                Brightness = AvatarRendering.Current.Brightness,
                 LegacyLeft = Position(settings.LeftHandItemPos), LegacyRight = Position(settings.RightHandItemPos),
                 Left = Item(profile.Left), Right = Item(profile.Right), TwoHanded = Item(profile.TwoHanded), Back = Item(profile.Back)
             };

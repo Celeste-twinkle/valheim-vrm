@@ -10,6 +10,7 @@ using UniGLTF;
 using UnityEngine;
 using VRM;
 using UniVRM10;
+using ValheimVRM.Sync;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
@@ -246,6 +247,8 @@ namespace ValheimVRM
 			var physicsWeight = vrmModel.GetComponent<AvatarPhysicsWeight>() ?? vrmModel.AddComponent<AvatarPhysicsWeight>();
 			physicsWeight.Setup();
 			if (calibrationBinding != null) physicsWeight.SynchronizedWeight = calibrationBinding.PhysicsWeight;
+			var brightness = vrmModel.GetComponent<AvatarBrightnessTarget>() ?? vrmModel.AddComponent<AvatarBrightnessTarget>();
+			brightness.Setup(player == Player.m_localPlayer, calibrationBinding?.Brightness ?? AvatarCalibrationData.DefaultBrightness);
 			vrmModel.SetActive(true);
 			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
 			var nativeEquipment = player.GetComponentInChildren<VisEquipment>(true);
@@ -336,6 +339,8 @@ namespace ValheimVRM
 				var mToonColorSync = vrmModel.GetComponent<MToonColorSync>() ?? vrmModel.AddComponent<MToonColorSync>();
 				mToonColorSync.Setup(vrmModel);
 			}
+			// The legacy color driver may have replaced unsupported materials.
+			brightness.Setup(player == Player.m_localPlayer, calibrationBinding?.Brightness ?? AvatarCalibrationData.DefaultBrightness);
 			yield return null;
 			if (!stillAttached()) yield break;
 

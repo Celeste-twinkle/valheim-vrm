@@ -46,6 +46,8 @@ public sealed class AvatarBrightnessEngineTests : BaseUnityPlugin
         float deadline=Time.realtimeSinceStartup+90;
         while(!VRMShaders.Shaders.ContainsKey("VRM10/MToon10"))
         {if(Time.realtimeSinceStartup>deadline)throw new Exception("Shader timeout");yield return null;}
+        yield return BrightnessCalibrationProbe.Run(report, output);
+        if (Environment.GetEnvironmentVariable("VRM_BRIGHTNESS_CALIBRATION_ONLY") == "1") yield break;
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VRM_BRIGHTNESS_LEGACY_MODELS")))
         {
             yield return LegacyBrightnessProbe.Run(report, output);

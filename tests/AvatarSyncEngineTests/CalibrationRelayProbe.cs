@@ -20,6 +20,7 @@ static class CalibrationRelayProbe
     public static string Data(float value, int entries = 1)
     {
         var data = new AvatarCalibrationData { Standing = value, Sitting = -value, Physics = .5f + value };
+        if (entries < AvatarCalibrationCodec.MaxEntries) data.Brightness = 1 + value;
         data.Left.Scale = 1 + value; data.Right.Scale = 1 - value; data.TwoHanded.Scale = 1 + value * 2;
         data.Left.Offset = new AvatarCalibrationData.Position(value, 0, -value);
         data.Right.Offset = new AvatarCalibrationData.Position(0, value, -value);

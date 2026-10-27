@@ -9,6 +9,8 @@ namespace ValheimVRM.Sync
     // BCL-only wire data; the server never references Unity avatars or client DLLs.
     public sealed class AvatarCalibrationData
     {
+        public const float DefaultBrightness = 1, MinimumBrightness = .1f, MaximumBrightness = 2;
+        public const string BrightnessKey = "legacy:render.brightness";
         public struct Position
         {
             public float X, Y, Z;
@@ -25,6 +27,14 @@ namespace ValheimVRM.Sync
         public readonly Dictionary<string, Position> Animations = new Dictionary<string, Position>(StringComparer.Ordinal);
         // The reserved positional-settings namespace permits additive controls
         // without changing format 1. Existing relays preserve these entries.
+        public float Brightness
+        {
+            get => Animations.TryGetValue(BrightnessKey, out var value) ? value.X : DefaultBrightness;
+            set {
+                if (value == DefaultBrightness) Animations.Remove(BrightnessKey);
+                else Animations[BrightnessKey] = new Position(value, 0, 0);
+            }
+        }
         public Item Back
         {
             get => new Item {
@@ -57,7 +67,10 @@ namespace ValheimVRM.Sync
             if (data == null || !Range(data.Standing, -MaxOffset, MaxOffset) || !Range(data.Sitting, -MaxOffset, MaxOffset) ||
                 !Range(data.ModelY, -5, 5) || !Range(data.Physics, 0, 1) || !Range(data.EquipmentScale, .01f, 10) ||
                 !Valid(data.LegacyLeft, 5) || !Valid(data.LegacyRight, 5) ||
-                !Valid(data.Left) || !Valid(data.Right) || !Valid(data.TwoHanded) || !Valid(data.Back) || data.Animations.Count > MaxEntries)
+                !Valid(data.Left) || !Valid(data.Right) || !Valid(data.TwoHanded) || !Valid(data.Back) ||
+                !Range(data.Brightness, AvatarCalibrationData.MinimumBrightness, AvatarCalibrationData.MaximumBrightness) ||
+                (data.Animations.TryGetValue(AvatarCalibrationData.BrightnessKey, out var brightness) && (brightness.Y != 0 || brightness.Z != 0)) ||
+                data.Animations.Count > MaxEntries)
                 throw new ArgumentException("Invalid avatar calibration.");
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream, Encoding.UTF8))

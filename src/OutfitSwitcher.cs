@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using HarmonyLib;
 using UnityEngine;
+using ValheimVRM.Sync;
 
 namespace ValheimVRM
 {
@@ -25,6 +26,7 @@ namespace ValheimVRM
         Texture2D windowBackground;
         string loadingName;
         bool physicsDirty;
+        bool brightnessDirty;
         float? pendingModelHeight;
         Player pendingHeightPlayer;
         readonly HashSet<string> heightDirty = new HashSet<string>();
@@ -254,7 +256,7 @@ namespace ValheimVRM
 
         public void SetMenuOpen(bool value)
         {
-            if (!value) { SavePhysicsOptions(); SaveHeightOptions(); SaveCalibrationOptions(); ApplyPendingModelHeight(); }
+            if (!value) { SaveBrightnessOptions(); SavePhysicsOptions(); SaveHeightOptions(); SaveCalibrationOptions(); ApplyPendingModelHeight(); }
             MenuOpen = value && Player.m_localPlayer != null && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InIntro();
             if (!MenuOpen) return;
             float width = Mathf.Min(500, Screen.width - 20);
@@ -265,6 +267,7 @@ namespace ValheimVRM
         void Update()
         {
             if (pendingModelHeight.HasValue && GUIUtility.hotControl == 0) ApplyPendingModelHeight();
+            if (brightnessDirty && GUIUtility.hotControl == 0) SaveBrightnessOptions();
             if (physicsDirty && GUIUtility.hotControl == 0) SavePhysicsOptions();
             if (heightDirty.Count > 0 && GUIUtility.hotControl == 0) SaveHeightOptions();
             if (AvatarCalibrationOptions.Current.Dirty && GUIUtility.hotControl == 0) SaveCalibrationOptions();
@@ -366,6 +369,19 @@ namespace ValheimVRM
                 try { AvatarRendering.Set(lighting, shadows, bloom); }
                 catch (Exception ex) { ReportError("Cannot save rendering options", ex); }
             }
+            GUILayout.Space(6);
+            float value = AvatarRendering.Current.Brightness;
+            GUILayout.Label(Text("Avatar brightness calibration", "模型亮度校准") + "  " + Mathf.RoundToInt(value * 100) + "%");
+            float brightness = Mathf.Round(GUILayout.HorizontalSlider(value,
+                AvatarCalibrationData.MinimumBrightness, AvatarCalibrationData.MaximumBrightness) * 100) / 100;
+            if (GUILayout.Button(Text("Reset brightness to 100%", "亮度恢复为 100%"))) brightness = AvatarCalibrationData.DefaultBrightness;
+            if (brightness != value)
+            {
+                AvatarRendering.PreviewBrightness(brightness);
+                brightnessDirty = true;
+            }
+            GUILayout.Label(Text("10–200% · Default 100% keeps the existing calibration · Shared per player",
+                "10%～200%；默认 100% 保留原有亮度校准；随玩家同步"), new GUIStyle(GUI.skin.label) { wordWrap = true });
         }
 
         void DrawPhysicsOptions()
@@ -401,7 +417,7 @@ namespace ValheimVRM
                     : Text("Height is local only · Update the server to sync height", "身高仅本机生效 · 更新服务端可同步身高"));
             if (sync.Connected && sync.SyncEnabled)
                 GUILayout.Label(sync.CalibrationSync
-                    ? Text("Pose, item and physics settings synchronized per player", "姿态、道具与物理设置已按玩家同步")
+                    ? Text("Pose, item, physics and brightness settings synchronized per player", "姿态、道具、物理与亮度设置已按玩家同步")
                     : Text("Calibration stays local · Update the server and viewers to 1.8.14+", "校准仅本机生效；服务端与观察方需更新至 1.8.14 或更新版本"));
             if (sync.Connected && sync.SyncEnabled)
                 GUILayout.Label(sync.SequencedRequests
@@ -494,12 +510,21 @@ namespace ValheimVRM
 
         void OnDestroy()
         {
+            SaveBrightnessOptions();
             SavePhysicsOptions();
             SaveHeightOptions();
             SaveCalibrationOptions();
             if (font != null) Destroy(font);
             if (windowBackground != null) Destroy(windowBackground);
             if (Instance == this) Instance = null;
+        }
+
+        void SaveBrightnessOptions()
+        {
+            if (!brightnessDirty) return;
+            brightnessDirty = false;
+            try { AvatarRendering.SaveBrightness(); }
+            catch (Exception ex) { ReportError("Cannot save avatar brightness", ex); }
         }
     }
 

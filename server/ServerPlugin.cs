@@ -7,7 +7,7 @@ using ValheimVRM.Sync;
 
 namespace ValheimVRM.Server
 {
-    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "2.0.2")]
+    [BepInPlugin(AvatarSyncWire.ServerGuid, "ValheimVRM Server Sync", "2.0.6")]
     public sealed class ServerPlugin : BaseUnityPlugin
     {
         sealed class Session

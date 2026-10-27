@@ -83,6 +83,30 @@ static class Program
             back.Back.Scale==1.4f && back.Back.Offset.Y==-.2f,"Back controls failed additive roundtrip");
         Check(AvatarCalibrationCodec.TryDecode(AvatarCalibrationCodec.Default,out var defaults) && defaults.Back.Scale==1 &&
             defaults.Back.Offset.X==0,"Older payload did not use neutral back controls");
+        Check(defaults.Brightness == 1 && AvatarCalibrationCodec.Encode(new AvatarCalibrationData { Brightness = 1 }) == AvatarCalibrationCodec.Default,
+            "Default brightness changed the previous wire payload");
+        foreach (float brightness in new[] { .1f, .45f, 1f, 2f })
+        {
+            var data = new AvatarCalibrationData { Brightness = brightness };
+            string state = AvatarCalibrationCodec.Encode(data);
+            Check(AvatarCalibrationCodec.TryDecode(state, out var roundtrip) && roundtrip.Brightness == brightness,
+                "Brightness did not roundtrip");
+            Check(server.Set(101,1001,2,b.Model,b.Sha256,2f,state), "Brightness-only edit did not advance the player state");
+            Check(server.Snapshot().Single(s=>s.Peer==202).SameAs(b), "Brightness edit changed the other player");
+        }
+        foreach (float invalid in new[] { 0f, .099f, 2.01f, float.NaN, float.PositiveInfinity, float.NegativeInfinity })
+        {
+            bool rejected = false;
+            try { AvatarCalibrationCodec.Encode(new AvatarCalibrationData { Brightness = invalid }); }
+            catch (ArgumentException) { rejected = true; }
+            Check(rejected, "Invalid brightness was accepted");
+        }
+        var malformedBrightness = new AvatarCalibrationData();
+        malformedBrightness.Animations[AvatarCalibrationData.BrightnessKey] = new AvatarCalibrationData.Position(.5f, 1, 0);
+        bool malformedRejected = false;
+        try { AvatarCalibrationCodec.Encode(malformedBrightness); } catch (ArgumentException) { malformedRejected = true; }
+        Check(malformedRejected, "Noncanonical brightness carrier was accepted");
+        Console.WriteLine("PASS: brightness range/nonfinite validation, neutral old payload, additive roundtrip and per-player isolation.");
         controls.Back = new AvatarCalibrationData.Item { Scale=2.1f };
         bool backRejected=false; try{AvatarCalibrationCodec.Encode(controls);}catch(ArgumentException){backRejected=true;}
         Check(backRejected,"Out-of-range back scale accepted");

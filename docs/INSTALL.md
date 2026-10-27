@@ -1,4 +1,6 @@
-# Install ValheimVRM 2.0.5 (Celeste-twinkle fork)
+# Install ValheimVRM 2.0.6 (Celeste-twinkle fork)
+
+**2.0.6 adds synchronized avatar brightness calibration in F8.** The 10–200% slider previews live and saves on release; 100% preserves the existing 0.45/0.2025 MToon import calibration. Brightness belongs to each rendered player, follows expression colors, and preserves alpha and shared materials. Client and server packages are both 2.0.6; 2.0.5 clients and the preceding 2.0.2 server remain compatible. Viewers need 2.0.6 to display the new brightness control.
 
 **2.0.5 fixes mounted players appearing at the creature's feet to observers.** Updated riders send saddle-joint changes even when the parent is unchanged; updated observers can recover the missing joint from older riders. Configuration and server protocol stay unchanged, and the 2.0.4 configuration-save repair is retained.
 
@@ -23,14 +25,14 @@ Prerequisite downloads: [Valheim-specific BepInEx pack (recommended)](https://th
 
 ## Install or upgrade
 
-With a complete 2.0.3 or 2.0.4 installation, use `ValheimVRM-2.0.5-update.zip`: exit the game and replace `BepInEx/plugins/ValheimVRM/ValheimVRM.dll`. Keep models and configuration. Existing 2.0.2 servers need no update. For a fresh installation or another older version, follow the complete-package steps below.
+With a complete 2.0.3, 2.0.4 or 2.0.5 installation, use `ValheimVRM-2.0.6-update.zip`: exit the game and replace `BepInEx/plugins/ValheimVRM/ValheimVRM.dll`. Keep models and configuration. Existing 2.0.2 servers need no update. For a fresh installation or another older version, follow the complete-package steps below.
 
 1. Close Valheim. Install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/5.4.2333/)
    if BepInEx is not already installed. Start the game once and close it.
 2. Back up an existing ValheimVRM installation and its settings. Keep only one
    `ValheimVRM.dll` inside `BepInEx/plugins`; remove an older duplicate plugin
    folder before extracting this release. Keep your `.vrm` files and settings.
-3. Extract `ValheimVRM-2.0.5.zip` directly into the folder containing `valheim.exe`.
+3. Extract `ValheimVRM-2.0.6.zip` directly into the folder containing `valheim.exe`.
    Merge its `BepInEx` and `valheim_Data` folders. Use the complete
    package: replacing only the plugin DLL does not fix mismatched UniVRM libraries.
 4. Put your own `.vrm` files directly in the `ValheimVRM` folder beside the game.
@@ -53,6 +55,10 @@ an error and leaves the previous avatar in place. Selections are saved per chara
 in `BepInEx/config/ValheimVRM/avatar_selections.json` and restored on respawn and restart.
 If a selected file disappears, normal character-name/default matching is used.
 Restart the game after replacing a model's contents; loaded models are cached.
+
+F8 → **Avatar brightness calibration** adjusts recognized color properties in the owning avatar's materials from **10% to 200%**, in 1% steps. **100%** retains the import baseline below; the reset button restores it. The setting applies across your avatar choices and is saved in `BepInEx/config/ValheimVRM/rendering_options.json` after dragging. Base/shade colors, emission, rim, matcap and outline color factors are adjusted when exposed by the shader; arbitrary custom shader outputs and texture-only effects are not a final-pixel exposure control.
+
+Brightness is synchronized independently per player with the existing calibration format. New clients can share it through the previous 2.0.2 server. Previous 2.0.5 clients can use the new 2.0.6 server and ignore the new control safely; an old sender defaults to 100% on updated viewers. Both sender and viewer need 2.0.6 to see brightness adjustments. Remote settings do not overwrite the viewer's preferences or another player using the same model.
 
 Use **Physics sway weight** in F8 to reduce excessive spring motion. Default: 50%.
 0% removes spring rotation and 100% retains the original motion. It applies to
@@ -179,7 +185,7 @@ installed over your own settings. Set `EnableAvatarPicker=false` in
 `BepInEx/config/ValheimVRM/global_settings.txt` to disable F8.
 
 No server installation is required for local appearance. For per-player synchronized
-selection, install `ValheimVRM-Server-2.0.2.zip` on a BepInEx 5 server. Give each
+selection, install `ValheimVRM-Server-2.0.6.zip` on a BepInEx 5 server. Give each
 client the matching files for models it needs to display; whole folders may differ. See [server setup](SERVER-SYNC.md), including the
 F8 opt-out switch and client-hosted servers. The legacy whole-file sharing protocol
 is disabled by default with `EnableLegacyVrmSharing=false`; keep it disabled when
@@ -189,7 +195,7 @@ using this new protocol. Share model files only when their license permits it.
 
 - Press F8 after entering a world, outside chat, inventory and other menus.
 - An empty list means no top-level `.vrm` files were found in the game folder above.
-- Check `BepInEx/LogOutput.log` for plugin version **2.0.2**, import errors or unsupported shaders.
+- Check `BepInEx/LogOutput.log` for plugin version **2.0.6**, import errors or unsupported shaders.
 - If upgrading from a much older UniVRM set, follow [Libs/README.md](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md).
   Do not overwrite Valheim's own Unity.Burst/Unity.Mathematics libraries with older copies.
 - To uninstall, close the game and remove `BepInEx/plugins/ValheimVRM`. Keep your models

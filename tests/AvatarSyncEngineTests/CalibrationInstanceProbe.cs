@@ -27,6 +27,9 @@ public sealed partial class AvatarSyncEngineTests
             var rootA = VrmManager.PlayerToVrmInstance[a]; var rootB = VrmManager.PlayerToVrmInstance[b];
             var boundA = rootA.GetComponent<AvatarCalibrationBinding>(); var boundB = rootB.GetComponent<AvatarCalibrationBinding>();
             Check(boundA.Encoded == controlA && boundB.Encoded == controlB, "Remote controls crossed players");
+            Check(boundA.Brightness == 1.12f && boundB.Brightness == .8f &&
+                rootA.GetComponent<AvatarBrightnessTarget>().Brightness == 1.12f && rootB.GetComponent<AvatarBrightnessTarget>().Brightness == .8f,
+                "Same-model players did not retain independent brightness");
             Check(!ReferenceEquals(boundA.Settings, localSettings) && !ReferenceEquals(boundA.Profile, localProfile) &&
                 !ReferenceEquals(boundA.Profile, boundB.Profile), "Remote calibration aliases personal/shared settings");
             Check(boundA.Settings.StandingHeightOffset == .12f && boundB.Settings.StandingHeightOffset == -.2f &&
@@ -48,6 +51,8 @@ public sealed partial class AvatarSyncEngineTests
                 Check(Mathf.Abs(boundA.Profile.Back.Scale - (1 + value)) < .000001f &&
                     boundA.Profile.Back.Position.Value == new Vector3(-value, value, value), "Back equipment settings were not received");
                 Check(Mathf.Abs(rootA.GetComponent<AvatarPhysicsWeight>().SynchronizedWeight - (.5f + value)) < .000001f, "Physics weight was not applied");
+                Check(Mathf.Abs(rootA.GetComponent<AvatarBrightnessTarget>().Brightness - (1 + value)) < .000001f &&
+                    rootB.GetComponent<AvatarBrightnessTarget>().Brightness == .8f, "Brightness updates crossed player instances");
                 Check(VrmManager.PlayerToVrmInstance[b] == rootB && boundB.Encoded == controlB, "A's controls changed B");
                 Check(AvatarCalibrationBinding.Capture(model) == localControls, "Remote controls overwrote observer preferences");
             }
@@ -67,6 +72,8 @@ public sealed partial class AvatarSyncEngineTests
             yield return VrmManager.VrmDic[model].SetToPlayer(a);
             Check(VrmManager.PlayerToVrmInstance[a].GetComponent<AvatarCalibrationBinding>().Encoded == CalibrationRelayProbe.Data(-.1f),
                 "External reattachment lost received calibration");
+            Check(VrmManager.PlayerToVrmInstance[a].GetComponent<AvatarBrightnessTarget>().Brightness == .9f,
+                "External reattachment lost synchronized brightness");
             Check(preferences.All(p => File.Exists(p.Key) && File.ReadAllBytes(p.Key).SequenceEqual(p.Value)) &&
                 Directory.GetFiles(ValheimVRM.Settings.ConfigDir, "*", SearchOption.AllDirectories).Length == preferences.Count,
                 "Received calibration wrote personal config files");
@@ -75,6 +82,9 @@ public sealed partial class AvatarSyncEngineTests
             SetState(sync, registry); yield return PumpRemote(sync); yield return PumpRemote(sync);
             Check(VrmManager.PlayerToVrmInstance[b].GetComponent<AvatarCalibrationBinding>().Encoded == AvatarCalibrationCodec.Default,
                 "Sender without calibration inherited observer controls");
+            Check(VrmManager.PlayerToVrmInstance[b].GetComponent<AvatarBrightnessTarget>().Brightness == 1,
+                "Previous client did not fall back to default brightness");
+            report.Add("Brightness: same-model player instances stay independent through in-place updates and reattachment; previous-client payload uses 100%; observer preferences unchanged");
             report.Add("Actual same-model player instances: independent height, standing/sitting, action XYZ, left/right/two-handed/back item scales/XYZ and spring weight; 12 in-place updates retain objects/references, external refresh retains controls, observer config files unchanged; sender fallback resets defaults");
         }
         finally { players.Remove(a); players.Remove(b); }
@@ -84,7 +94,8 @@ public sealed partial class AvatarSyncEngineTests
         var local = Player.m_localPlayer; var settings = ValheimVRM.Settings.GetSettings(model);
         var profile = AvatarCalibrationOptions.Current.Get(model); string key = "Base Layer.Calibration Sender Probe";
         var oldOffset = profile.Get(key); float oldStanding = settings.StandingHeightOffset, oldSitting = settings.SittingHeightOffset;
-        float oldWeight = AvatarPhysics.Weight, leftScale = profile.Left.Scale, rightScale = profile.Right.Scale, bothScale = profile.TwoHanded.Scale;
+        float oldWeight = AvatarPhysics.Weight, oldBrightness = AvatarRendering.Current.Brightness;
+        float leftScale = profile.Left.Scale, rightScale = profile.Right.Scale, bothScale = profile.TwoHanded.Scale;
         var leftOffset = profile.Left.Position.Value; var rightOffset = profile.Right.Position.Value; var bothOffset = profile.TwoHanded.Position.Value;
         float backScale = profile.Back.Scale; var backOffset = profile.Back.Position.Value;
         var saved = new Dictionary<string,object>();
@@ -116,9 +127,10 @@ public sealed partial class AvatarSyncEngineTests
             profile.TwoHanded.Scale = 1.31f; profile.TwoHanded.Position.Value = new Vector3(0,0,.3f); send();
             profile.Back.Scale = 1.42f; profile.Back.Position.Value = new Vector3(.1f,-.2f,.3f); send();
             AvatarPhysics.Preview(.21f); send(); send();
-            Check(packets.Count == 9 && sequences.SequenceEqual(Enumerable.Range(1,9).Select(i=>(long)i)), "One of the slider groups did not trigger a sequenced request");
+            AvatarRendering.PreviewBrightness(.46f); send(); send();
+            Check(packets.Count == 10 && sequences.SequenceEqual(Enumerable.Range(1,10).Select(i=>(long)i)), "One of the slider groups did not trigger a sequenced request");
             Check(packets.Last() == AvatarCalibrationBinding.Capture(model),"Owner request omitted current controls");
-            report.Add("Production owner SendSelection: standing, sitting, animation XYZ, left/right/two-hand/back size/XYZ and physics edits emit nine complete calibration requests with strictly increasing sequence; unchanged state emits nothing");
+            report.Add("Production owner SendSelection: standing, sitting, animation XYZ, left/right/two-hand/back size/XYZ, physics and brightness edits emit ten complete calibration requests with strictly increasing sequence; unchanged state emits nothing");
         }
         finally
         {
@@ -127,6 +139,7 @@ public sealed partial class AvatarSyncEngineTests
             profile.Left.Position.Value=leftOffset; profile.Right.Position.Value=rightOffset; profile.TwoHanded.Position.Value=bothOffset;
             profile.Back.Scale=backScale; profile.Back.Position.Value=backOffset;
             AvatarPhysics.Preview(oldWeight);
+            AvatarRendering.PreviewBrightness(oldBrightness);
             foreach(var pair in saved) AccessTools.Field(typeof(AvatarSyncClient),pair.Key).SetValue(sync,pair.Value);
             client.Dispose(); relay.Dispose();
         }

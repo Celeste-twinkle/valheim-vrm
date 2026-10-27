@@ -1,3 +1,11 @@
+## 2.0.6 - Synchronized avatar brightness calibration
+
+- Add an F8 brightness slider from 10% to 200% in 1% steps, with live preview, save on release and a 100% reset button. Default 100% retains the existing 0.45/0.2025 MToon import calibration; old rendering preferences default to that value.
+- Scale recognized avatar color factors after expressions and fur synchronization with per-renderer property blocks. Preserve alpha, shared material identity, source files, render queues and independent same-model players. Resetting or disabling restores the original property blocks.
+- Share brightness through an additive format-1 calibration key. New client/server packages both use 2.0.6. Keep compatibility with the preceding 2.0.5 client and its 2.0.2 server; older viewers safely ignore the new control and older senders default to 100%.
+
+Validation: `docs/release-2.0.6-validation.md`.
+
 ## 2.0.5 — Compatible mounted-player position repair
 
 - Fix observers seeing a mounted player at the creature's origin when standing on that creature and then riding it leaves the network parent unchanged. Synchronize attachment-joint changes independently of parent changes, including clearing the saddle joint on dismount.

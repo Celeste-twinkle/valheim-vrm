@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Newtonsoft.Json;
 using UnityEngine;
+using ValheimVRM.Sync;
 
 namespace ValheimVRM
 {
@@ -12,6 +13,7 @@ namespace ValheimVRM
             public bool SceneLighting = true;
             public bool ReceiveShadows = true;
             public bool Bloom = false;
+            public float Brightness = AvatarCalibrationData.DefaultBrightness;
         }
 
         public static Options Current { get; private set; } = new Options();
@@ -23,6 +25,12 @@ namespace ValheimVRM
 
         public static void Initialize()
         {
+            LoadPreferences();
+            LoadShaders();
+        }
+
+        internal static void LoadPreferences()
+        {
             try
             {
                 var path = Path.Combine(Settings.ConfigDir, "rendering_options.json");
@@ -30,7 +38,12 @@ namespace ValheimVRM
                     ? JsonConvert.DeserializeObject<Options>(File.ReadAllText(path)) ?? new Options() : new Options();
             }
             catch (Exception ex) { Debug.LogWarning("[ValheimVRM] Cannot load rendering options: " + ex.Message); }
+            Current.Brightness = ClampBrightness(Current.Brightness);
             AvatarBloomController.Enabled = !Current.Bloom;
+        }
+
+        static void LoadShaders()
+        {
             try
             {
                 using (var stream = typeof(AvatarRendering).Assembly.GetManifestResourceStream("ValheimVRM.avatar_rendering"))
@@ -52,11 +65,22 @@ namespace ValheimVRM
 
         public static void Set(bool sceneLighting, bool receiveShadows, bool bloom)
         {
-            var next = new Options { SceneLighting = sceneLighting, ReceiveShadows = receiveShadows, Bloom = bloom };
+            var next = new Options { SceneLighting = sceneLighting, ReceiveShadows = receiveShadows, Bloom = bloom, Brightness = Current.Brightness };
             AvatarConfigFile.WriteAllText(SettingsPath, JsonConvert.SerializeObject(next, Formatting.Indented), "rendering options");
             Current = next;
             AvatarBloomController.Enabled = !bloom;
             foreach (var target in UnityEngine.Object.FindObjectsByType<AvatarRenderingTarget>(FindObjectsSortMode.None)) target.Apply();
+        }
+
+        public static float ClampBrightness(float value) => float.IsNaN(value) || float.IsInfinity(value)
+            ? AvatarCalibrationData.DefaultBrightness
+            : Mathf.Clamp(value, AvatarCalibrationData.MinimumBrightness, AvatarCalibrationData.MaximumBrightness);
+
+        // Match the other F8 sliders: preview live, write once on release.
+        public static void PreviewBrightness(float value) { Current.Brightness = ClampBrightness(value); }
+        public static void SaveBrightness()
+        {
+            AvatarConfigFile.WriteAllText(SettingsPath, JsonConvert.SerializeObject(Current, Formatting.Indented), "rendering options");
         }
     }
 }

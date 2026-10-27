@@ -1,5 +1,7 @@
 # ValheimVRM — Celeste-twinkle fork
 
+**2.0.6 adds synchronized avatar brightness calibration in F8.** The 10–200% slider previews live and saves on release; 100% preserves the existing 0.45/0.2025 MToon import calibration. Brightness belongs to each rendered player, follows expression colors, and preserves alpha and shared materials. Client and server packages are both 2.0.6; 2.0.5 clients and the preceding 2.0.2 server remain compatible. Viewers need 2.0.6 to display the new brightness control.
+
 **2.0.5 fixes mounted players appearing at the creature's feet to observers.** It synchronizes saddle-joint changes even when the mount is unchanged, and updated observers can recover a missing joint from older riders. Existing configurations and the 2.0.2 server addon remain compatible; the 2.0.4 configuration-save fix is retained.
 
 **2.0.4 fixes configuration updates failing after a successful avatar switch.** Saves now use unique temporary files, backed replacement, bounded retries and a Windows fallback. Logs identify the failed stage and successful save method. Existing configuration files and the 2.0.2 server addon remain compatible.
@@ -20,7 +22,7 @@
 
 Replace Valheim characters with your own humanoid VRM avatars and switch them with **F8**. Use it locally or install the separate server addon so players can see one another's selected avatars.
 
-**Current client release: 2.0.5** · Tested with Valheim **1.0.16 / 1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.5 / 5.4.23.3**, D3D11.
+**Current client/server release: 2.0.6** · Tested with Valheim **1.0.20 / 1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.5 / 5.4.23.3**, D3D11.
 
 [Download Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [Release source](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [Changelog](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -47,10 +49,10 @@ Avatar authors can add optional GPU fur using the [fur extension integration spe
 
 | Use case | Install |
 | --- | --- |
-| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-2.0.5.zip` + your own `.vrm` files. |
-| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-2.0.2.zip`; no avatars or client dependencies needed. |
+| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-2.0.6.zip` + your own `.vrm` files. |
+| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-2.0.6.zip`; no avatars or client dependencies needed. |
 | Player hosting through **Start server**, with avatar synchronization | Both client and server packages on the host; other players use the client package. |
-| Source development | `ValheimVRM-2.0.5-source.zip` contains source, not an installable plugin. |
+| Source development | `ValheimVRM-2.0.6-source.zip` contains source, not an installable plugin. |
 
 Neither public runtime ZIP includes BepInEx. See the [installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) for the loader and dependency provenance.
 
@@ -71,7 +73,7 @@ The separately shared **local Windows x64 bundles** `09_ValheimVRM_2.0.2_完整�
 2. Extract the **complete client ZIP** beside `valheim.exe`, merging `BepInEx` and `valheim_Data`. Copying only `ValheimVRM.dll` is insufficient.
 3. Create `ValheimVRM` in the game root and add `.vrm` files directly inside. One model is enough.
 4. Start the game, enter a world, close chat/inventory and other menus, then press **F8** and select a model.
-5. Confirm **ValheimVRM 2.0.5** loads in `BepInEx/LogOutput.log`.
+5. Confirm **ValheimVRM 2.0.6** loads in `BepInEx/LogOutput.log`.
 
 ```text
 Valheim/
@@ -88,7 +90,7 @@ Valheim/
     Another Avatar.vrm
 ```
 
-With a complete 2.0.3 or 2.0.4 installation, `ValheimVRM-2.0.5-update.zip` can replace only the plugin DLL; exit the game first. For other installations use the complete client ZIP. Existing 2.0.2 servers need no update.
+With a complete 2.0.3, 2.0.4 or 2.0.5 installation, `ValheimVRM-2.0.6-update.zip` can replace only the plugin DLL; exit the game first. For other installations use the complete client ZIP. Existing 2.0.2 servers need no update.
 
 To upgrade, exit the game, back up wanted files and keep only one `ValheimVRM.dll` under `BepInEx/plugins`. Store backup DLLs outside that scanned directory. Extract the full new package while preserving avatars and `BepInEx/config`. Do not mix old UniVRM dependencies or overwrite the game's `Unity.Burst` / `Unity.Mathematics` with older copies.
 
@@ -220,6 +222,10 @@ Without the server addon, or with synchronization disabled, height works locally
 
 ## Model brightness reference
 
+F8 → **Avatar brightness calibration** adjusts recognized color properties in the owning avatar's materials from **10% to 200%**, in 1% steps. **100%** retains the import baseline below; the reset button restores it. The setting applies across your avatar choices and is saved in `BepInEx/config/ValheimVRM/rendering_options.json` after dragging. Base/shade colors, emission, rim, matcap and outline color factors are adjusted when exposed by the shader; arbitrary custom shader outputs and texture-only effects are not a final-pixel exposure control.
+
+Brightness is synchronized independently per player with the existing calibration format. New clients can share it through the previous 2.0.2 server. Previous 2.0.5 clients can use the new 2.0.6 server and ignore the new control safely; an old sender defaults to 100% on updated viewers. Both sender and viewer need 2.0.6 to see brightness adjustments. Remote settings do not overwrite the viewer's preferences or another player using the same model.
+
 The calibrated Shinano variants and KUMALY 2 use the following **exported
 VRM 1.0 / MToon material values** as their brightness reference. These privately
 supplied models are not included in the public plugin release.
@@ -255,7 +261,7 @@ to either MToon generation; existing model settings can keep `ModelBrightness=1`
 
 ### Server setup
 
-Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-2.0.2.zip` into its root and start it normally:
+Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-2.0.6.zip` into its root and start it normally:
 
 ```text
 Dedicated server/
@@ -339,7 +345,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Outputs are `release/ValheimVRM-2.0.5.zip` and `release/ValheimVRM-Server-2.0.2.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
+Outputs are `release/ValheimVRM-2.0.6.zip` and `release/ValheimVRM-Server-2.0.6.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
 
 [Shader rebuilding](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [Dependency sources/licenses](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [Project license](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [Issues](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 
