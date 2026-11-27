@@ -22,7 +22,7 @@
 
 Replace Valheim characters with your own humanoid VRM avatars and switch them with **F8**. Use it locally or install the separate server addon so players can see one another's selected avatars.
 
-**Current client/server release: 2.0.6** · Tested with Valheim **1.0.20 / 1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.5 / 5.4.23.3**, D3D11.
+**Current client/server release: 2.0.7** · Gameplay baseline tested with Valheim **1.0.20 / 1.0.12**, Windows x64, Unity 6000.0.75f1, BepInEx **5.4.23.5 / 5.4.23.3**, D3D11.
 
 [Download Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [Release source](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [Changelog](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -45,14 +45,16 @@ Avatar authors can add optional GPU fur using the [fur extension integration spe
 
 ## Installation and upgrades
 
+**Windows 10/11 x64** · Use the [portable manager](docs/MANAGER.md) to detect your game, install either mod and manage VRM models. The EXE includes BepInEx 5 for offline setup.
+
 ### Choose a package
 
 | Use case | Install |
 | --- | --- |
-| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-2.0.6.zip` + your own `.vrm` files. |
-| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-2.0.6.zip`; no avatars or client dependencies needed. |
+| Player client: single-player, local appearance or synchronized appearance | BepInEx 5 + `ValheimVRM-2.0.7.zip` + your own `.vrm` files. |
+| Dedicated server that synchronizes avatars | BepInEx 5 + `ValheimVRM-Server-2.0.7.zip`; no avatars or client dependencies needed. |
 | Player hosting through **Start server**, with avatar synchronization | Both client and server packages on the host; other players use the client package. |
-| Source development | `ValheimVRM-2.0.6-source.zip` contains source, not an installable plugin. |
+| Source development | `ValheimVRM-2.0.7-source.zip` contains source, not an installable plugin. |
 
 Neither public runtime ZIP includes BepInEx. See the [installation guide](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.md) for the loader and dependency provenance.
 
@@ -73,7 +75,7 @@ The separately shared **local Windows x64 bundles** `09_ValheimVRM_2.0.2_完整�
 2. Extract the **complete client ZIP** beside `valheim.exe`, merging `BepInEx` and `valheim_Data`. Copying only `ValheimVRM.dll` is insufficient.
 3. Create `ValheimVRM` in the game root and add `.vrm` files directly inside. One model is enough.
 4. Start the game, enter a world, close chat/inventory and other menus, then press **F8** and select a model.
-5. Confirm **ValheimVRM 2.0.6** loads in `BepInEx/LogOutput.log`.
+5. Confirm **ValheimVRM 2.0.7** loads in `BepInEx/LogOutput.log`.
 
 ```text
 Valheim/
@@ -261,7 +263,7 @@ to either MToon generation; existing model settings can keep `ModelBrightness=1`
 
 ### Server setup
 
-Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-2.0.6.zip` into its root and start it normally:
+Install BepInEx 5 on the dedicated server, stop it, extract the complete `ValheimVRM-Server-2.0.7.zip` into its root and start it normally:
 
 ```text
 Dedicated server/
@@ -345,7 +347,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-Outputs are `release/ValheimVRM-2.0.6.zip` and `release/ValheimVRM-Server-2.0.6.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
+Outputs are `release/ValheimVRM-2.0.7.zip` and `release/ValheimVRM-Server-2.0.7.zip`. The client build cleans the release directory, so build it before packaging the server. Builds install into the game only with explicit `-p:InstallToGame=true`. Use a full build to embed rendering resources; `-t:Compile` alone is not a distributable build.
 
 [Shader rebuilding](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [Dependency sources/licenses](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [Project license](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [Issues](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 

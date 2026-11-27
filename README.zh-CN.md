@@ -22,7 +22,7 @@
 
 将英灵神殿角色替换为自己的 VRM 人形模型，游戏内按 **F8** 切换。可以只在本机生效，也可以安装独立服务器插件，让其他玩家看到各自选择的模型。
 
-**当前客户端／服务端发布版：2.0.6** · 验证环境：Valheim **1.0.20 / 1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.5 / 5.4.23.3**、D3D11。
+**当前客户端／服务端发布版：2.0.7** · 游戏功能基线验证环境：Valheim **1.0.20 / 1.0.12**、Windows x64、Unity 6000.0.75f1、BepInEx **5.4.23.5 / 5.4.23.3**、D3D11。
 
 [下载 Release](https://github.com/Celeste-twinkle/valheim-vrm/releases/latest) · [发布版源码](https://github.com/Celeste-twinkle/valheim-vrm/tree/codex/public-release) · [更新记录](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/release-notes.md)
 
@@ -44,14 +44,16 @@
 
 ## 安装与升级
 
+**Windows 10/11 x64** · 可使用[便携管理器](docs/MANAGER.zh-CN.md)自动识别安装目录、安装或卸载组件，以及添加和删除 VRM 模型。EXE 内置 BepInEx 5，可离线安装。
+
 ### 选择安装包
 
 | 使用场景 | 安装内容 |
 | --- | --- |
-| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-2.0.6.zip` + 自备 `.vrm`。 |
-| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-2.0.6.zip`；无需模型或客户端依赖。 |
+| 玩家客户端，含单人、本地外观和联机外观 | BepInEx 5 + `ValheimVRM-2.0.7.zip` + 自备 `.vrm`。 |
+| 专用服务器，需要同步玩家外观 | BepInEx 5 + `ValheimVRM-Server-2.0.7.zip`；无需模型或客户端依赖。 |
 | 通过游戏“启动服务器”的房主，需要外观同步 | 在房主游戏目录安装客户端包和服务器包；其他玩家按客户端方式安装。 |
-| 仅下载源码 | `ValheimVRM-2.0.6-source.zip` 用于开发，不能代替编译好的插件包。 |
+| 仅下载源码 | `ValheimVRM-2.0.7-source.zip` 用于开发，不能代替编译好的插件包。 |
 
 公开客户端、服务器 ZIP 均不附带 BepInEx。前置加载器与依赖来源见[详细安装说明](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/docs/INSTALL.zh-CN.md)。
 
@@ -74,7 +76,7 @@
 2. 将**完整客户端 ZIP**解压到 `valheim.exe` 所在目录，合并 `BepInEx` 和 `valheim_Data`。不能只复制 `ValheimVRM.dll`。
 3. 在游戏根目录创建 `ValheimVRM`，把自己的 `.vrm` 直接放进去。一个模型就能使用。
 4. 启动游戏，进入世界后关闭聊天、物品栏等菜单，按 **F8** 选择模型。
-5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 2.0.6**。
+5. 在 `BepInEx/LogOutput.log` 中确认加载的是 **ValheimVRM 2.0.7**。
 
 ```text
 Valheim/
@@ -251,7 +253,7 @@ VRM 0.x／1.0 MToon 均不应用该配置，现有模型配置继续保持 `Mode
 
 ### 服务端怎么安装
 
-在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-2.0.6.zip` 解压到服务器根目录，再按原启动方式启动：
+在专用服务器上安装 BepInEx 5，停止服务器，将完整 `ValheimVRM-Server-2.0.7.zip` 解压到服务器根目录，再按原启动方式启动：
 
 ```text
 专用服务器目录/
@@ -335,7 +337,7 @@ dotnet run --project tests/AvatarSyncTests -c Release
 powershell -NoProfile -File tools/Build-ServerPackage.ps1 -ValheimPath $env:VALHEIM_INSTALL_PATH
 ```
 
-输出为 `release/ValheimVRM-2.0.6.zip` 和 `release/ValheimVRM-Server-2.0.6.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
+输出为 `release/ValheimVRM-2.0.7.zip` 和 `release/ValheimVRM-Server-2.0.7.zip`。客户端构建会清理 release 目录，应先构建客户端，再打服务器包。默认不安装到游戏；只有显式传入 `-p:InstallToGame=true` 才安装。必须完整构建以嵌入渲染资源，不能用 `-t:Compile` 输出代替发布包。
 
 [着色器重建](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/shaders/README.md) · [依赖来源与许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/Libs/README.md) · [项目许可证](https://github.com/Celeste-twinkle/valheim-vrm/blob/codex/public-release/LICENSE) · [问题反馈](https://github.com/Celeste-twinkle/valheim-vrm/issues)
 

@@ -1,3 +1,11 @@
+## 2.0.7 - Portable Windows manager
+
+- Detect Valheim and its dedicated server in Steam libraries. Each target also accepts a manually entered directory.
+- Install and uninstall the client and the multiplayer sync addon independently. The Windows x64 EXE bundles the public mods and BepInEx 5.4.23.3 for offline installation.
+- Import, list and remove `.vrm` files in the client. Import accepts drag-and-drop and multi-select.
+
+[Manager guide](docs/MANAGER.md) · [简体中文](docs/MANAGER.zh-CN.md)
+
 ## 2.0.6 - Synchronized avatar brightness calibration
 
 - Add an F8 brightness slider from 10% to 200% in 1% steps, with live preview, save on release and a 100% reset button. Default 100% retains the existing 0.45/0.2025 MToon import calibration; old rendering preferences default to that value.
