@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/AvatarCatalog.cs" Link="AvatarCatalog.cs" />
+    <Compile Include="../../src/AvatarConfigFile.cs" Link="AvatarConfigFile.cs" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/Newtonsoft.Json.dll" />
+  </ItemGroup>
+</Project>

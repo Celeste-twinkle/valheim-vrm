@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -191,11 +191,14 @@ namespace ValheimVRM
 
         public class VrmSettingsContainer : Container
         {
+            internal VrmSettingsContainer CloneForInstance() => (VrmSettingsContainer)MemberwiseClone();
             [NonSerializedAttribute]
             public string Name;
 
-            public float ModelScale = 1.1f;
+            public float ModelScale = 1.0f;
             public float ModelOffsetY = 0.0f;
+            public float StandingHeightOffset = 0.0f;
+            public float SittingHeightOffset = 0.0f;
             public float PlayerHeight = 1.85f;
             public float PlayerRadius = 0.5f;
 
@@ -231,10 +234,10 @@ namespace ValheimVRM
             public bool UtilityVisible = false;
             public bool LegsVisible = false;
 
-            public float ModelBrightness = 0.8f;
+            public float ModelBrightness = 1.0f;
             public bool FixCameraHeight = true;
-            public bool UseMToonShader = false;
-            public bool EnablePlayerFade = true;
+            public bool UseMToonShader = true;
+            public bool EnablePlayerFade = false;
             public bool AllowShare = true;
 
             public float SpringBoneStiffness = 1.0f;
@@ -283,8 +286,8 @@ namespace ValheimVRM
                             VRM vrm;
                             if (VrmManager.VrmDic.TryGetValue(Name, out vrm))
                             {
-                                vrm.VisualModel.transform.localScale = Vector3.one * ModelScale;
-                                VrmManager.PlayerToVrmInstance[player].transform.localScale = Vector3.one * ModelScale;
+                                AvatarScale.Apply(vrm.VisualModel, ModelScale);
+                                AvatarScale.Apply(VrmManager.PlayerToVrmInstance[player], ModelScale);
                             }
                             break;
 
@@ -329,7 +332,9 @@ namespace ValheimVRM
         public class GlobalSettingsContainer : Container
         {
             public bool ReloadInMenu = false;
+            public bool EnableAvatarPicker = true;
             public bool AcceptVrmSharing = true;
+            public bool EnableLegacyVrmSharing = false;
             public bool DrawPlayerSizeGizmo = false;
             public float StartVrmShareDelay = 10.0f;
             public bool ForceWindDisabled = false;
@@ -382,7 +387,10 @@ namespace ValheimVRM
 
         public static string ValheimVRMDir => Path.Combine(Environment.CurrentDirectory, "ValheimVRM");
 
-        public static string PlayerSettingsPath(string playerName, bool shared) => Path.Combine(ValheimVRMDir, shared ? "Shared" : "", $"settings_{playerName}.txt");
+        public static string ConfigDir => Path.Combine(BepInEx.Paths.ConfigPath, "ValheimVRM");
+
+        public static string PlayerSettingsPath(string playerName, bool shared) =>
+            Path.Combine(ConfigDir, shared ? "Shared" : "", $"settings_{playerName}.txt");
         private static Dictionary<string, VrmSettingsContainer> playerSettings = new Dictionary<string, VrmSettingsContainer>();
 
         public static readonly GlobalSettingsContainer globalSettings = new GlobalSettingsContainer();
@@ -397,10 +405,13 @@ namespace ValheimVRM
             var path = PlayerSettingsPath(playerName, shared);
             if (File.Exists(path))
             {
+                Debug.Log("[ValheimVRM Config] MODEL_SETTINGS_READ path=\"" + Path.GetFullPath(path) + "\"");
                 AddSettingsRaw(playerName, File.ReadAllLines(path));
             }
             else
             {
+                Debug.Log("[ValheimVRM Config] MODEL_SETTINGS_DEFAULT path=\"" + Path.GetFullPath(path) +
+                    "\"; optional TXT absent, using defaults. Saving F8 standing/sitting height offsets creates it.");
                 if (!playerSettings.ContainsKey(playerName)) playerSettings[playerName] = new VrmSettingsContainer();
                 playerSettings[playerName].Name = playerName;
                 playerSettings[playerName].Reset();
@@ -422,7 +433,7 @@ namespace ValheimVRM
             playerSettings[playerName].Name = playerName;
             playerSettings[playerName].LoadFrom(settingsData);
 
-            int maxNameWidth = settingsData.Max(kvp => kvp.Key.Length);
+            int maxNameWidth = settingsData.Count == 0 ? 0 : settingsData.Max(kvp => kvp.Key.Length);
 
             Debug.Log("[ValheimVRM] loaded settings for " + playerName + ":\n" + playerSettings[playerName].ToString());
         }
@@ -451,7 +462,7 @@ namespace ValheimVRM
 
         public static void ReloadGlobalSettings()
         {
-            var path = Path.Combine(ValheimVRMDir, "global_settings.txt");
+            var path = Path.Combine(ConfigDir, "global_settings.txt");
 
             if (File.Exists(path))
             {

@@ -1,0 +1,290 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using BepInEx.Bootstrap;
+using BepInEx.Configuration;
+using HarmonyLib;
+using UnityEngine;
+using ValheimVRM.Sync;
+
+namespace ValheimVRM
+{
+    public sealed class AvatarSyncClient : MonoBehaviour
+    {
+        public static AvatarSyncClient Instance { get; private set; }
+        public bool Connected { get; private set; }
+        public bool SequencedRequests { get; private set; }
+        public bool HeightSync { get; private set; }
+        public bool CalibrationSync { get; private set; }
+        public bool SyncEnabled => syncEnabled.Value;
+        public bool SharePartSettings => sharePartSettings.Value;
+        public bool ApplyRemotePartSettings => applyRemotePartSettings.Value;
+        public string LastError { get; private set; } = "";
+        ConfigEntry<bool> syncEnabled, sharePartSettings, applyRemotePartSettings;
+        ZNet network;
+        ZRpc server;
+        object hostPlugin;
+        MethodInfo hostSubmit, hostRead;
+        long revision = -1;
+        long requestSequence;
+        float nextPoll;
+        string lastSent;
+        AvatarSelection[] states = new AvatarSelection[0];
+        readonly Dictionary<Player, AvatarSelection> applied = new Dictionary<Player, AvatarSelection>();
+        readonly Dictionary<Player, AvatarSelection> failed = new Dictionary<Player, AvatarSelection>();
+        readonly HashSet<ZRpc> registered = new HashSet<ZRpc>();
+        readonly AvatarSnapshotAssembly snapshotParts = new AvatarSnapshotAssembly();
+
+        public void Initialize(ConfigEntry<bool> setting, ConfigEntry<bool> shareParts, ConfigEntry<bool> applyRemoteParts)
+        { syncEnabled = setting; sharePartSettings = shareParts; applyRemotePartSettings = applyRemoteParts; Instance = this; }
+        public void SetEnabled(bool value)
+        {
+            syncEnabled.Value = value; lastSent = null; failed.Clear();
+            if (value && Connected) AvatarResidency.SetRemoteSelections(states);
+            else if (!value) { AvatarResidency.ClearRemoteSelections(); LastError = ""; }
+        }
+        public void RetryMissing() { failed.Clear(); LastError = ""; }
+        public void SetSharePartSettings(bool value)
+        { sharePartSettings.Value = value; lastSent = null; }
+        public void SetApplyRemotePartSettings(bool value)
+        {
+            applyRemotePartSettings.Value = value; failed.Clear();
+            foreach (var pair in VrmManager.PlayerToVrmInstance.ToArray())
+            {
+                if (pair.Key == null || pair.Key == Player.m_localPlayer || pair.Value == null) continue;
+                var binding = pair.Value.GetComponent<AvatarCalibrationBinding>();
+                if (binding != null && binding.Encoded != null) binding.Apply(binding.Encoded, value);
+            }
+        }
+
+        public void Register(ZNetPeer peer)
+        {
+            if (peer?.m_rpc == null || !registered.Add(peer.m_rpc)) return;
+            peer.m_rpc.Register<int>(AvatarSyncWire.Hello, ReceiveHello);
+            peer.m_rpc.Register<int>(AvatarSyncWire.SequencedHello, ReceiveSequencedHello);
+            peer.m_rpc.Register<int>(AvatarSyncWire.HeightHello, ReceiveHeightHello);
+            peer.m_rpc.Register<int>(AvatarSyncWire.CalibrationHello, ReceiveCalibrationHello);
+            peer.m_rpc.Register<ZPackage>(AvatarSyncWire.State, ReceiveState);
+            peer.m_rpc.Register<ZPackage>(AvatarSyncWire.StateChunk, ReceiveStateChunk);
+        }
+        void ReceiveHello(ZRpc rpc, int version)
+        {
+            ProcessHello(rpc, version, false);
+        }
+        void ReceiveSequencedHello(ZRpc rpc, int version)
+        {
+            ProcessHello(rpc, version, true);
+        }
+        void ReceiveHeightHello(ZRpc rpc, int version) { ProcessHello(rpc, version, true, true); }
+        void ReceiveCalibrationHello(ZRpc rpc, int version) { ProcessHello(rpc, version, true, true, true); }
+        void ProcessHello(ZRpc rpc, int version, bool sequenced, bool withHeight = false, bool withCalibration = false)
+        {
+            if (ZNet.instance == null || ZNet.instance.IsServer() || ZNet.instance.GetServerPeer()?.m_rpc != rpc) return;
+            ResetConnectionIfNeeded();
+            // Discovery packets may themselves arrive out of order. A legacy
+            // hello cannot downgrade an already upgraded connection.
+            if (SequencedRequests && !sequenced && version == AvatarSyncRules.Version) return;
+            if (HeightSync && !withHeight && version == AvatarSyncRules.Version) return;
+            if (CalibrationSync && !withCalibration && version == AvatarSyncRules.Version) return;
+            Connected = version == AvatarSyncRules.Version; server = rpc; lastSent = null;
+            if (Connected && sequenced) SequencedRequests = true;
+            if (Connected && withHeight && !HeightSync) { HeightSync = true; revision = -1; }
+            if (Connected && withCalibration && !CalibrationSync) { CalibrationSync = true; revision = -1; snapshotParts.Clear(); }
+            if (!Connected) LastError = "Server sync protocol is unavailable or incompatible.";
+            SendSelection();
+        }
+        void ReceiveState(ZRpc rpc, ZPackage package)
+        {
+            if (!Connected || server != rpc || ZNet.instance?.GetServerPeer()?.m_rpc != rpc) return;
+            AcceptSnapshot(package);
+        }
+        void ReceiveStateChunk(ZRpc rpc, ZPackage package)
+        {
+            if (!Connected || !CalibrationSync || server != rpc || ZNet.instance?.GetServerPeer()?.m_rpc != rpc) return;
+            if (snapshotParts.Add(package, revision, out var snapshot)) AcceptSnapshot(snapshot);
+        }
+        void AcceptSnapshot(ZPackage package)
+        {
+            if (!AvatarSyncWire.ReadSnapshot(package, out var next, out var selections, out var withHeight, out var withCalibration) ||
+                (HeightSync && !withHeight) || (CalibrationSync && !withCalibration) || next <= revision) return;
+            revision = next; states = selections;
+            if (SyncEnabled) AvatarResidency.SetRemoteSelections(states);
+            snapshotParts.Clear();
+        }
+        void ResetConnectionIfNeeded()
+        {
+            var net = ZNet.instance;
+            var rpc = net != null && !net.IsServer() ? net.GetServerPeer()?.m_rpc : null;
+            if (network == net && (net == null || net.IsServer() || server == rpc)) return;
+            var previousNetwork = network;
+            if (previousNetwork != null && previousNetwork != net) AvatarResidency.ClearAll();
+            else AvatarResidency.LoseRemoteAuthority();
+            network = net; server = rpc; Connected = false; revision = -1;
+            requestSequence = 0; SequencedRequests = false; HeightSync = CalibrationSync = false; snapshotParts.Clear();
+            states = new AvatarSelection[0]; lastSent = null; hostPlugin = null; failed.Clear(); LastError = "";
+            // Keep only live registrations so reconnects cannot retain stale sockets.
+            registered.RemoveWhere(r => net == null || !net.GetPeers().Any(p => p.m_rpc == r));
+            if (net != null && net.IsServer() && Chainloader.PluginInfos.TryGetValue(AvatarSyncWire.ServerGuid, out var plugin))
+            {
+                hostPlugin = plugin.Instance;
+                hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionWithCalibration");
+                CalibrationSync = hostSubmit != null;
+                if (hostSubmit == null) hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionWithHeight");
+                HeightSync = hostSubmit != null;
+                if (hostSubmit == null) hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelectionSequenced");
+                SequencedRequests = hostSubmit != null;
+                if (hostSubmit == null) hostSubmit = hostPlugin.GetType().GetMethod("SetHostSelection");
+                hostRead = hostPlugin.GetType().GetMethod(CalibrationSync ? "ReadHostSnapshotWithCalibration" : HeightSync ? "ReadHostSnapshotWithHeight" : "ReadHostSnapshot");
+                Connected = hostSubmit != null && hostRead != null &&
+                    hostPlugin.GetType().GetProperty("SyncAvailable")?.GetValue(hostPlugin, null) is bool available && available;
+            }
+        }
+        void Update()
+        {
+            if (syncEnabled == null || Time.realtimeSinceStartup < nextPoll) return;
+            nextPoll = Time.realtimeSinceStartup + .25f;
+            ResetConnectionIfNeeded();
+            if (network != null && !network.IsServer())
+                foreach (var peer in network.GetPeers()) Register(peer);
+            if (Connected)
+            {
+                SendSelection();
+                if (hostPlugin != null) AcceptSnapshot((ZPackage)hostRead.Invoke(hostPlugin, null));
+            }
+            ApplyRemotePlayers();
+        }
+        void SendSelection()
+        {
+            if (!Connected || syncEnabled == null) return;
+            if (OutfitSwitcher.Instance?.MenuOpen == true && GUIUtility.hotControl != 0) return;
+            string model = "", hash = "";
+            string calibration = AvatarCalibrationCodec.Default;
+            float height = AvatarHeightRules.Default;
+            var player = Player.m_localPlayer;
+            bool original = player != null && !player.IsDead() && OutfitSwitcher.Instance != null &&
+                !OutfitSwitcher.Instance.IsBusy && !VrmManager.LoadingPlayers.Contains(player) &&
+                OutfitSwitcher.Instance.Catalog.IsOriginalSelected(player.GetPlayerName());
+            if (SyncEnabled && !original && player != null && !player.IsDead() && OutfitSwitcher.Instance != null &&
+                !OutfitSwitcher.Instance.IsBusy && !VrmManager.LoadingPlayers.Contains(player) &&
+                VrmManager.PlayerToName.TryGetValue(player, out var name) &&
+                VrmManager.PlayerToVrmInstance.TryGetValue(player, out var visual) && visual != null &&
+                VrmManager.VrmHashes.TryGetValue(name, out var bytes))
+            {
+                model = name; hash = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+                height = visual.GetComponent<AvatarScale>()?.TargetHeight ?? AvatarHeightRules.Default;
+                if (CalibrationSync)
+                {
+                    try { calibration = AvatarCalibrationBinding.Capture(name, SharePartSettings); }
+                    catch (Exception ex) { LastError = "Cannot synchronize calibration: " + ex.Message; return; }
+                }
+            }
+            // During a model load/death keep the previous choice for the server to
+            // rebind to the new character ID. Explicit opt-out sends an empty choice.
+            if (SyncEnabled && model == "" && lastSent != null && !original) return;
+            string token = SyncEnabled + ":" + model + ":" + hash;
+            if (HeightSync) token += ":" + height.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+            if (CalibrationSync) token += ":" + calibration;
+            if (token == lastSent) return;
+            if (SequencedRequests)
+            {
+                if (requestSequence == long.MaxValue)
+                { LastError = "Avatar request sequence exhausted. Reconnect to start a new session."; return; }
+                long sequence = ++requestSequence;
+                if (CalibrationSync)
+                {
+                    if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { sequence, SyncEnabled, model, hash, height, calibration });
+                    else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash, sequence, height, calibration));
+                }
+                else if (HeightSync)
+                {
+                    if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { sequence, SyncEnabled, model, hash, height });
+                    else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash, sequence, height));
+                }
+                else if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { sequence, SyncEnabled, model, hash });
+                else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash, sequence));
+            }
+            else if (hostPlugin != null) hostSubmit.Invoke(hostPlugin, new object[] { SyncEnabled, model, hash });
+            else server?.Invoke(AvatarSyncWire.Select, AvatarSyncWire.Selection(SyncEnabled, model, hash));
+            lastSent = token;
+        }
+        AvatarSelection Desired(Player player)
+        {
+            if (!Connected || !SyncEnabled || player == null || player == Player.m_localPlayer || player.IsDead()) return null;
+            var view = player.GetComponent<ZNetView>(); var zdo = view?.GetZDO();
+            if (zdo == null || view.IsOwner()) return null;
+            var id = zdo.m_uid;
+            return states.FirstOrDefault(s => s.CharacterUser == id.UserID && s.CharacterId == id.ID && s.Peer == zdo.GetOwner());
+        }
+        internal float? RemoteHeight(Player player) => Desired(player)?.Height;
+        internal string RemoteCalibration(Player player)
+        {
+            var desired = Desired(player);
+            return desired == null ? null : desired.Calibration ?? AvatarCalibrationCodec.Default;
+        }
+        void ApplyRemotePlayers()
+        {
+            foreach (var stale in applied.Keys.Where(p => p == null).ToArray()) applied.Remove(stale);
+            foreach (var stale in failed.Keys.Where(p => p == null).ToArray()) failed.Remove(stale);
+            foreach (var player in Player.GetAllPlayers())
+            {
+                if (player == Player.m_localPlayer || player.IsDead()) continue;
+                var desired = Desired(player);
+                if (desired == null)
+                {
+                    failed.Remove(player);
+                    if (applied.Remove(player)) RemoteAvatarBaseline.Restore(player);
+                    continue;
+                }
+                if (applied.TryGetValue(player, out var current) && current.SameAs(desired) &&
+                    VrmManager.PlayerToVrmInstance.TryGetValue(player, out var existing) && existing != null &&
+                    existing.GetComponent<AvatarScale>()?.TargetHeight == desired.Height &&
+                    existing.GetComponent<AvatarCalibrationBinding>() is AvatarCalibrationBinding existingBinding &&
+                    existingBinding.Encoded == (desired.Calibration ?? AvatarCalibrationCodec.Default) &&
+                    existingBinding.PartVisibilityEnabled == ApplyRemotePartSettings &&
+                    VrmManager.PlayerToName.TryGetValue(player, out var existingName) && existingName == desired.Model) continue;
+                if (failed.TryGetValue(player, out var bad) && bad.SameAs(desired)) continue;
+                if (current != null && current.Model == desired.Model && current.Sha256 == desired.Sha256 && current.Height == desired.Height &&
+                    VrmManager.PlayerToVrmInstance.TryGetValue(player, out var currentVisual) && currentVisual != null &&
+                    currentVisual.GetComponent<AvatarScale>()?.TargetHeight == desired.Height &&
+                    VrmManager.PlayerToName.TryGetValue(player, out var currentName) && currentName == desired.Model &&
+                    currentVisual.GetComponent<AvatarCalibrationBinding>() is AvatarCalibrationBinding binding &&
+                    binding.Apply(desired.Calibration ?? AvatarCalibrationCodec.Default, ApplyRemotePartSettings))
+                {
+                    applied[player] = desired; failed.Remove(player); continue;
+                }
+                var picker = OutfitSwitcher.Instance;
+                if (picker == null || picker.IsBusy || VrmManager.LoadingPlayers.Contains(player)) continue;
+                if (!picker.Catalog.TryGetPath(desired.Model, out _))
+                {
+                    failed[player] = desired; LastError = "Missing local VRM: " + desired.Model + ". Existing appearance retained; add the file and refresh the list.";
+                    Debug.Log("[ValheimVRM Sync] " + LastError); continue;
+                }
+                var target = player; var selection = desired;
+                Func<bool> stillCurrent = () => target != null && selection.SameAs(Desired(target));
+                picker.RequestRemoteSwitch(target, selection.Model, selection.Sha256, stillCurrent, success =>
+                {
+                    if (target == null) return;
+                    // Track the attached player even if another selection arrived
+                    // during import; the next poll applies its newest state.
+                    if (success && VrmManager.PlayerToName.TryGetValue(target, out var name) && name == selection.Model &&
+                        VrmManager.PlayerToVrmInstance.TryGetValue(target, out var visual) && visual != null) applied[target] = selection;
+                    if (!success && stillCurrent())
+                    { failed[target] = selection; LastError = picker.LastError; }
+                }, selection.Height, selection.Calibration ?? AvatarCalibrationCodec.Default);
+                break; // Serialize imports so shared model caches cannot race.
+            }
+        }
+        void OnDestroy()
+        {
+            AvatarResidency.ClearAll();
+            if (Instance == this) Instance = null;
+        }
+    }
+
+    [HarmonyPatch(typeof(ZNet), "OnNewConnection")]
+    static class AvatarSyncRegisterPeer
+    {
+        static void Postfix(ZNetPeer peer) { AvatarSyncClient.Instance?.Register(peer); }
+    }
+}

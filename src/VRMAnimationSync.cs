@@ -8,7 +8,8 @@ using Object = UnityEngine.Object;
 
 namespace ValheimVRM
 {
-	[DefaultExecutionOrder(int.MaxValue)]
+	// Copy game animation before UniVRM 1.0 updates constraints and spring bones (11000).
+	[DefaultExecutionOrder(10000)]
 	public class VRMAnimationSync : MonoBehaviour
 	{
 		private Animator orgAnim, vrmAnim;
@@ -16,8 +17,14 @@ namespace ValheimVRM
 		private HumanPose hp = new HumanPose();
 		private bool ragdoll;
 		private Settings.VrmSettingsContainer settings;
-		private Vector3? adjustPos;
-		private int oldStateHash;
+		private readonly Quaternion[] boneRotationOffsets = new Quaternion[(int)HumanBodyBones.LastBone];
+		private readonly bool[] hasBoneRotationOffset = new bool[(int)HumanBodyBones.LastBone];
+		private HumanBodyBones[] ragdollBones;
+		private AvatarPoseCalibration calibration;
+		private AvatarCalibrationOptions.Profile profile;
+		private readonly List<AnimatorClipInfo> clipInfo = new List<AnimatorClipInfo>();
+		public AvatarAnimationCatalog AnimationCatalog { get; private set; }
+		public int CalibratedStateCount => calibration?.Count ?? 0;
 
 		public void Setup(Animator orgAnim, Settings.VrmSettingsContainer settings, bool isRagdoll = false)
 		{
@@ -32,6 +39,60 @@ namespace ValheimVRM
 			this.vrmAnim.stabilizeFeet = orgAnim.stabilizeFeet;
 
 			PoseHandlerCreate(orgAnim, vrmAnim);
+			if (isRagdoll)
+			{
+				PrepareRagdollBones();
+			}
+			else
+			{
+				AnimationCatalog = new AvatarAnimationCatalog(orgAnim);
+				profile = GetComponent<AvatarCalibrationBinding>()?.Profile ?? AvatarCalibrationOptions.Current.Get(settings.Name);
+				calibration = new AvatarPoseCalibration(orgAnim, vrmAnim, AnimationCatalog, vrmPose);
+			}
+		}
+
+		private void PrepareRagdollBones()
+		{
+			ragdollBones = Enumerable.Range(0, (int)HumanBodyBones.LastBone)
+				.Select(index => (HumanBodyBones)index)
+				.Where(bone => orgAnim.GetBoneTransform(bone) != null && vrmAnim.GetBoneTransform(bone) != null)
+				.OrderBy(bone => GetBoneDepth(vrmAnim.GetBoneTransform(bone)))
+				.ToArray();
+
+			foreach (var bone in ragdollBones)
+			{
+				int index = (int)bone;
+				if (hasBoneRotationOffset[index]) continue;
+
+				var source = orgAnim.GetBoneTransform(bone);
+				var target = vrmAnim.GetBoneTransform(bone);
+				boneRotationOffsets[index] = Quaternion.Inverse(source.rotation) * target.rotation;
+			}
+		}
+
+		private static int GetBoneDepth(Transform bone)
+		{
+			int depth = 0;
+			while (bone.parent != null)
+			{
+				depth++;
+				bone = bone.parent;
+			}
+			return depth;
+		}
+
+		private void CacheBoneRotationOffsets()
+		{
+			for (int index = 0; index < (int)HumanBodyBones.LastBone; index++)
+			{
+				var bone = (HumanBodyBones)index;
+				var source = orgAnim.GetBoneTransform(bone);
+				var target = vrmAnim.GetBoneTransform(bone);
+				if (source == null || target == null) continue;
+
+				boneRotationOffsets[index] = Quaternion.Inverse(source.rotation) * target.rotation;
+				hasBoneRotationOffset[index] = true;
+			}
 		}
 
 		void PoseHandlerCreate(Animator org, Animator vrm)
@@ -47,89 +108,7 @@ namespace ValheimVRM
 				orgPose.Dispose();
 			if (vrmPose != null)
 				vrmPose.Dispose();
-		}
-
-		const int FirstTime = -161139084;
-		const int Usually = 229373857;  // standing idle
-		const int FirstRise = -1536343465; // stand up upon login
-		const int RiseUp = -805461806;
-		const int StartToSitDown = 890925016;
-		const int SittingIdle = -1544306596;
-		const int StandingUpFromSit = -805461806;
-		const int SittingChair = -1829310159;
-		const int SittingThrone = 1271596;
-		const int SittingShip = -675369009;
-		const int StartSleeping = 337039637;
-		const int Sleeping = -1603096;
-		const int GetUpFromBed = -496559199;
-		const int Crouch = -2015693266;
-		const int HoldingMast = -2110678410;
-		const int HoldingDragon = -2076823180; // that thing in a front of longship
-
-		private static List<int> adjustHipHashes = new List<int>()
-		{
-			SittingChair,
-			SittingThrone,
-			SittingShip,
-			Sleeping
-		};
-		private Vector3 StateHashToOffset(int stateHash, out float interpSpeed)
-		{
-			interpSpeed = Time.deltaTime * 5;
-			switch (stateHash)
-			{
-				case StartToSitDown:
-				case SittingIdle:
-					return settings.SittingIdleOffset;
-
-				case SittingChair:
-					return settings.SittingOnChairOffset;
-
-				case SittingThrone:
-					return settings.SittingOnThroneOffset;
-
-				case SittingShip:
-					return settings.SittingOnShipOffset;
-
-				case HoldingMast:
-					return settings.HoldingMastOffset;
-
-				case HoldingDragon:
-					return settings.HoldingDragonOffset;
-
-				case Sleeping:
-					return settings.SleepingOffset;
-
-				default:
-					interpSpeed = 1;
-					return Vector3.zero;
-			}
-		}
-		void Update()
-		{
-			vrmAnim.transform.localPosition = Vector3.zero;
-			if (!ragdoll)
-			{
-				for (var i = 0; i < 55; i++)
-				{
-					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
-					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-
-					if (i > 0 && orgTrans != null && vrmTrans != null)
-					{
-						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot)
-						{
-							orgTrans.position = vrmTrans.position;
-						}
-						else
-						{
-							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
-						}
-					}
-				}
-			}
-
-			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
+			orgPose = vrmPose = null;
 		}
 
 		void LateUpdate()
@@ -139,115 +118,99 @@ namespace ValheimVRM
 				vrmAnim.transform.localPosition = Vector3.zero;
 				var verticalOffset = Vector3.up * settings.ModelOffsetY;
 
-				for (var i = 0; i < 55; i++)
+				// Physics does not update HumanPoseHandler. Apply rotations parent first,
+				// using the live avatar's bone axes and retaining its own bone lengths.
+				foreach (var bone in ragdollBones)
 				{
-					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
-					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-					if (orgTrans != null && vrmTrans != null)
-					{
-						vrmTrans.position = orgTrans.position + verticalOffset;
-						vrmTrans.rotation = orgTrans.rotation;
-					}
+					var source = orgAnim.GetBoneTransform(bone);
+					var target = vrmAnim.GetBoneTransform(bone);
+					target.rotation = source.rotation * boneRotationOffsets[(int)bone];
 				}
+				vrmAnim.GetBoneTransform(HumanBodyBones.Hips).position =
+					orgAnim.GetBoneTransform(HumanBodyBones.Hips).position + verticalOffset;
 				return;
 			}
 
-			float playerScaleFactor = settings.PlayerHeight / 1.85f;
-
 			vrmAnim.transform.localPosition = Vector3.zero;
 
+			// One-way transfer: the game skeleton is an input, never a destination.
+			// Start from this frame's animation before applying an absolute contact delta.
+			// Writing corrected VRM bones back would feed last frame's lift into the next.
 			orgPose.GetHumanPose(ref hp);
 			vrmPose.SetHumanPose(ref hp);
 
-			var curStateHash = orgAnim.GetCurrentAnimatorStateInfo(0).shortNameHash;
-			var nextState = orgAnim.GetNextAnimatorStateInfo(0);
-			var nextStateHash = nextState.shortNameHash;
+            var hips = vrmAnim.GetBoneTransform(HumanBodyBones.Hips);
+            Vector3 offset = LayerOffset(0);
+            for (int layer = 1; layer < orgAnim.layerCount; layer++)
+                offset += LayerOffset(layer) * orgAnim.GetLayerWeight(layer);
+            hips.position = orgAnim.GetBoneTransform(HumanBodyBones.Hips).position + orgAnim.transform.rotation * offset;
+            vrmAnim.transform.localPosition = Vector3.up * settings.ModelOffsetY;
+            CacheBoneRotationOffsets();
+        }
 
-			var vrmHip = vrmAnim.GetBoneTransform(HumanBodyBones.Hips);
-			var orgHip = orgAnim.GetBoneTransform(HumanBodyBones.Hips);
+        public bool IsActive(AvatarAnimationEntry entry)
+        {
+            if (orgAnim == null || entry == null || entry.LayerIndex >= orgAnim.layerCount) return false;
+            if (entry.LayerIndex > 0 && orgAnim.GetLayerWeight(entry.LayerIndex) <= 0) return false;
+            return orgAnim.GetCurrentAnimatorStateInfo(entry.LayerIndex).fullPathHash == entry.Hash ||
+                (orgAnim.IsInTransition(entry.LayerIndex) && orgAnim.GetNextAnimatorStateInfo(entry.LayerIndex).fullPathHash == entry.Hash);
+        }
 
-			vrmHip.position = orgAnim.GetBoneTransform(HumanBodyBones.Hips).position;
+        Vector3 LayerOffset(int layer)
+        {
+            var state = orgAnim.GetCurrentAnimatorStateInfo(layer);
+            var entry = AnimationCatalog.Resolve(orgAnim, layer, state, false);
+            var result = StateOffset(entry, layer, false);
+            if (orgAnim.IsInTransition(layer))
+            {
+                var next = AnimationCatalog.Resolve(orgAnim, layer, orgAnim.GetNextAnimatorStateInfo(layer), true);
+                if (next != null) result = Vector3.Lerp(result, StateOffset(next, layer, true),
+                    Mathf.Clamp01(orgAnim.GetAnimatorTransitionInfo(layer).normalizedTime));
+            }
+            return result;
+        }
 
-			Vector3 actualAdjustHipPos;
-			float actualInterpSpeed;
+        Vector3 StateOffset(AvatarAnimationEntry entry, int layer, bool next)
+        {
+            var result = layer == 0 ? calibration.Offset(entry, orgAnim, vrmAnim) : Vector3.zero;
+            if (entry == null) return result;
+            result += profile.Get(entry.Path);
+            if (layer == 0)
+            {
+                bool sitting = entry.Contact == AvatarContactKind.Ground || entry.Contact == AvatarContactKind.Seat;
+                if (sitting || entry.Contact == AvatarContactKind.Feet)
+                    result.y += AvatarHeightOffsets.Clamp(sitting ? settings.SittingHeightOffset : settings.StandingHeightOffset);
+                // Preserve existing per-model position settings exactly once.
+                result += LegacyOffset(entry.Name);
+            }
+            if (entry.Clips.Length > 1)
+            {
+                clipInfo.Clear();
+                if (next) orgAnim.GetNextAnimatorClipInfo(layer, clipInfo); else orgAnim.GetCurrentAnimatorClipInfo(layer, clipInfo);
+                float weight = 0; Vector3 clipOffset = Vector3.zero;
+                foreach (var clip in clipInfo)
+                {
+                    if (clip.clip == null || clip.weight <= 0) continue;
+                    weight += clip.weight; clipOffset += profile.Get(entry.ClipKey(clip.clip.name)) * clip.weight;
+                }
+                if (weight > .00001f) result += clipOffset / weight;
+            }
+            return result;
+        }
 
-			// Phase 1: Calculate current state adjustment
-
-			var curAdjustPos = Vector3.zero;
-
-			if (!adjustHipHashes.Contains(curStateHash))
-			{
-				Vector3 curOrgHipPos = orgHip.position - orgHip.parent.position;
-				Vector3 curVrmHipPos = curOrgHipPos * playerScaleFactor;
-
-				curAdjustPos = curVrmHipPos - curOrgHipPos;
-			}
-
-			float curInterpSpeed = Time.deltaTime * 5;
-			Vector3 curOffset = StateHashToOffset(curStateHash, out curInterpSpeed);
-			if (curOffset != Vector3.zero) curAdjustPos += orgHip.transform.rotation * curOffset;
-
-			// Phase 2: Calculate next state adjustment
-
-			var nextAdjustPos = Vector3.zero;
-
-			if (nextStateHash != 0)
-			{
-				if (!adjustHipHashes.Contains(nextStateHash))
-				{
-					Vector3 nextOrgHipPos = orgHip.position - orgHip.parent.position;
-					Vector3 nextVrmHipPos = nextOrgHipPos * playerScaleFactor;
-
-					nextAdjustPos = nextVrmHipPos - nextOrgHipPos;
-				}
-
-				float nextInterpSpeed = Time.deltaTime * 5;
-				Vector3 nextOffset = StateHashToOffset(nextStateHash, out nextInterpSpeed);
-				if (nextOffset != Vector3.zero) nextAdjustPos += orgHip.transform.rotation * nextOffset;
-
-				float trans = Mathf.Clamp01(nextState.normalizedTime * nextState.length / 0.5f);
-
-				actualInterpSpeed = Mathf.Lerp(curInterpSpeed, nextInterpSpeed, trans);
-
-				actualAdjustHipPos = Vector3.Lerp(curAdjustPos, nextAdjustPos, trans);
-			}
-			else
-			{
-				actualInterpSpeed = curInterpSpeed;
-
-				actualAdjustHipPos = curAdjustPos;
-			}
-
-			// Phase 3: Lerp and apply
-
-			adjustPos = adjustPos.HasValue ? Vector3.Lerp(adjustPos.Value, actualAdjustHipPos, actualInterpSpeed) : curAdjustPos;
-
-			vrmHip.position += adjustPos.Value;
-
-			if (!ragdoll)
-			{
-				for (var i = 0; i < 55; i++)
-				{
-					var orgTrans = orgAnim.GetBoneTransform((HumanBodyBones)i);
-					var vrmTrans = vrmAnim.GetBoneTransform((HumanBodyBones)i);
-
-					if (i > 0 && orgTrans != null && vrmTrans != null)
-					{
-						if ((HumanBodyBones)i == HumanBodyBones.LeftFoot || (HumanBodyBones)i == HumanBodyBones.RightFoot)
-						{
-							orgTrans.position = vrmTrans.position;
-						}
-						else
-						{
-							orgTrans.position = vrmTrans.position + Vector3.up * settings.ModelOffsetY;
-						}
-					}
-				}
-			}
-
-			vrmAnim.transform.localPosition += Vector3.up * settings.ModelOffsetY;
-
-			oldStateHash = curStateHash;
-		}
-	}
+        Vector3 LegacyOffset(string name)
+        {
+            switch (name)
+            {
+                case "sit down": case "Emote_sit": return settings.SittingIdleOffset;
+                case "SitChair": return settings.SittingOnChairOffset;
+                case "SitThrone": return settings.SittingOnThroneOffset;
+                case "SitShip": return settings.SittingOnShipOffset;
+                case "HoldMast": return settings.HoldingMastOffset;
+                case "HoldDragon": return settings.HoldingDragonOffset;
+                case "Sleeping": return settings.SleepingOffset;
+                default: return Vector3.zero;
+            }
+        }
+    }
 }

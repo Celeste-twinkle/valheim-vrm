@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net471</TargetFramework>
+    <Version>2.0.7</Version>
+    <AssemblyName>ValheimVRM.Server</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../shared/*.cs" Link="Shared/%(Filename)%(Extension)" />
+    <Reference Include="BepInEx" HintPath="$(VALHEIM_INSTALL_PATH)/BepInEx/core/BepInEx.dll" />
+    <Reference Include="assembly_valheim" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_valheim.dll" />
+    <Reference Include="assembly_utils" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/assembly_utils.dll" />
+    <Reference Include="UnityEngine" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(VALHEIM_INSTALL_PATH)/valheim_Data/Managed/UnityEngine.CoreModule.dll" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

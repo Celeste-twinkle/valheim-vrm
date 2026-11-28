@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,14 +10,14 @@ using UniGLTF;
 using UnityEngine;
 using VRM;
 using UniVRM10;
-using VRMShaders;
+using ValheimVRM.Sync;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 
 namespace ValheimVRM
 {
-	public class VRM
+	public class VRM : IDisposable
 	{
 		public enum SourceType
 		{
@@ -35,24 +35,29 @@ namespace ValheimVRM
 		public VRM(GameObject visualModel, string name)
 		{
 			VisualModel = visualModel;
+			if (visualModel.GetComponent<AvatarRenderingTarget>() == null) visualModel.AddComponent<AvatarRenderingTarget>();
+			if (visualModel.GetComponent<AvatarBloomTarget>() == null) visualModel.AddComponent<AvatarBloomTarget>();
 			Name = name;
 		}
 
-		~VRM()
+		public void Dispose()
 		{
-			if (VisualModel != null)
-			{
-				Object.Destroy(VisualModel);
-			}
+			// Unity objects must be released on the main thread, never a finalizer.
+			if (VisualModel != null) Object.Destroy(VisualModel);
+			VisualModel = null;
+			Src = null;
 		}
 
 		public void RecalculateSrcBytesHash()
 		{
+			var bytes = Src;
+			if (!Settings.globalSettings.EnableLegacyVrmSharing) Src = null;
+			if (bytes == null) return;
 			Task.Run(() =>
 			{
 				using (var md5 = System.Security.Cryptography.MD5.Create())
 				{
-					var hash = md5.ComputeHash(Src);
+					var hash = md5.ComputeHash(bytes);
 					lock (this)
 					{
 						SrcHash = hash;
@@ -98,216 +103,93 @@ namespace ValheimVRM
 
 		public static GameObject ImportVisual(byte[] buf, string path, float scale)
 		{
-			Debug.Log("[ValheimVRM] loading vrm: " + buf.Length + " bytes");
-			try
-			{
-				var data = new GlbBinaryParser(buf, path).Parse();
-
-				var loaded = default(RuntimeGltfInstance);
-
-				try
-				{
-					var vrm = new VRMData(data);
-					var context = new VRMImporterContext(vrm);
-					try
-					{
-						loaded = context.Load();
-					}
-					catch (TypeLoadException ex)
-					{
-						Debug.LogError("Failed to load type: " + ex.TypeName);
-						Debug.LogError(ex);
-					}
-				}
-				catch (NotVrm0Exception)
-				{
-					Debug.Log("[ValheimVRM] Not Vrm0, Trying VRM10");
-					var vrm = Vrm10Data.Parse(data);
-					var context = new Vrm10Importer(vrm);
-					try
-					{
-						loaded = context.Load();
-					}
-					catch (TypeLoadException ex)
-					{
-						Debug.LogError("Failed to load type: " + ex.TypeName);
-						Debug.LogError(ex);
-					}
-				}
-
-				loaded.ShowMeshes();
-				loaded.Root.transform.localScale = Vector3.one * scale;
-
-				Debug.Log("[ValheimVRM] VRM read successful");
-
-				return loaded.Root;
-			}
-			catch (Exception ex)
-			{
-				Debug.LogError(ex);
-			}
-
-			return null;
+			try { return LoadVisual(buf, path, scale, new ImmediateCaller(), false).GetAwaiter().GetResult(); }
+			catch (Exception ex) { Debug.LogError("[ValheimVRM] Import failed: " + ex); return null; }
 		}
-
-
 
 		public static IEnumerator ImportVisualAsync(byte[] buf, string path, float scale, Action<GameObject> onCompleted)
 		{
-			Debug.Log("[ValheimVRM Async] loading vrm: " + buf.Length + " bytes");
-
-			var dataTask = Task.Run(() => new GlbBinaryParser(buf, path).Parse());
-			while (!dataTask.IsCompleted)
+			var task = ImportVisualAsync(buf, path, scale);
+			while (!task.IsCompleted) yield return null;
+			if (task.IsFaulted)
 			{
-				yield return new WaitUntil(() => dataTask.IsCompleted);
-			}
-
-			if (dataTask.IsFaulted)
-			{
-				Debug.LogError($"[ValheimVRM] Failed to parse GLB data: {dataTask.Exception?.Flatten()}");
+				Debug.LogError("[ValheimVRM] Import failed: " + task.Exception.Flatten());
 				onCompleted(null);
-				yield break;
 			}
-
-			var gltfData = dataTask.Result;
-			if (gltfData == null)
-			{
-				Debug.LogError("[ValheimVRM] GLB parser returned null data");
-				onCompleted(null);
-				yield break;
-			}
-
-
-			Task<RuntimeGltfInstance> loader = null;
-			bool maybeVrm10 = false;
-
-			Task<VRMData> vrm0Task = Task.Run(() => new VRMData(gltfData));
-
-			while (!vrm0Task.IsCompleted)
-			{
-				yield return new WaitUntil(() => vrm0Task.IsCompleted);
-			}
-
-
-			if (vrm0Task.IsFaulted)
-			{
-				if (vrm0Task.Exception.InnerException is NotVrm0Exception)
-				{
-					maybeVrm10 = true;
-				}
-			}
-			else
-			{
-				var context = new VRMImporterContext(vrm0Task.Result, null, new TextureDeserializer());
-				loader = context.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
-			}
-
-
-			if (maybeVrm10)
-			{
-				Debug.Log("[ValheimVRM] Not Vrm0, Trying VRM10");
-				var vrmTask = Task.Run(() => Vrm10Data.Parse(gltfData));
-				while (!vrmTask.IsCompleted)
-				{
-					yield return new WaitUntil(() => vrmTask.IsCompleted);
-				}
-
-				if (vrmTask.IsFaulted)
-				{
-					Debug.LogError($"[ValheimVRM] Failed to parse VRM10 data: {vrmTask.Exception?.Flatten()}");
-					onCompleted(null);
-					yield break;
-				}
-
-				var context = new Vrm10Importer(vrmTask.Result, null, null);
-				loader = context.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
-			}
-
-			if (loader == null)
-			{
-				Debug.LogError("Loader was not initialized.");
-				yield break;
-			}
-			while (!loader.IsCompleted)
-			{
-				yield return new WaitUntil(() => loader.IsCompleted);
-			}
-
-			if (loader.IsFaulted)
-			{
-				Debug.LogError("Error during VRM loading: " + loader.Exception.Flatten());
-				onCompleted(null);
-				yield break;
-			}
-
-			var loaded = loader.Result;
-			if (loaded == null)
-			{
-				Debug.LogError("[ValheimVRM] Loader returned null result");
-				onCompleted(null);
-				yield break;
-			}
-
-			//this is what .LoadMeshes() does
-			// we are just yielding between each mesh.
-			foreach (Renderer visibleRenderer in loaded.VisibleRenderers)
-			{
-				visibleRenderer.enabled = true;
-				yield return null;
-			}
-
-			loaded.Root.transform.localScale = Vector3.one * scale;
-			Debug.Log("[ValheimVRM] VRM read successful");
-			onCompleted(loaded.Root);
+			else onCompleted(task.Result);
 		}
 
-
-		public static async Task<GameObject> ImportVisualAsync(byte[] buf, string path, float scale)
+		public static Task<GameObject> ImportVisualAsync(byte[] buf, string path, float scale)
 		{
-			Debug.Log("[ValheimVRM Async] loading vrm: " + buf.Length + " bytes");
-
-			GltfData data = new GlbBinaryParser(buf, path).Parse();
-
-			var vrm = new VRMData(data);
-
-			RuntimeGltfInstance loaded;
-
-			using (VRMImporterContext loader = new VRMImporterContext(vrm, null, new TextureDeserializer()))
-			{
-				loaded = await loader.LoadAsync(new UniGLTF.RuntimeOnlyAwaitCaller(0.001f));
-			}
-
-			try
-			{
-				if (loaded == null)
-				{
-					Debug.LogError("[ValheimVRM] Loader returned null result");
-					return null;
-				}
-
-				loaded.ShowMeshes();
-				loaded.Root.transform.localScale = Vector3.one * scale;
-				Debug.Log("[ValheimVRM] VRM read successful");
-
-				return loaded.Root;
-			}
-			catch (Exception ex)
-			{
-				Debug.LogError("Error during VRM loading: " + ex);
-			}
-
-			return null;
+			return LoadVisual(buf, path, scale, new RuntimeOnlyAwaitCaller(0.001f), true);
 		}
 
-
-		public IEnumerator SetToPlayer(Player player)
+		private static async Task<GameObject> LoadVisual(byte[] buf, string path, float scale, IAwaitCaller awaitCaller, bool backgroundParse)
 		{
-			if (player == null) yield break;
-			var animator = player.GetComponentInChildren<Animator>();
+			Debug.Log("[ValheimVRM] Loading VRM: " + buf.Length + " bytes");
+			// GltfData owns native import buffers. Dispose it even on malformed VRM
+			// input; dropping the managed reference does not free these buffers.
+			using (var data = backgroundParse
+				? await Task.Run(() => new GlbBinaryParser(buf, path).Parse())
+				: new GlbBinaryParser(buf, path).Parse())
+			{
+				ImporterContext context;
+				AvatarFurImporter fur;
+				try
+				{
+					var legacy = new VRMData(data);
+					var materials = AvatarFurImporter.Wrap(new AvatarBrightness(new BuiltInVrmMaterialDescriptorGenerator(legacy.VrmExtension)), data.Json, out fur);
+					context = new VRMImporterContext(legacy, null, new TextureDeserializer(), materials);
+				}
+				catch (NotVrm0Exception)
+				{
+					var materials = AvatarFurImporter.Wrap(new AvatarBrightness(), data.Json, out fur);
+					context = new Vrm10Importer(Vrm10Data.Parse(data), null, null, materials);
+				}
+				using (context)
+				{
+					try
+					{
+						var loaded = await context.LoadAsync(awaitCaller);
+						loaded.ShowMeshes();
+						float effectiveScale = AvatarScale.Apply(loaded.Root, scale);
+						var sizing = loaded.Root.GetComponent<AvatarScale>();
+						fur?.Attach(loaded, buf);
+						Debug.Log($"[ValheimVRM] Avatar standing height {sizing.UnscaledHeight:F3} m, scale {effectiveScale:F3}, final {sizing.UnscaledHeight * effectiveScale:F3} m");
+						Debug.Log("[ValheimVRM] VRM read successful");
+						// LoadAsync transfers resource ownership to RuntimeGltfInstance.
+						return loaded.Root;
+					}
+					catch
+					{
+						var failedRoot = AccessTools.Field(typeof(ImporterContext), "Root")?.GetValue(context) as GameObject;
+						if (failedRoot != null) Object.Destroy(failedRoot);
+						throw;
+					}
+				}
+			}
+		}
+
+		public IEnumerator SetToPlayer(Player player, float? height = null, string calibration = null)
+		{
+			using (AvatarResidency.Acquire(this))
+			{
+				// Drive the child here so cancellation/errors unwind the attachment
+				// lease in this iterator instead of escaping a nested Unity coroutine.
+				var attachment = AttachToPlayer(player, height, calibration);
+				try { while (attachment.MoveNext()) yield return attachment.Current; }
+				finally { (attachment as IDisposable)?.Dispose(); }
+			}
+		}
+
+		private IEnumerator AttachToPlayer(Player player, float? height, string calibration)
+		{
+			if (player == null || player.IsDead()) yield break;
+			var animator = player.GetField<Player, Animator>("m_animator") ?? player.GetComponentInChildren<Animator>();
 			while (animator == null)
 			{
 				yield return null;
-				if (player == null) yield break;
+				if (player == null || player.IsDead()) yield break;
 				animator = player.GetComponentInChildren<Animator>();
 			}
 
@@ -316,18 +198,24 @@ namespace ValheimVRM
 
 			var settings = Settings.GetSettings(Name);
 			if (settings == null) yield break;
-			player.m_maxInteractDistance *= settings.InteractionDistanceScale;
-
-			if (VisualModel == null) yield break;
-			var vrmModel = Object.Instantiate(VisualModel);
-			if (vrmModel == null) yield break;
-			VrmManager.PlayerToVrmInstance[player] = vrmModel;
-			vrmModel.name = "VRM_Visual";
-			vrmModel.SetActive(true);
-			vrmController.visual = vrmModel;
+			// Capture native state before the first local or remote attachment.
+			(player.GetComponent<RemoteAvatarBaseline>() ?? player.gameObject.AddComponent<RemoteAvatarBaseline>()).Capture();
+			var networkView = player.GetComponent<ZNetView>();
+			bool localPhysics = networkView == null || networkView.GetZDO() == null || networkView.IsOwner();
+			if (localPhysics) player.m_maxInteractDistance *= settings.InteractionDistanceScale;
 
 			var parent = animator.transform != null ? animator.transform.parent : null;
-			if (parent == null) yield break;
+			if (parent == null || VisualModel == null) yield break;
+			var vrmModel = Object.Instantiate(VisualModel);
+			if (vrmModel == null) yield break;
+			AvatarResidency.Bind(this, vrmModel);
+			VrmManager.PlayerToName[player] = Name;
+			VrmManager.PlayerToVrmInstance[player] = vrmModel;
+			vrmModel.name = "VRM_Visual";
+			vrmController.visual = vrmModel;
+			Func<bool> stillAttached = () => player != null && !player.IsDead() && animator != null &&
+				vrmModel != null && vrmController != null && vrmController.visual == vrmModel;
+
 			var oldModel = parent.Find("VRM_Visual");
 			if (oldModel != null)
 			{
@@ -335,33 +223,91 @@ namespace ValheimVRM
 			}
 
 			vrmModel.transform.SetParent(parent, false);
+			vrmModel.transform.localPosition = animator.transform.localPosition;
+			calibration = calibration ?? AvatarSyncClient.Instance?.RemoteCalibration(player);
+			AvatarCalibrationBinding calibrationBinding = null;
+			if (calibration != null)
+			{
+				calibrationBinding = vrmModel.AddComponent<AvatarCalibrationBinding>();
+				if (!calibrationBinding.Initialize(settings, calibration, AvatarSyncClient.Instance?.ApplyRemotePartSettings ?? true))
+					throw new InvalidOperationException("Invalid synchronized calibration.");
+				settings = calibrationBinding.Settings;
+			}
+			var partVisibility = vrmModel.AddComponent<AvatarPartVisibility>();
+			var localParts = calibrationBinding == null ? AvatarPartOptions.Current.Get(Name) : null;
+			partVisibility.Initialize(calibrationBinding != null ? calibrationBinding.HiddenParts : localParts.Hidden,
+				calibrationBinding != null ? calibrationBinding.ShownParts : localParts.Shown);
+			// Scale the clone before springs, camera, and both posture calibrations.
+			// The imported template and any other player's clone remain unchanged.
+			AvatarScale.ApplyHeight(vrmModel, height ?? (player == Player.m_localPlayer
+				? OutfitSwitcher.Instance?.Heights?.Get(player.GetPlayerName()) ?? AvatarScale.DefaultHeight
+				: AvatarSyncClient.Instance?.RemoteHeight(player) ?? AvatarScale.DefaultHeight));
+			// Initialize springs at the player's location, not at the import origin.
+			PrepareVrm10Clone(VisualModel, vrmModel);
+			var physicsWeight = vrmModel.GetComponent<AvatarPhysicsWeight>() ?? vrmModel.AddComponent<AvatarPhysicsWeight>();
+			physicsWeight.Setup();
+			if (calibrationBinding != null) physicsWeight.SynchronizedWeight = calibrationBinding.PhysicsWeight;
+			var brightness = vrmModel.GetComponent<AvatarBrightnessTarget>() ?? vrmModel.AddComponent<AvatarBrightnessTarget>();
+			brightness.Setup(player == Player.m_localPlayer, calibrationBinding?.Brightness ?? AvatarCalibrationData.DefaultBrightness);
+			vrmModel.SetActive(true);
+			var equipmentSync = player.GetComponent<VRMEquipmentSync>() ?? player.gameObject.AddComponent<VRMEquipmentSync>();
+			var nativeEquipment = player.GetComponentInChildren<VisEquipment>(true);
+			equipmentSync.Setup(animator, vrmModel.GetComponent<Animator>(), nativeEquipment, settings);
+			// Existing equipment may have been built before this VRM was registered,
+			// so UpdateLodgroup's patch could not hide it. Apply the same slot policy
+			// immediately, including wearable slots added by newer Valheim versions.
+			NativeEquipmentVisibility.Apply(nativeEquipment, settings);
+
+			// Detach the previous camera binding even when the next avatar opts out.
+			// Calibrate from this clone before any yield lets animation retargeting
+			// change its rest-pose bones. Never select the player's vanilla animator.
+			var eyeSync = player.GetComponent<VRMEyePositionSync>();
+			if (eyeSync != null) eyeSync.ResetEyePosition();
+			if (localPhysics && settings.FixCameraHeight)
+			{
+				var vrmAnimator = vrmModel.GetComponent<Animator>();
+				if (vrmAnimator != null)
+				{
+					var vrmEye = vrmAnimator.GetBoneTransform(HumanBodyBones.LeftEye) ??
+						vrmAnimator.GetBoneTransform(HumanBodyBones.Head) ??
+						vrmAnimator.GetBoneTransform(HumanBodyBones.Neck);
+					if (vrmEye != null)
+					{
+						if (eyeSync == null) eyeSync = player.gameObject.AddComponent<VRMEyePositionSync>();
+						eyeSync.Setup(vrmEye, settings.ModelOffsetY);
+					}
+				}
+			}
 
 			float newHeight = settings.PlayerHeight;
 			float newRadius = settings.PlayerRadius;
 
 			var rigidBody = player.GetComponent<Rigidbody>();
 			var collider = player.GetComponent<CapsuleCollider>();
-			if (collider != null)
+			if (localPhysics && collider != null)
 			{
 				collider.height = newHeight;
 				collider.radius = newRadius;
 				collider.center = new Vector3(0, newHeight / 2, 0);
 			}
-			if (rigidBody != null && collider != null)
+			if (localPhysics && rigidBody != null && collider != null)
 			{
 				rigidBody.centerOfMass = collider.center;
 			}
 
 			yield return null;
+			if (!stillAttached()) yield break;
 
 			var originalVisual = player.GetVisual();
 			if (originalVisual != null)
 			{
 				foreach (var smr in originalVisual.GetComponentsInChildren<SkinnedMeshRenderer>())
 				{
+					if (smr == null) continue;
 					smr.forceRenderingOff = true;
 					smr.updateWhenOffscreen = true;
 					yield return null;
+					if (!stillAttached()) yield break;
 				}
 			}
 
@@ -373,6 +319,7 @@ namespace ValheimVRM
 				vrmModel.transform.localPosition = orgAnim.transform.localPosition;
 			}
 			yield return null;
+			if (!stillAttached()) yield break;
 
 			var animationSync = vrmModel.GetComponent<VRMAnimationSync>();
 			if (animationSync == null)
@@ -385,44 +332,28 @@ namespace ValheimVRM
 			}
 			yield return null;
 
-			if (player == null || vrmModel == null) yield break;
-
-			if (settings.FixCameraHeight)
-			{
-				var currentAnimator = player != null ? player.GetComponentInChildren<Animator>() : null;
-				if (currentAnimator != null)
-				{
-					var vrmEye = currentAnimator.GetBoneTransform(HumanBodyBones.LeftEye) ??
-								currentAnimator.GetBoneTransform(HumanBodyBones.Head) ??
-								currentAnimator.GetBoneTransform(HumanBodyBones.Neck);
-					if (vrmEye != null && player != null)
-					{
-						var vrmEyePostSync = player.gameObject.GetComponent<VRMEyePositionSync>() ?? player.gameObject.AddComponent<VRMEyePositionSync>();
-						if (vrmEyePostSync != null)
-						{
-							vrmEyePostSync.Setup(vrmEye);
-						}
-					}
-				}
-			}
-			yield return null;
-
-			if (player == null || vrmModel == null) yield break;
+			if (!stillAttached()) yield break;
 
 			if (settings.UseMToonShader)
 			{
 				var mToonColorSync = vrmModel.GetComponent<MToonColorSync>() ?? vrmModel.AddComponent<MToonColorSync>();
 				mToonColorSync.Setup(vrmModel);
 			}
+			// The legacy color driver may have replaced unsupported materials.
+			brightness.Setup(player == Player.m_localPlayer, calibrationBinding?.Brightness ?? AvatarCalibrationData.DefaultBrightness);
 			yield return null;
+			if (!stillAttached()) yield break;
 
 			foreach (var springBone in vrmModel.GetComponentsInChildren<VRMSpringBone>())
 			{
+				if (springBone == null) continue;
 				springBone.m_stiffnessForce *= settings.SpringBoneStiffness;
 				springBone.m_gravityPower *= settings.SpringBoneGravityPower;
-				springBone.m_updateType = VRMSpringBone.SpringBoneUpdateType.FixedUpdate;
-				springBone.m_center = null;
+				// Legacy springs also run after the retargeted humanoid pose. Keep
+				// the avatar's authored simulation center and collision settings.
+				springBone.m_updateType = VRMSpringBone.SpringBoneUpdateType.LateUpdate;
 				yield return null;
+				if (!stillAttached()) yield break;
 			}
 
 			if (player == null) yield break;
@@ -431,6 +362,26 @@ namespace ValheimVRM
 			{
 				controller.ReloadSpringBones();
 			}
+			if (stillAttached()) AvatarResidency.Attached(this, player);
+		}
+
+		private static void PrepareVrm10Clone(GameObject source, GameObject model)
+		{
+			var vrm10 = model.GetComponent<Vrm10Instance>();
+			if (vrm10 == null) return;
+			var sourceVrm10 = source.GetComponent<Vrm10Instance>();
+			if (sourceVrm10 != null) Vrm10SpringBoneClone.Copy(sourceVrm10, vrm10);
+
+			var gltf = model.GetComponent<RuntimeGltfInstance>();
+			if (gltf != null && gltf.InitialTransformStates.Count == 0 && gltf.RuntimeResources.Count == 0)
+			{
+				// Instantiate does not copy the importer's pose dictionary or resource ownership.
+				// Remove the empty component so UniVRM captures the clone's own bind pose.
+				Object.DestroyImmediate(gltf);
+			}
+
+			// Constraints must capture this pose before animation changes the transforms.
+			_ = vrm10.Runtime;
 		}
 	}
 }

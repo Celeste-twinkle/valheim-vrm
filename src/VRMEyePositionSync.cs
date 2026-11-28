@@ -1,44 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace ValheimVRM
 {
     public class VRMEyePositionSync : MonoBehaviour
     {
-        private Transform vrmEye;
         private Transform orgEye;
+        private Vector3 originalLocalPosition;
 
-        public void Setup(Transform vrmEye)
+        // Call while the new avatar is still in its rest pose. An animated head
+        // is not a stable camera pivot: GameCamera uses m_eye directly for its
+        // close-range collision casts, bypassing its smoothed base offset.
+        public void Setup(Transform vrmEye, float modelOffsetY = 0f)
         {
-            this.vrmEye = vrmEye;
-            Player player = GetComponent<Player>();
-            if (player != null)
-            {
-                this.orgEye = player.m_eye;
-            }
-            else
-            {
-                Debug.LogError("Player component or m_eye is null. Ensure the component exists.");
-            }
+            ResetEyePosition();
+            var player = GetComponent<Player>();
+            if (player == null || player.m_eye == null || vrmEye == null) return;
+
+            orgEye = player.m_eye;
+            originalLocalPosition = orgEye.localPosition;
+            var position = orgEye.position;
+            position.y = vrmEye.position.y + modelOffsetY;
+            orgEye.position = position;
+            enabled = true;
         }
 
-        void LateUpdate()
+        public void ResetEyePosition()
         {
-            if (orgEye != null)
-            {
-                var pos = this.orgEye.position;
-                pos.y = this.vrmEye.position.y;
-                this.orgEye.position = pos;
-            }
-            else
-            {
-                Debug.LogError("orgEye is null. Make sure Setup method is called and Player component is available.");
-            }
+            if (orgEye != null) orgEye.localPosition = originalLocalPosition;
+            orgEye = null;
+        }
+
+        void OnDisable()
+        {
+            ResetEyePosition();
+        }
+
+        void OnDestroy()
+        {
+            ResetEyePosition();
         }
     }
 }
-
