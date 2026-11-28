@@ -333,7 +333,7 @@ See the [2.0.5 mounted-player compatibility validation](https://github.com/Celes
 
 ## Development and provenance
 
-The [Windows manager project](manager/README.md) contains the desktop application and the local build and release commands.
+The [Windows manager project](manager/README.md) contains the desktop application and the local build and packaging commands.
 
 **Release implementation lives on `codex/public-release`.** The default `main` README describes the current Release; it does not mean `main` contains that implementation. Switch to the release branch before building. `codex/valheim-1.0-compatibility` remains the source branch for the upstream compatibility PR.
 

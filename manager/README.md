@@ -12,14 +12,16 @@
 
 `-ValheimPath` 指向有 BepInEx 5 的 Valheim 客户端，提供编译引用。可用 `-BepInExPackage` 指定本地原版 BepInEx 5.4.23.3 Windows x64 ZIP。构建输出到 `release/`，也可传 `-OutputDirectory` 指定其他目录。
 
-## 准备 Release
+## 打包
 
-提交本次版本的源码和[版本日志](../release-notes.md)。日志标题使用 `## 版本号 - 标题`，版本号与 [ValheimVRM.csproj](../ValheimVRM.csproj) 一致。用以下命令准备发布包。
+克隆仓库并准备上述构建环境后，即可在干净的 Git 检出中生成并校验发布包。版本号取自 [ValheimVRM.csproj](../ValheimVRM.csproj)。
 
 ```powershell
-.\manager\Release.ps1 -ValheimPath "D:\SteamLibrary\steamapps\common\Valheim"
+.\manager\Pack.ps1 -ValheimPath "D:\SteamLibrary\steamapps\common\Valheim"
 ```
 
-命令在 `artifacts/releases/` 下生成带提交号的目录，包含管理器 EXE、客户端和服务端 ZIP、本次提交的源码 ZIP、随附组件源码、`SHA256SUMS.txt`、当前版本的 `RELEASE-NOTES.md` 和本地构建日志 `build.log`。按命令输出的源码提交校对发布标签。
+命令使用本地源码和公开的依赖包，在 `artifacts/releases/` 下生成管理器 EXE、客户端和服务端 ZIP、本次提交的源码 ZIP、随附组件源码及 `SHA256SUMS.txt`。`build.log` 记录源码提交和构建结果。
 
-手动将发布源码同步到 `codex/public-release`，给日志中的提交打标签，再在 GitHub 创建 Release。将 `RELEASE-NOTES.md` 的内容填入 Release 正文，上传 EXE、ZIP 和 `SHA256SUMS.txt`。仓库中的 `main` 推送工作流负责构建。
+## GitHub 发布
+
+仓库维护者单独执行 GitHub 发布。以 `build.log` 中记录的源码提交为准，同步 `codex/public-release` 并打标签。根据上个发布标签以来的变更撰写 Release 正文，再上传 EXE、ZIP 和 `SHA256SUMS.txt`。仓库中的 `main` 推送工作流负责构建。

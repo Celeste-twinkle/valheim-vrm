@@ -225,7 +225,7 @@
 			<ProjectFiles Include="$(ROOT_DIR)/global_settings.txt.example" />
 			<ProjectFiles Include="$(ROOT_DIR)/README.md" />
             <ProjectFiles Include="$(ROOT_DIR)/README.zh-CN.md" />
-            <ProjectFiles Include="$(ROOT_DIR)/release-notes.md" />
+            <ProjectFiles Include="$(ROOT_DIR)/release-notes.md" Condition="Exists('$(ROOT_DIR)/release-notes.md')" />
             <ProjectDocs Include="$(ROOT_DIR)/docs/*.md" />
             <ProjectDocs Include="$(ROOT_DIR)/docs/*.schema.json" />
 

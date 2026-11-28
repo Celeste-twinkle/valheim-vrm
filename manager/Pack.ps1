@@ -7,18 +7,12 @@ $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $changes = git -C $repo status --porcelain
 if ($LASTEXITCODE -ne 0) { throw 'Could not read the source checkout.' }
-if ($changes) { throw 'Commit your source and release notes before packaging so the source ZIP matches the build.' }
+if ($changes) { throw 'Commit your source before packaging so the source ZIP matches the build.' }
 $revision = git -C $repo rev-parse HEAD
 if ($LASTEXITCODE -ne 0) { throw 'Could not identify the source commit.' }
 
 $project = Join-Path $repo 'ValheimVRM.csproj'
 $version = ([xml](Get-Content -LiteralPath $project -Raw)).Project.PropertyGroup[0].Version
-$notes = Get-Content -LiteralPath (Join-Path $repo 'release-notes.md') -Raw -Encoding utf8
-$heading = [regex]::Escape($version)
-$section = [regex]::Match($notes, "(?ms)^##[ \t]+$heading(?=[ \t\r\n]|$)[^\r\n]*\r?\n(?<body>.*?)(?=^##[ \t]+|\z)")
-if (!$section.Success -or [string]::IsNullOrWhiteSpace($section.Groups['body'].Value)) {
-    throw "Add release notes under '## $version' in release-notes.md before packaging."
-}
 
 $runId = [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $folder = "ValheimVRM-$version-$($revision.Substring(0, 8))-$runId"
@@ -94,7 +88,6 @@ try {
         throw 'The source checkout changed during packaging. Run the release command from a clean, stable checkout.'
     }
 
-    Set-Content -LiteralPath (Join-Path $release 'RELEASE-NOTES.md') -Value $section.Value.Trim() -Encoding utf8
     $checksums = foreach ($asset in $assets) {
         $hash = (Get-FileHash -LiteralPath $asset.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
         "$hash  $($asset.Name)"
