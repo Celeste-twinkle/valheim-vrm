@@ -11,4 +11,4 @@ The EXE includes both mods and the [BepInEx 5 x64 loader](https://github.com/Bep
 
 ## Build
 
-From the repository root, run `./tools/Build-Manager.ps1 -ValheimPath "D:\SteamLibrary\steamapps\common\Valheim"` on Windows with the .NET SDK. The build needs the same Windows Valheim and BepInEx 5 references as the mod projects. Pass `-BepInExPackage` with the original 5.4.23.3 Windows x64 ZIP to reuse a local download. The script writes the EXE and the manual ZIPs to `release`.
+From the repository root, run `./manager/Build.ps1 -ValheimPath "D:\SteamLibrary\steamapps\common\Valheim"` on Windows with the .NET SDK. The build needs the same Windows Valheim and BepInEx 5 references as the mod projects. Pass `-BepInExPackage` with the original 5.4.23.3 Windows x64 ZIP to reuse a local download. The script writes the EXE and the manual ZIPs to `release`. See the [manager project](../manager/README.md#准备-release) for the local release command.

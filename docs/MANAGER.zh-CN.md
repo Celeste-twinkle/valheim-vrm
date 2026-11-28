@@ -11,4 +11,4 @@ EXE 随附两个模组及 [BepInEx 5 x64 加载器](https://github.com/BepInEx/B
 
 ## 构建
 
-在装有 .NET SDK 的 Windows 上，从仓库根目录运行 `./tools/Build-Manager.ps1 -ValheimPath "D:\SteamLibrary\steamapps\common\Valheim"`。构建使用现有 Valheim 客户端和 BepInEx 5 的引用。可用 `-BepInExPackage` 指定本地原版 5.4.23.3 Windows x64 ZIP。EXE 和手动安装包输出到 `release`。
+在装有 .NET SDK 的 Windows 上，从仓库根目录运行 `./manager/Build.ps1 -ValheimPath "D:\SteamLibrary\steamapps\common\Valheim"`。构建使用现有 Valheim 客户端和 BepInEx 5 的引用。可用 `-BepInExPackage` 指定本地原版 5.4.23.3 Windows x64 ZIP。EXE 和手动安装包输出到 `release`。本地发版命令见[管理器工程](../manager/README.md#准备-release)。

@@ -323,6 +323,8 @@ Unity 和显卡驱动可能保留内存池，因此资源已释放不代表任�
 
 ## 开发与来源
 
+[管理器工程](manager/README.md)包含 Windows 桌面程序源码、本地构建命令和发版命令。
+
 **发布代码位于 `codex/public-release`。** 默认 `main` 的 README 用于介绍当前 Release，不代表 `main` 包含最新实现；编译前请切换发布分支。`codex/valheim-1.0-compatibility` 保留作为上游兼容性 PR 的来源。
 
 准备 .NET 7 SDK、已安装的游戏与 BepInEx；插件目标框架为 .NET Framework 4.7.1：

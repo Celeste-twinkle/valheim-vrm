@@ -26,11 +26,3 @@ jobs:
       contents: read
     with:
       project_name: valheim-vrm
-
-  publish:
-    needs: build-mod
-    uses: ./.github/workflows/_publish.yml
-    secrets: inherit
-    permissions:
-      actions: read
-      contents: write
